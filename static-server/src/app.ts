@@ -72,11 +72,13 @@ app.use(async (ctx: KoaContext, next) => {
   // 检查请求路径是否以 /endless 开头
   if (ctx.path.startsWith('/endless')) {
     // 移除 /endless 前缀
-    ctx.path = ctx.path.replace('/endless', '');
+    const newPath = ctx.path.replace('/endless', '');
     
     // 如果是根路径，则默认返回 index.html
-    if (ctx.path === '' || ctx.path === '/') {
+    if (newPath === '' || newPath === '/') {
       ctx.path = '/index.html';
+    } else {
+      ctx.path = newPath;
     }
     
     await serve(path.join(__dirname, '../static'))(ctx, next);

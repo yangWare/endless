@@ -9,7 +9,7 @@
     "build": "tsc",
     "build:server": "tsc",
     "build:endless": "cd ../endless_v2 && npm run build",
-    "copy:dist": "rm -rf static/* && cp -r ../endless_v2/dist/* static/ && mkdir -p static/assets && cp -r ../endless_v2/assets/* static/assets/"
+    "copy:dist": "rm -rf static/* && mkdir -p static && cp -r ../endless_v2/dist/* static/ && mkdir -p static/assets && cp -r ../endless_v2/assets/* static/assets/"
   },
   "dependencies": {
     "@types/mongoose": "^5.11.96",
