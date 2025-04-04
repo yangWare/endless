@@ -68,7 +68,23 @@ app.use(async (ctx: KoaContext, next) => {
 // });
 
 // 配置静态文件服务
-app.use(serve(path.join(__dirname, '../static')));
+app.use(async (ctx: KoaContext, next) => {
+  // 检查请求路径是否以 /endless 开头
+  if (ctx.path.startsWith('/endless')) {
+    // 移除 /endless 前缀
+    ctx.path = ctx.path.replace('/endless', '');
+    
+    // 如果是根路径，则默认返回 index.html
+    if (ctx.path === '' || ctx.path === '/') {
+      ctx.path = '/index.html';
+    }
+    
+    await serve(path.join(__dirname, '../static'))(ctx, next);
+  } else {
+    ctx.status = 404;
+    ctx.body = { success: false, error: '路径不正确' };
+  }
+});
 
 // 错误处理
 app.on('error', (err, ctx) => {
