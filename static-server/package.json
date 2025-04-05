@@ -10,7 +10,7 @@
     "build": "tsc",
     "build:server": "tsc",
     "build:endless": "cd ../endless_v2 && npm run build",
-    "copy:dist": "rm -rf static/* && mkdir -p static && cp -r ../endless_v2/dist/* static/ && mkdir -p static/assets && cp -r ../endless_v2/assets/* static/assets/",
+    "copy:dist": "rm -rf static/* && mkdir -p static && cp -r ../endless_v2/dist/* static/ && mkdir -p static/assets",
     "copy:images": "rm -rf images/* && mkdir -p images && cp -r ../endless_v2/images/* images/"
   },
   "dependencies": {
