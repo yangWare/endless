@@ -61,6 +61,7 @@ pnpm-debug.log*
 # Production
 /build
 /endless-admin/build
+/static-server/admin
 
 # Misc
 .DS_Store

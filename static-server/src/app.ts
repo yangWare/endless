@@ -253,12 +253,31 @@ app.use(async (ctx: BaseContext, next) => {
   if (ctx.path === '/') {
     ctx.path = '/static/index.html';
   }
+  // 处理 admin 路径
+  if (ctx.path.startsWith('/admin')) {
+    const newPath = ctx.path.replace('/admin', '');
+    // 检查文件是否存在
+    const filePath = path.join(__dirname, '../admin', newPath);
+    try {
+      await require('fs').promises.access(filePath);
+      ctx.path = newPath;
+    } catch (error) {
+      // 文件不存在，返回 index.html
+      ctx.path = '/index.html';
+    }
+    await serve(path.join(__dirname, '../admin'))(ctx, next);
+    return;
+  }
   if (ctx.path.startsWith('/static')) {
     const newPath = ctx.path.replace('/static', '');
-    if (newPath === '' || newPath === '/') {
-      ctx.path = '/index.html';
-    } else {
+    // 检查文件是否存在
+    const filePath = path.join(__dirname, '../static', newPath);
+    try {
+      await require('fs').promises.access(filePath);
       ctx.path = newPath;
+    } catch (error) {
+      // 文件不存在，返回 index.html
+      ctx.path = '/index.html';
     }
     await serve(path.join(__dirname, '../static'))(ctx, next);
   } else {

@@ -4,13 +4,14 @@
   "description": "Static file server using Koa2 and TypeScript",
   "main": "dist/app.js",
   "scripts": {
-    "start": "npm run build:server && npm run build:endless && npm run copy:dist && node dist/app.js",
-    "start:prod": "npm run build:server && npm run build:endless && npm run copy:dist && pm2 start dist/app.js --name static-server",
+    "start": "npm run build:server && npm run build:endless && npm run build:admin && npm run copy:dist && node dist/app.js",
+    "start:prod": "npm run build:server && npm run build:endless && npm run build:admin && npm run copy:dist && pm2 start dist/app.js --name static-server",
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
     "build:server": "tsc",
     "build:endless": "cd ../endless_v2 && npm run build",
-    "copy:dist": "rm -rf static/* && mkdir -p static && cp -r ../endless_v2/dist/* static/ && mkdir -p static/assets"
+    "build:admin": "cd ../endless-admin && npm run build",
+    "copy:dist": "rm -rf static/* admin/* && mkdir -p static admin && cp -r ../endless_v2/dist/* static/ && cp -r ../endless-admin/dist/* admin/ && mkdir -p static/assets"
   },
   "dependencies": {
     "@types/mongoose": "^5.11.96",
