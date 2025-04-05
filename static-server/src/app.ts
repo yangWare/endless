@@ -7,6 +7,8 @@ import { MaterialTypeAPI } from './apis/material-type';
 import { MaterialAPI } from './apis/material';
 import { CreatureAPI } from './apis/creature';
 import { PotionAPI } from './apis/potion';
+import { LocationAPI } from './apis/location';
+import { MapAPI } from './apis/map';
 import { BaseContext, ParamContext } from './types/context';
 
 const app = new Koa();
@@ -56,7 +58,7 @@ app.use(async (ctx: BaseContext, next) => {
   ctxWithParams.params = {};
 
   // 从路径中提取 ID
-  const match = ctx.path.match(/^\/api\/(races|material-types|materials|creatures|potions)\/([a-zA-Z0-9]+)$/);
+  const match = ctx.path.match(/^\/api\/(races|material-types|materials|creatures|potions|locations|maps)\/([a-zA-Z0-9]+)$/);
   if (match) {
     ctxWithParams.params.id = match[2];
   }
@@ -188,6 +190,58 @@ app.use(async (ctx: BaseContext, next) => {
 
   if (ctx.path.match(/^\/api\/potions\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
     await PotionAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 地点 API
+  if (ctx.path === '/api/locations' && ctx.method === 'GET') {
+    await LocationAPI.list(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/locations' && ctx.method === 'POST') {
+    await LocationAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await LocationAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await LocationAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await LocationAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 地图 API
+  if (ctx.path === '/api/maps' && ctx.method === 'GET') {
+    await MapAPI.list(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/maps' && ctx.method === 'POST') {
+    await MapAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/maps\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await MapAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/maps\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await MapAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/maps\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await MapAPI.delete(ctxWithParams);
     return;
   }
 

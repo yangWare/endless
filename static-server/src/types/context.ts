@@ -1,4 +1,5 @@
 import { Context } from 'koa';
+import { Types } from 'mongoose';
 
 // 基础 Context 类型，包含所有共享的属性
 export interface BaseContext extends Context {
@@ -15,6 +16,10 @@ export interface ParamContext extends BaseContext {
 }
 
 // 种族相关的 Context 类型
-export interface RaceContext extends ParamContext {
-  request: ParamContext['request'];
-} 
+export interface RaceContext extends ParamContext {}
+export interface MaterialTypeContext extends ParamContext {}
+export interface MaterialContext extends ParamContext {}
+export interface CreatureContext extends ParamContext {}
+export interface PotionContext extends ParamContext {}
+export interface LocationContext extends ParamContext {}
+export interface MapContext extends ParamContext {} 

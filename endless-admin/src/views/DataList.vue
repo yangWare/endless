@@ -1,11 +1,59 @@
 <template>
   <div class="data-list">
     <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+      <el-tab-pane label="地图" name="maps">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('map')">新建地图</el-button>
+        </div>
+        <el-table :data="maps" style="width: 100%">
+          <el-table-column prop="name" label="名称" />
+          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="width" label="宽度" />
+          <el-table-column prop="height" label="高度" />
+          <el-table-column prop="startLocationId" label="起始位置" />
+          <el-table-column label="操作" width="150">
+            <template #default="scope">
+              <el-button size="small" @click="handleEdit('map', scope.row)">编辑</el-button>
+              <el-button size="small" type="danger" @click="handleDelete('map', scope.row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+
+      <el-tab-pane label="地点" name="locations">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('location')">新建地点</el-button>
+        </div>
+        <el-table :data="locations" style="width: 100%">
+          <el-table-column prop="name" label="名称" />
+          <el-table-column prop="description" label="描述" />
+          <el-table-column prop="mapId" label="所属地图" />
+          <el-table-column label="位置" width="150">
+            <template #default="scope">
+              {{ `(${scope.row.position.x}, ${scope.row.position.y})` }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="150">
+            <template #default="scope">
+              <el-button size="small" @click="handleEdit('location', scope.row)">编辑</el-button>
+              <el-button size="small" type="danger" @click="handleDelete('location', scope.row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-tab-pane>
+
       <el-tab-pane label="种族" name="races">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('race')">新建种族</el-button>
+        </div>
         <el-table :data="races" style="width: 100%">
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
-          <el-table-column prop="parentRace" label="父级种族" />
+          <el-table-column prop="parentRace" label="父级种族">
+            <template #default="scope">
+              {{ getParentRaceName(scope.row.parentRace) }}
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="150">
             <template #default="scope">
               <el-button size="small" @click="handleEdit('race', scope.row)">编辑</el-button>
@@ -16,6 +64,9 @@
       </el-tab-pane>
 
       <el-tab-pane label="生物" name="creatures">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('creature')">新建生物</el-button>
+        </div>
         <el-table :data="creatures" style="width: 100%">
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="raceId" label="种族" />
@@ -31,6 +82,9 @@
       </el-tab-pane>
 
       <el-tab-pane label="材料类型" name="materialTypes">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('materialType')">新建材料类型</el-button>
+        </div>
         <el-table :data="materialTypes" style="width: 100%">
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
@@ -44,6 +98,9 @@
       </el-tab-pane>
 
       <el-tab-pane label="材料" name="materials">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('material')">新建材料</el-button>
+        </div>
         <el-table :data="materials" style="width: 100%">
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="typeId" label="类型" />
@@ -59,6 +116,9 @@
       </el-tab-pane>
 
       <el-tab-pane label="药品" name="potions">
+        <div class="table-header">
+          <el-button type="primary" @click="handleCreate('potion')">新建药品</el-button>
+        </div>
         <el-table :data="potions" style="width: 100%">
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="effectType" label="效果类型" />
@@ -72,85 +132,56 @@
         </el-table>
       </el-tab-pane>
     </el-tabs>
-
-    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="30%">
-      <el-form :model="formData" label-width="80px">
-        <el-form-item label="名称">
-          <el-input v-model="formData.name" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="formData.description" type="textarea" />
-        </el-form-item>
-        <template v-if="activeTab === 'creatures'">
-          <el-form-item label="种族">
-            <el-input v-model="formData.raceId" />
-          </el-form-item>
-          <el-form-item label="等级">
-            <el-input-number v-model="formData.level" :min="1" />
-          </el-form-item>
-        </template>
-        <template v-if="activeTab === 'materials'">
-          <el-form-item label="类型">
-            <el-input v-model="formData.typeId" />
-          </el-form-item>
-          <el-form-item label="等级">
-            <el-input-number v-model="formData.level" :min="1" />
-          </el-form-item>
-        </template>
-        <template v-if="activeTab === 'potions'">
-          <el-form-item label="效果类型">
-            <el-input v-model="formData.effectType" />
-          </el-form-item>
-        </template>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSave">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { raceApi, creatureApi, materialTypeApi, materialApi, potionApi } from '../api';
+import { raceApi, creatureApi, materialTypeApi, materialApi, potionApi, locationApi, mapApi } from '../api';
+import { useRouter } from 'vue-router';
 
-const activeTab = ref('races');
-const dialogVisible = ref(false);
-const dialogTitle = ref('');
-const formData = ref<any>({});
-
+const activeTab = ref('maps');
+const maps = ref<any[]>([]);
+const locations = ref<any[]>([]);
 const races = ref<any[]>([]);
 const creatures = ref<any[]>([]);
 const materialTypes = ref<any[]>([]);
 const materials = ref<any[]>([]);
 const potions = ref<any[]>([]);
 
+const router = useRouter();
+
 const loadData = async () => {
   try {
     switch (activeTab.value) {
+      case 'maps':
+        const mapRes = await mapApi.list({});
+        maps.value = mapRes.data.data.maps || [];
+        break;
+      case 'locations':
+        const locationRes = await locationApi.list({});
+        locations.value = locationRes.data.data.locations || [];
+        break;
       case 'races':
         const raceRes = await raceApi.list({});
-        races.value = raceRes.data.data.items;
+        races.value = raceRes.data.data.races || [];
         break;
       case 'creatures':
         const creatureRes = await creatureApi.list({});
-        creatures.value = creatureRes.data.data.items;
+        creatures.value = creatureRes.data.data.creatures || [];
         break;
       case 'materialTypes':
         const materialTypeRes = await materialTypeApi.list({});
-        materialTypes.value = materialTypeRes.data.data.items;
+        materialTypes.value = materialTypeRes.data.data.materialTypes || [];
         break;
       case 'materials':
         const materialRes = await materialApi.list({});
-        materials.value = materialRes.data.data.items;
+        materials.value = materialRes.data.data.materials || [];
         break;
       case 'potions':
         const potionRes = await potionApi.list({});
-        potions.value = potionRes.data.data.items;
+        potions.value = potionRes.data.data.potions || [];
         break;
     }
   } catch (error) {
@@ -163,14 +194,23 @@ const handleTabClick = () => {
 };
 
 const handleEdit = (type: string, row: any) => {
-  dialogTitle.value = '编辑' + getTypeName(type);
-  formData.value = { ...row };
-  dialogVisible.value = true;
+  const route = router.resolve({
+    name: 'Edit',
+    params: { id: row._id },
+    query: { type }
+  });
+  window.open(route.href, '_blank');
 };
 
 const handleDelete = async (type: string, row: any) => {
   try {
     switch (type) {
+      case 'map':
+        await mapApi.delete(row._id);
+        break;
+      case 'location':
+        await locationApi.delete(row._id);
+        break;
       case 'race':
         await raceApi.delete(row._id);
         break;
@@ -194,63 +234,18 @@ const handleDelete = async (type: string, row: any) => {
   }
 };
 
-const handleSave = async () => {
-  try {
-    const data = { ...formData.value };
-    if (data._id) {
-      switch (activeTab.value) {
-        case 'races':
-          await raceApi.update(data._id, data);
-          break;
-        case 'creatures':
-          await creatureApi.update(data._id, data);
-          break;
-        case 'materialTypes':
-          await materialTypeApi.update(data._id, data);
-          break;
-        case 'materials':
-          await materialApi.update(data._id, data);
-          break;
-        case 'potions':
-          await potionApi.update(data._id, data);
-          break;
-      }
-    } else {
-      switch (activeTab.value) {
-        case 'races':
-          await raceApi.create(data);
-          break;
-        case 'creatures':
-          await creatureApi.create(data);
-          break;
-        case 'materialTypes':
-          await materialTypeApi.create(data);
-          break;
-        case 'materials':
-          await materialApi.create(data);
-          break;
-        case 'potions':
-          await potionApi.create(data);
-          break;
-      }
-    }
-    ElMessage.success('保存成功');
-    dialogVisible.value = false;
-    loadData();
-  } catch (error) {
-    ElMessage.error('保存失败');
-  }
+const handleCreate = (type: string) => {
+  const route = router.resolve({
+    name: 'Create',
+    query: { type }
+  });
+  window.open(route.href, '_blank');
 };
 
-const getTypeName = (type: string) => {
-  const typeMap: Record<string, string> = {
-    race: '种族',
-    creature: '生物',
-    materialType: '材料类型',
-    material: '材料',
-    potion: '药品',
-  };
-  return typeMap[type] || '';
+const getParentRaceName = (parentRaceId: string | null) => {
+  if (!parentRaceId) return '-';
+  const parentRace = races.value.find(race => race._id === parentRaceId);
+  return parentRace ? parentRace.name : '-';
 };
 
 onMounted(() => {
@@ -261,6 +256,10 @@ onMounted(() => {
 <style scoped>
 .data-list {
   padding: 16px;
+}
+
+.table-header {
+  margin-bottom: 16px;
 }
 
 :deep(.el-tabs__content) {

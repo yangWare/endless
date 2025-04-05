@@ -1,13 +1,20 @@
 import axios from 'axios';
 
+const baseURL = 'http://localhost:3000/api';
+
 const api = axios.create({
-  baseURL: '/endless/api',
+  baseURL,
+  timeout: 5000
 });
 
 export interface ListResponse<T> {
   success: boolean;
   data: {
-    items: T[];
+    races?: T[];
+    creatures?: T[];
+    materialTypes?: T[];
+    materials?: T[];
+    potions?: T[];
     total: number;
     page: number;
     limit: number;
@@ -51,41 +58,57 @@ export interface Potion {
 }
 
 export const raceApi = {
-  list: (params: { name?: string; parentRace?: string; page?: number; limit?: number }) =>
-    api.get<ListResponse<Race>>('/races', { params }),
-  create: (data: Omit<Race, '_id'>) => api.post<Race>('/races', data),
-  update: (id: string, data: Partial<Race>) => api.put<Race>(`/races/${id}`, data),
-  delete: (id: string) => api.delete<Race>(`/races/${id}`),
+  list: (params: any) => api.get('/races', { params }),
+  create: (data: any) => api.post('/races', data),
+  update: (id: string, data: any) => api.put(`/races/${id}`, data),
+  delete: (id: string) => api.delete(`/races/${id}`),
+  getById: (id: string) => api.get(`/races/${id}`)
 };
 
 export const creatureApi = {
-  list: (params: { name?: string; raceId?: string; level?: number; page?: number; limit?: number }) =>
-    api.get<ListResponse<Creature>>('/creatures', { params }),
-  create: (data: Omit<Creature, '_id'>) => api.post<Creature>('/creatures', data),
-  update: (id: string, data: Partial<Creature>) => api.put<Creature>(`/creatures/${id}`, data),
-  delete: (id: string) => api.delete<Creature>(`/creatures/${id}`),
+  list: (params: any) => api.get('/creatures', { params }),
+  create: (data: any) => api.post('/creatures', data),
+  update: (id: string, data: any) => api.put(`/creatures/${id}`, data),
+  delete: (id: string) => api.delete(`/creatures/${id}`),
+  getById: (id: string) => api.get(`/creatures/${id}`)
 };
 
 export const materialTypeApi = {
-  list: (params: { name?: string; page?: number; limit?: number }) =>
-    api.get<ListResponse<MaterialType>>('/material-types', { params }),
-  create: (data: Omit<MaterialType, '_id'>) => api.post<MaterialType>('/material-types', data),
-  update: (id: string, data: Partial<MaterialType>) => api.put<MaterialType>(`/material-types/${id}`, data),
-  delete: (id: string) => api.delete<MaterialType>(`/material-types/${id}`),
+  list: (params: any) => api.get('/material-types', { params }),
+  create: (data: any) => api.post('/material-types', data),
+  update: (id: string, data: any) => api.put(`/material-types/${id}`, data),
+  delete: (id: string) => api.delete(`/material-types/${id}`),
+  getById: (id: string) => api.get(`/material-types/${id}`)
 };
 
 export const materialApi = {
-  list: (params: { name?: string; level?: number; page?: number; limit?: number }) =>
-    api.get<ListResponse<Material>>('/materials', { params }),
-  create: (data: Omit<Material, '_id'>) => api.post<Material>('/materials', data),
-  update: (id: string, data: Partial<Material>) => api.put<Material>(`/materials/${id}`, data),
-  delete: (id: string) => api.delete<Material>(`/materials/${id}`),
+  list: (params: any) => api.get('/materials', { params }),
+  create: (data: any) => api.post('/materials', data),
+  update: (id: string, data: any) => api.put(`/materials/${id}`, data),
+  delete: (id: string) => api.delete(`/materials/${id}`),
+  getById: (id: string) => api.get(`/materials/${id}`)
 };
 
 export const potionApi = {
-  list: (params: { name?: string; effectType?: string; page?: number; limit?: number }) =>
-    api.get<ListResponse<Potion>>('/potions', { params }),
-  create: (data: Omit<Potion, '_id'>) => api.post<Potion>('/potions', data),
-  update: (id: string, data: Partial<Potion>) => api.put<Potion>(`/potions/${id}`, data),
-  delete: (id: string) => api.delete<Potion>(`/potions/${id}`),
+  list: (params: any) => api.get('/potions', { params }),
+  create: (data: any) => api.post('/potions', data),
+  update: (id: string, data: any) => api.put(`/potions/${id}`, data),
+  delete: (id: string) => api.delete(`/potions/${id}`),
+  getById: (id: string) => api.get(`/potions/${id}`)
+};
+
+export const locationApi = {
+  list: (params: any) => api.get('/locations', { params }),
+  create: (data: any) => api.post('/locations', data),
+  update: (id: string, data: any) => api.put(`/locations/${id}`, data),
+  delete: (id: string) => api.delete(`/locations/${id}`),
+  getById: (id: string) => api.get(`/locations/${id}`)
+};
+
+export const mapApi = {
+  list: (params: any) => api.get('/maps', { params }),
+  create: (data: any) => api.post('/maps', data),
+  update: (id: string, data: any) => api.put(`/maps/${id}`, data),
+  delete: (id: string) => api.delete(`/maps/${id}`),
+  getById: (id: string) => api.get(`/maps/${id}`)
 }; 
