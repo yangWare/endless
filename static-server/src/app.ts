@@ -86,8 +86,11 @@ app.use(async (ctx: KoaContext, next) => {
 
 // 配置静态文件服务
 app.use(async (ctx: KoaContext, next) => {
-  if (ctx.path.startsWith('/endless')) {
-    const newPath = ctx.path.replace('/endless', '');
+  if (ctx.path === '/') {
+    ctx.path = '/static/index.html';
+  }
+  if (ctx.path.startsWith('/static')) {
+    const newPath = ctx.path.replace('/static', '');
     if (newPath === '' || newPath === '/') {
       ctx.path = '/index.html';
     } else {
