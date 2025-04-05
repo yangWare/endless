@@ -69,6 +69,7 @@ app.use(async (ctx: KoaContext, next) => {
 
 // 图片文件服务
 app.use(async (ctx: KoaContext, next) => {
+  console.log('ctx.path', ctx.path);
   if (ctx.path.startsWith('/images')) {
     // 移除 /images 前缀
     const newPath = ctx.path.replace('/images', '');
