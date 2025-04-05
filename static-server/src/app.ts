@@ -70,7 +70,13 @@ app.use(async (ctx: KoaContext, next) => {
 // 图片文件服务
 app.use(async (ctx: KoaContext, next) => {
   if (ctx.path.startsWith('/images')) {
-    await serve(path.join(__dirname, '../images'))(ctx, next);
+    // 移除 /images 前缀
+    const newPath = ctx.path.replace('/images', '');
+    ctx.path = newPath;
+    // 使用 koa-static 在 images 目录下查找文件
+    await serve(path.join(__dirname, '../images'), {
+      index: false
+    })(ctx, next);
     return;
   }
   await next();
