@@ -14,10 +14,9 @@ export interface LocationNPC {
 }
 
 export interface LocationEnemy {
-  [key: string]: {
-    probability: number;
-    maxCount: number;
-  };
+  creatureId: Types.ObjectId;
+  probability: number;
+  maxCount: number;
 }
 
 export interface LocationData {
@@ -30,7 +29,7 @@ export interface LocationData {
   };
   adjacentLocations: Types.ObjectId[];
   npc?: LocationNPC;
-  enemy?: LocationEnemy;
+  enemies?: LocationEnemy[];
   enemyUpdateDuration?: number;
 }
 
@@ -93,7 +92,8 @@ export class LocationService {
    */
   static async getLocationById(id: string) {
     try {
-      const location = await Location.findById(id);
+      const location = await Location.findById(id)
+        .populate('enemies.creatureId', 'name'); // 填充生物信息
       if (!location) {
         throw new Error('地点不存在');
       }
@@ -122,6 +122,7 @@ export class LocationService {
       
       const [locations, total] = await Promise.all([
         Location.find(query)
+          .populate('enemies.creatureId', 'name')
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),

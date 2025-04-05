@@ -24,7 +24,7 @@ const mapSchema = new mongoose.Schema({
   startLocationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Location',
-    required: true
+    required: false
   },
   createdAt: {
     type: Date,

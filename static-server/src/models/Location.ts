@@ -10,7 +10,8 @@ const locationSchema = new mongoose.Schema({
     required: true
   },
   mapId: {
-    type: Number,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Map',
     required: true
   },
   position: {
@@ -24,7 +25,8 @@ const locationSchema = new mongoose.Schema({
     }
   },
   adjacentLocations: [{
-    type: Number,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Location',
     required: true
   }],
   npc: {
@@ -53,22 +55,24 @@ const locationSchema = new mongoose.Schema({
     },
     default: {}
   },
-  enemy: {
-    type: Map,
-    of: {
-      probability: {
-        type: Number,
-        required: true,
-        min: 0,
-        max: 1
-      },
-      maxCount: {
-        type: Number,
-        required: true
-      }
+  enemies: [{
+    creatureId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Creature',
+      required: true
     },
-    default: new Map()
-  },
+    probability: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 1
+    },
+    maxCount: {
+      type: Number,
+      required: true,
+      min: 1
+    }
+  }],
   enemyUpdateDuration: {
     type: Number,
     default: 3600000 // 默认1小时

@@ -81,17 +81,17 @@
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane label="材料类型" name="materialTypes">
+      <el-tab-pane label="材料类型" name="material-types">
         <div class="table-header">
-          <el-button type="primary" @click="handleCreate('materialType')">新建材料类型</el-button>
+          <el-button type="primary" @click="handleCreate('material-types')">新建材料类型</el-button>
         </div>
         <el-table :data="materialTypes" style="width: 100%">
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
           <el-table-column label="操作" width="150">
             <template #default="scope">
-              <el-button size="small" @click="handleEdit('materialType', scope.row)">编辑</el-button>
-              <el-button size="small" type="danger" @click="handleDelete('materialType', scope.row)">删除</el-button>
+              <el-button size="small" @click="handleEdit('material-types', scope.row)">编辑</el-button>
+              <el-button size="small" type="danger" @click="handleDelete('material-types', scope.row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -171,7 +171,7 @@ const loadData = async () => {
         const creatureRes = await creatureApi.list({});
         creatures.value = creatureRes.data.data.creatures || [];
         break;
-      case 'materialTypes':
+      case 'material-types':
         const materialTypeRes = await materialTypeApi.list({});
         materialTypes.value = materialTypeRes.data.data.materialTypes || [];
         break;
@@ -217,7 +217,7 @@ const handleDelete = async (type: string, row: any) => {
       case 'creature':
         await creatureApi.delete(row._id);
         break;
-      case 'materialType':
+      case 'material-types':
         await materialTypeApi.delete(row._id);
         break;
       case 'material':
