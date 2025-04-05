@@ -5,6 +5,7 @@ export interface MaterialData {
   id?: number;  // 创建时可选，更新时必需
   name: string;
   description: string;
+  typeId: string;  // 添加 typeId 字段
   combat_multipliers: {
     max_hp: number;
     attack: number;
@@ -22,6 +23,7 @@ export interface MaterialData {
 export interface MaterialQueryParams {
   name?: string;
   level?: number;
+  typeId?: string;  // 添加 typeId 查询参数
   page?: number;
   limit?: number;
 }
@@ -78,7 +80,7 @@ export class MaterialService {
    */
   static async getMaterialById(id: string) {
     try {
-      const material = await Material.findById(id);
+      const material = await Material.findById(id).populate('typeId', 'name');
       if (!material) {
         throw new Error('材料不存在');
       }
@@ -93,7 +95,7 @@ export class MaterialService {
    */
   static async getMaterials(params: MaterialQueryParams) {
     try {
-      const { name, level, page = 1, limit = 50 } = params;
+      const { name, level, typeId, page = 1, limit = 50 } = params;
       
       const query: any = {};
       if (name) {
@@ -102,12 +104,16 @@ export class MaterialService {
       if (level) {
         query.level = level;
       }
+      if (typeId) {
+        query.typeId = typeId;
+      }
 
       const skip = (page - 1) * limit;
       
       const [materials, total] = await Promise.all([
         Material.find(query)
           .sort({ createdAt: -1 })
+          .populate('typeId', 'name')  // 添加 populate
           .skip(skip)
           .limit(limit),
         Material.countDocuments(query)

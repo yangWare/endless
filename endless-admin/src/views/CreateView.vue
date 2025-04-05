@@ -77,6 +77,16 @@
 
         <!-- 材料特有字段 -->
         <template v-if="formData.type === 'material'">
+          <el-form-item label="材料类型" prop="typeId">
+            <el-select v-model="formData.typeId" placeholder="请选择材料类型">
+              <el-option
+                v-for="type in materialTypes"
+                :key="type._id"
+                :label="type.name"
+                :value="type._id"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item label="等级" prop="level">
             <el-input-number v-model="formData.level" :min="1" />
           </el-form-item>
@@ -302,6 +312,11 @@ interface Location {
   enemyUpdateDuration: number
 }
 
+interface MaterialType {
+  _id: string;
+  name: string;
+}
+
 interface FormData {
   id?: number;
   type: string;
@@ -316,6 +331,7 @@ interface FormData {
   combat_multipliers: Record<string, number>;
   drop_materials: DropMaterial[];
   // 材料特有
+  typeId: string;
   // 药水特有
   effect: {
     type: string;
@@ -364,6 +380,7 @@ const materials = ref<Material[]>([])
 const maps = ref<Map[]>([])
 const locations = ref<Location[]>([])
 const creatures = ref<Creature[]>([])
+const materialTypes = ref<MaterialType[]>([])
 
 // 表单数据
 const formData = reactive<FormData>({
@@ -399,6 +416,7 @@ const formData = reactive<FormData>({
   },
   drop_materials: [] as DropMaterial[],
   // 材料特有
+  typeId: '',
   // 药水特有
   effect: {
     type: '',
@@ -446,6 +464,7 @@ const rules = {
   description: [{ required: true, message: '请输入描述', trigger: 'blur' }],
   raceId: [{ required: true, message: '请选择种族', trigger: 'change' }],
   level: [{ required: true, message: '请输入等级', trigger: 'blur' }],
+  typeId: [{ required: true, message: '请选择材料类型', trigger: 'change' }],
   'effect.type': [{ required: true, message: '请选择效果类型', trigger: 'change' }],
   'effect.value': [{ required: true, message: '请输入效果值', trigger: 'blur' }],
   mapId: [{ required: true, message: '请选择所属地图', trigger: 'change' }],
@@ -638,6 +657,16 @@ const fetchLocations = async () => {
   }
 }
 
+// 获取材料类型列表
+const fetchMaterialTypes = async () => {
+  try {
+    const response = await axios.get('/endless/api/material-types')
+    materialTypes.value = response.data.data.materialTypes || []
+  } catch (error) {
+    ElMessage.error('获取材料类型列表失败')
+  }
+}
+
 // 提交表单
 const submitForm = async () => {
   if (!formRef.value) return
@@ -683,6 +712,7 @@ const submitForm = async () => {
             data = {
               name: formData.name,
               description: formData.description,
+              typeId: formData.typeId,
               level: formData.level,
               combat_multipliers: formData.combat_multipliers
             };
@@ -782,6 +812,7 @@ onMounted(() => {
   fetchMaps()
   fetchLocations()
   fetchCreatures()
+  fetchMaterialTypes()
   // 从 URL 参数中获取类型
   const type = route.query.type as string
   if (type) {

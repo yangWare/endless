@@ -100,6 +100,7 @@ export class MaterialAPI {
       const queryParams: MaterialQueryParams = {
         name: ctx.query.name as string,
         level: ctx.query.level ? parseInt(ctx.query.level as string) : undefined,
+        typeId: ctx.query.typeId as string,
         page: parseInt(ctx.query.page as string) || 1,
         limit: parseInt(ctx.query.limit as string) || 50
       };

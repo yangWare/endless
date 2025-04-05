@@ -103,7 +103,11 @@
         </div>
         <el-table :data="materials" style="width: 100%">
           <el-table-column prop="name" label="名称" />
-          <el-table-column prop="typeId" label="类型" />
+          <el-table-column label="类型">
+            <template #default="scope">
+              {{ getMaterialTypeName(scope.row.typeId) }}
+            </template>
+          </el-table-column>
           <el-table-column prop="level" label="等级" />
           <el-table-column prop="description" label="描述" />
           <el-table-column label="操作" width="150">
@@ -246,6 +250,11 @@ const getParentRaceName = (parentRaceId: string | null) => {
   if (!parentRaceId) return '-';
   const parentRace = races.value.find(race => race._id === parentRaceId);
   return parentRace ? parentRace.name : '-';
+};
+
+const getMaterialTypeName = (typeId: string) => {
+  const type = materialTypes.value.find(t => t._id === typeId);
+  return type ? type.name : '-';
 };
 
 onMounted(() => {

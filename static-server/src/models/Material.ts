@@ -10,6 +10,11 @@ const materialSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  typeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'MaterialType',
+    required: true
+  },
   combat_multipliers: {
     max_hp: {
       type: Number,
