@@ -67,6 +67,15 @@ app.use(async (ctx: KoaContext, next) => {
   await next();
 });
 
+// 图片文件服务
+app.use(async (ctx: KoaContext, next) => {
+  if (ctx.path.startsWith('/images')) {
+    await serve(path.join(__dirname, '../images'))(ctx, next);
+    return;
+  }
+  await next();
+});
+
 // 配置静态文件服务
 app.use(async (ctx: KoaContext, next) => {
   // 检查请求路径是否以 /endless 开头
