@@ -33,7 +33,18 @@ app.use(async (ctx: KoaContext, next) => {
   await next();
 });
 
-// 写入数据接口
+// 图片文件服务
+app.use(async (ctx: KoaContext, next) => {
+  if (ctx.path.startsWith('/images')) {
+    const newPath = ctx.path.replace('/images', '');
+    ctx.path = newPath;
+    await serve(path.join(__dirname, '../images'))(ctx, next);
+    return;
+  }
+  await next();
+});
+
+// API 路由
 app.use(async (ctx: KoaContext, next) => {
   if (ctx.path === '/api/write' && ctx.method === 'GET') {
     try {
@@ -52,7 +63,6 @@ app.use(async (ctx: KoaContext, next) => {
   await next();
 });
 
-// 读取数据接口
 app.use(async (ctx: KoaContext, next) => {
   if (ctx.path === '/api/read' && ctx.method === 'GET') {
     try {
@@ -67,41 +77,18 @@ app.use(async (ctx: KoaContext, next) => {
   await next();
 });
 
-// 图片文件服务
-app.use(async (ctx: KoaContext, next) => {
-  console.log('ctx.path', ctx.path);
-  if (ctx.path.startsWith('/images')) {
-    // 移除 /images 前缀
-    const newPath = ctx.path.replace('/images', '');
-    ctx.path = newPath;
-    console.log('images', path.join(__dirname, '../images'));
-    // 使用 koa-static 在 images 目录下查找文件
-    await serve(path.join(__dirname, '../images'), {
-      index: false
-    })(ctx, next);
-    return;
-  }
-  await next();
-});
-
 // 配置静态文件服务
 app.use(async (ctx: KoaContext, next) => {
-  // 检查请求路径是否以 /endless 开头
   if (ctx.path.startsWith('/endless')) {
-    // 移除 /endless 前缀
     const newPath = ctx.path.replace('/endless', '');
-    
-    // 如果是根路径，则默认返回 index.html
     if (newPath === '' || newPath === '/') {
       ctx.path = '/index.html';
     } else {
       ctx.path = newPath;
     }
-    
     await serve(path.join(__dirname, '../static'))(ctx, next);
   } else {
-    ctx.status = 404;
-    ctx.body = { success: false, error: '路径不正确' };
+    await next();
   }
 });
 
