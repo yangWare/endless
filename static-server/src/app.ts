@@ -3,6 +3,10 @@ import serve from 'koa-static';
 import path from 'path';
 import { connectDB } from './db';
 import { RaceAPI } from './apis/race';
+import { MaterialTypeAPI } from './apis/material-type';
+import { MaterialAPI } from './apis/material';
+import { CreatureAPI } from './apis/creature';
+import { PotionAPI } from './apis/potion';
 import { BaseContext, ParamContext } from './types/context';
 
 const app = new Koa();
@@ -52,9 +56,9 @@ app.use(async (ctx: BaseContext, next) => {
   ctxWithParams.params = {};
 
   // 从路径中提取 ID
-  const match = ctx.path.match(/^\/api\/races\/([a-zA-Z0-9]+)$/);
+  const match = ctx.path.match(/^\/api\/(races|material-types|materials|creatures|potions)\/([a-zA-Z0-9]+)$/);
   if (match) {
-    ctxWithParams.params.id = match[1];
+    ctxWithParams.params.id = match[2];
   }
 
   // 种族 API
@@ -80,6 +84,110 @@ app.use(async (ctx: BaseContext, next) => {
 
   if (ctx.path.match(/^\/api\/races\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
     await RaceAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 材料类型 API
+  if (ctx.path === '/api/material-types' && ctx.method === 'GET') {
+    await MaterialTypeAPI.list(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/material-types' && ctx.method === 'POST') {
+    await MaterialTypeAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/material-types\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await MaterialTypeAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/material-types\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await MaterialTypeAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/material-types\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await MaterialTypeAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 材料 API
+  if (ctx.path === '/api/materials' && ctx.method === 'GET') {
+    await MaterialAPI.list(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/materials' && ctx.method === 'POST') {
+    await MaterialAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/materials\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await MaterialAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/materials\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await MaterialAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/materials\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await MaterialAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 生物 API
+  if (ctx.path === '/api/creatures' && ctx.method === 'GET') {
+    await CreatureAPI.list(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/creatures' && ctx.method === 'POST') {
+    await CreatureAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/creatures\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await CreatureAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/creatures\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await CreatureAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/creatures\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await CreatureAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 药品 API
+  if (ctx.path === '/api/potions' && ctx.method === 'GET') {
+    await PotionAPI.list(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/potions' && ctx.method === 'POST') {
+    await PotionAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/potions\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await PotionAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/potions\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await PotionAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/potions\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await PotionAPI.delete(ctxWithParams);
     return;
   }
 
