@@ -73,6 +73,7 @@ app.use(async (ctx: KoaContext, next) => {
     // 移除 /images 前缀
     const newPath = ctx.path.replace('/images', '');
     ctx.path = newPath;
+    console.log('images', path.join(__dirname, '../images'));
     // 使用 koa-static 在 images 目录下查找文件
     await serve(path.join(__dirname, '../images'), {
       index: false
