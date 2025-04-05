@@ -3,7 +3,7 @@
     "id": 1,
     "name": "初始地图",
     "description": "这是一个初始地图",
-    "bg_image": "/assets/map.png",
+    "bg_image": "/images/map.png",
     "width": 10000,
     "height": 10000,
     "start_location_id": 1,
