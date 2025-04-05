@@ -2,14 +2,8 @@ import Koa from 'koa';
 import serve from 'koa-static';
 import path from 'path';
 import { connectDB } from './db';
-import { Test } from './models/Test';
-
-// 扩展Koa的Context类型
-interface KoaContext extends Koa.Context {
-  request: Koa.Request & {
-    body?: any;
-  };
-}
+import { RaceAPI } from './apis/race';
+import { BaseContext, ParamContext } from './types/context';
 
 const app = new Koa();
 const PORT = process.env.PORT || 3000;
@@ -18,8 +12,8 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 // 解析请求体
-app.use(async (ctx: KoaContext, next) => {
-  if (ctx.request.method === 'POST') {
+app.use(async (ctx: BaseContext, next) => {
+  if (ctx.request.method === 'POST' || ctx.request.method === 'PUT') {
     ctx.request.body = await new Promise((resolve) => {
       let data = '';
       ctx.req.on('data', (chunk) => {
@@ -34,14 +28,14 @@ app.use(async (ctx: KoaContext, next) => {
 });
 
 // 处理 endless 前缀
-app.use(async (ctx: KoaContext, next) => {
+app.use(async (ctx: BaseContext, next) => {
   const newPath = ctx.path.replace('/endless', '');
   ctx.path = newPath || '/';
   await next();
 });
 
 // 图片文件服务
-app.use(async (ctx: KoaContext, next) => {
+app.use(async (ctx: BaseContext, next) => {
   if (ctx.path.startsWith('/images')) {
     const newPath = ctx.path.replace('/images', '');
     ctx.path = newPath;
@@ -52,40 +46,48 @@ app.use(async (ctx: KoaContext, next) => {
 });
 
 // API 路由
-app.use(async (ctx: KoaContext, next) => {
-  if (ctx.path === '/api/write' && ctx.method === 'GET') {
-    try {
-      const test = new Test({ 
-        name: '默认测试数据', 
-        value: `这是第${Date.now()}条测试数据` 
-      });
-      await test.save();
-      ctx.body = { success: true, data: test };
-    } catch (error: any) {
-      ctx.status = 500;
-      ctx.body = { success: false, error: error?.message || '未知错误' };
-    }
-    return;
-  }
-  await next();
-});
+app.use(async (ctx: BaseContext, next) => {
+  // 为路由添加 params 属性
+  const ctxWithParams = ctx as ParamContext;
+  ctxWithParams.params = {};
 
-app.use(async (ctx: KoaContext, next) => {
-  if (ctx.path === '/api/read' && ctx.method === 'GET') {
-    try {
-      const tests = await Test.find().sort({ createdAt: -1 });
-      ctx.body = { success: true, data: tests };
-    } catch (error: any) {
-      ctx.status = 500;
-      ctx.body = { success: false, error: error?.message || '未知错误' };
-    }
+  // 从路径中提取 ID
+  const match = ctx.path.match(/^\/api\/races\/([a-zA-Z0-9]+)$/);
+  if (match) {
+    ctxWithParams.params.id = match[1];
+  }
+
+  // 种族 API
+  if (ctx.path === '/api/races' && ctx.method === 'GET') {
+    await RaceAPI.list(ctxWithParams);
     return;
   }
+
+  if (ctx.path === '/api/races' && ctx.method === 'POST') {
+    await RaceAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/races\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
+    await RaceAPI.getById(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/races\/[a-zA-Z0-9]+$/) && ctx.method === 'PUT') {
+    await RaceAPI.update(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path.match(/^\/api\/races\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
+    await RaceAPI.delete(ctxWithParams);
+    return;
+  }
+
   await next();
 });
 
 // 配置静态文件服务
-app.use(async (ctx: KoaContext, next) => {
+app.use(async (ctx: BaseContext, next) => {
   if (ctx.path === '/') {
     ctx.path = '/static/index.html';
   }
