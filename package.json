@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "cd static-server && npm run start:prod"
+  },
   "devDependencies": {
     "@types/dotenv": "^6.1.1",
     "dotenv": "^16.4.7"
