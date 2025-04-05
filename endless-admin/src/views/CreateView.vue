@@ -341,7 +341,9 @@ const rules = {
   'position.y': [{ required: true, message: '请输入Y坐标', trigger: 'blur' }],
   'enemy.probability': [{ required: true, message: '请输入敌人概率', trigger: 'blur' }],
   'enemy.maxCount': [{ required: true, message: '请输入敌人最大数量', trigger: 'blur' }],
-  'enemyUpdateDuration': [{ required: true, message: '请输入敌人刷新时间', trigger: 'blur' }]
+  'enemyUpdateDuration': [{ required: true, message: '请输入敌人刷新时间', trigger: 'blur' }],
+  // Map specific rules
+  bgImage: [{ required: true, message: '请输入背景图片路径', trigger: 'blur' }]
 }
 
 // 获取战斗属性标签
