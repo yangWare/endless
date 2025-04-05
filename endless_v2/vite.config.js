@@ -4,7 +4,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/endless/',
+  base: '/endless/static/',
   plugins: [vue()],
   build: {
     assetsDir: 'assets',
