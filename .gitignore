@@ -27,4 +27,4 @@ dist-ssr/
 # Environment and static files
 .env
 static/
-static-server/images/ 
+endless_v2/images/ 

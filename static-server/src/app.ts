@@ -33,6 +33,13 @@ app.use(async (ctx: KoaContext, next) => {
   await next();
 });
 
+// 处理 endless 前缀
+app.use(async (ctx: KoaContext, next) => {
+  const newPath = ctx.path.replace('/endless', '');
+  ctx.path = newPath || '/';
+  await next();
+});
+
 // 图片文件服务
 app.use(async (ctx: KoaContext, next) => {
   if (ctx.path.startsWith('/images')) {
