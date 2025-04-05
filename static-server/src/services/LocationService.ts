@@ -21,15 +21,14 @@ export interface LocationEnemy {
 }
 
 export interface LocationData {
-  id?: number;  // 创建时可选，更新时必需
   name: string;
   description: string;
-  mapId: number;
+  mapId: Types.ObjectId;
   position: {
     x: number;
     y: number;
   };
-  adjacentLocations: number[];
+  adjacentLocations: Types.ObjectId[];
   npc?: LocationNPC;
   enemy?: LocationEnemy;
   enemyUpdateDuration?: number;
@@ -37,7 +36,7 @@ export interface LocationData {
 
 export interface LocationQueryParams {
   name?: string;
-  mapId?: number;
+  mapId?: Types.ObjectId;
   page?: number;
   limit?: number;
 }

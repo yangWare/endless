@@ -100,7 +100,7 @@ export class LocationAPI {
     try {
       const queryParams: LocationQueryParams = {
         name: ctx.query.name as string,
-        mapId: ctx.query.mapId ? parseInt(ctx.query.mapId as string) : undefined,
+        mapId: ctx.query.mapId ? new Types.ObjectId(ctx.query.mapId as string) : undefined,
         page: parseInt(ctx.query.page as string) || 1,
         limit: parseInt(ctx.query.limit as string) || 50
       };

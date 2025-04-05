@@ -1,5 +1,6 @@
 import { CreatureService, CreatureData, CreatureQueryParams } from '../services/CreatureService';
 import { BaseContext } from '../types/context';
+import { Types } from 'mongoose';
 
 export class CreatureAPI {
   /**
@@ -99,7 +100,7 @@ export class CreatureAPI {
     try {
       const queryParams: CreatureQueryParams = {
         name: ctx.query.name as string,
-        raceId: ctx.query.raceId as string,
+        raceId: ctx.query.raceId ? new Types.ObjectId(ctx.query.raceId as string) : undefined,
         level: ctx.query.level ? parseInt(ctx.query.level as string) : undefined,
         page: parseInt(ctx.query.page as string) || 1,
         limit: parseInt(ctx.query.limit as string) || 50

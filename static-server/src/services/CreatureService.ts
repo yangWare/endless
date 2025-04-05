@@ -7,7 +7,6 @@ export interface DropMaterial {
 }
 
 export interface CreatureData {
-  id?: number;  // 创建时可选，更新时必需
   name: string;
   description: string;
   raceId: Types.ObjectId;
@@ -28,7 +27,7 @@ export interface CreatureData {
 
 export interface CreatureQueryParams {
   name?: string;
-  raceId?: string;
+  raceId?: Types.ObjectId;
   level?: number;
   page?: number;
   limit?: number;

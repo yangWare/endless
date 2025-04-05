@@ -1,12 +1,6 @@
 import mongoose from 'mongoose';
-import { Counter } from './Counter';
 
 const materialTypeSchema = new mongoose.Schema({
-  id: {
-    type: Number,
-    required: true,
-    unique: true
-  },
   name: {
     type: String,
     required: true,
@@ -67,23 +61,6 @@ const materialTypeSchema = new mongoose.Schema({
 // 在保存前更新 updatedAt
 materialTypeSchema.pre('save', function(next) {
   this.updatedAt = new Date();
-  next();
-});
-
-// 在保存前自动生成递增的 ID
-materialTypeSchema.pre('save', async function(next) {
-  if (this.isNew) {
-    try {
-      const counter = await Counter.findByIdAndUpdate(
-        'materialTypeId',
-        { $inc: { seq: 1 } },
-        { new: true, upsert: true }
-      );
-      this.id = counter.seq;
-    } catch (error) {
-      return next(error as Error);
-    }
-  }
   next();
 });
 

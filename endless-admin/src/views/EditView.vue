@@ -9,9 +9,6 @@
       
       <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
         <!-- 基础字段 -->
-        <el-form-item label="ID" prop="id">
-          <el-input v-model="formData.id" disabled />
-        </el-form-item>
         <el-form-item label="名称" prop="name">
           <el-input v-model="formData.name" placeholder="请输入名称" />
         </el-form-item>
@@ -107,8 +104,15 @@
           <el-form-item label="高度" prop="height">
             <el-input-number v-model="formData.height" :min="1" />
           </el-form-item>
-          <el-form-item label="起始位置ID" prop="startLocationId">
-            <el-input-number v-model="formData.startLocationId" :min="1" />
+          <el-form-item label="起始位置" prop="startLocationId">
+            <el-select v-model="formData.startLocationId" placeholder="请选择起始位置">
+              <el-option
+                v-for="location in locations"
+                :key="location._id"
+                :label="location.name"
+                :value="location._id"
+              />
+            </el-select>
           </el-form-item>
         </template>
 
@@ -154,7 +158,10 @@
                 <el-button @click="addShopItem">添加商品</el-button>
                 <div v-for="(item, index) in formData.npc.shop.items" :key="index">
                   <el-form-item :label="'商品' + (index + 1)">
-                    <el-input v-model="item.id" placeholder="商品ID" style="width: 200px" />
+                    <el-select v-model="item.id" placeholder="请选择商品" style="width: 200px">
+                      <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material._id" />
+                      <el-option v-for="potion in potions" :key="potion._id" :label="potion.name" :value="potion._id" />
+                    </el-select>
                     <el-input-number v-model="item.price" :min="0" placeholder="价格" />
                     <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
                   </el-form-item>
@@ -224,7 +231,7 @@ interface Map {
   bgImage: string
   width: number
   height: number
-  startLocationId: number
+  startLocationId: string
 }
 
 interface Location {
@@ -246,6 +253,11 @@ interface Location {
   }
   enemy: Record<string, Enemy>
   enemyUpdateDuration: number
+}
+
+interface Potion {
+  _id: string
+  name: string
 }
 
 interface FormData {
@@ -270,7 +282,7 @@ interface FormData {
   bgImage: string;
   width: number;
   height: number;
-  startLocationId: number;
+  startLocationId: string;
   // Location specific fields
   mapId: string;
   position: {
@@ -297,6 +309,7 @@ const races = ref<Race[]>([])
 const materials = ref<Material[]>([])
 const maps = ref<Map[]>([])
 const locations = ref<Location[]>([])
+const potions = ref<Potion[]>([])
 
 const type = ref(route.query.type as string)
 const id = ref(route.params.id as string)
@@ -344,7 +357,7 @@ const formData = reactive<FormData>({
   bgImage: '',
   width: 1000,
   height: 1000,
-  startLocationId: 1,
+  startLocationId: '',
   // Location specific fields
   mapId: '',
   position: {
@@ -444,6 +457,16 @@ const fetchLocations = async () => {
     locations.value = response.data.data.locations || []
   } catch (error) {
     ElMessage.error('获取位置列表失败')
+  }
+}
+
+// 获取药水列表
+const fetchPotions = async () => {
+  try {
+    const response = await axios.get('/endless/api/potions')
+    potions.value = response.data.data.potions || []
+  } catch (error) {
+    ElMessage.error('获取药水列表失败')
   }
 }
 
@@ -608,6 +631,7 @@ onMounted(() => {
   fetchMaterials()
   fetchMaps()
   fetchLocations()
+  fetchPotions()
   fetchDetail()
 })
 </script>

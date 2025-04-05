@@ -23,7 +23,6 @@ export interface ListResponse<T> {
 
 export interface Race {
   _id: string;
-  id: number;
   name: string;
   description?: string;
   parentRace?: string;
@@ -31,7 +30,6 @@ export interface Race {
 
 export interface Creature {
   _id: string;
-  id: number;
   name: string;
   raceId: string;
   level: number;
@@ -40,14 +38,12 @@ export interface Creature {
 
 export interface MaterialType {
   _id: string;
-  id: number;
   name: string;
   description?: string;
 }
 
 export interface Material {
   _id: string;
-  id: number;
   name: string;
   typeId: string;
   level: number;
@@ -56,7 +52,6 @@ export interface Material {
 
 export interface Potion {
   _id: string;
-  id: number;
   name: string;
   effectType: string;
   description?: string;
@@ -64,7 +59,6 @@ export interface Potion {
 
 export interface Location {
   _id: string;
-  id: number;
   name: string;
   mapId: string;
   description?: string;

@@ -2,13 +2,12 @@ import { Map } from '../models/Map';
 import { Types } from 'mongoose';
 
 export interface MapData {
-  id: number;
   name: string;
   description: string;
   bgImage: string;
   width: number;
   height: number;
-  startLocationId: number;
+  startLocationId: Types.ObjectId;
 }
 
 export interface MapQueryParams {

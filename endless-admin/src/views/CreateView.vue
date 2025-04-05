@@ -180,8 +180,15 @@
           <el-form-item label="高度" prop="height">
             <el-input-number v-model="formData.height" :min="1" />
           </el-form-item>
-          <el-form-item label="起始位置ID" prop="startLocationId">
-            <el-input-number v-model="formData.startLocationId" :min="1" />
+          <el-form-item label="起始位置" prop="startLocationId">
+            <el-select v-model="formData.startLocationId" placeholder="请选择起始位置">
+              <el-option
+                v-for="location in locations"
+                :key="location._id"
+                :label="location.name"
+                :value="location._id"
+              />
+            </el-select>
           </el-form-item>
         </template>
 
@@ -232,7 +239,7 @@ interface Map {
   bgImage: string
   width: number
   height: number
-  startLocationId: number
+  startLocationId: string
 }
 
 interface Location {
@@ -279,7 +286,7 @@ interface FormData {
   bgImage: string;
   width: number;
   height: number;
-  startLocationId: number;
+  startLocationId: string;
   // Location specific fields
   mapId: string;
   position: {
@@ -350,7 +357,7 @@ const formData = reactive<FormData>({
   bgImage: '',
   width: 1000,
   height: 1000,
-  startLocationId: 1,
+  startLocationId: '',
   // Location specific fields
   mapId: '',
   position: {
@@ -509,7 +516,7 @@ const handleTypeChange = () => {
       formData.bgImage = '';
       formData.width = 1000;
       formData.height = 1000;
-      formData.startLocationId = 1;
+      formData.startLocationId = '';
       break;
   }
 }
