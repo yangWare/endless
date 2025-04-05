@@ -256,6 +256,49 @@ interface Location {
   enemyUpdateDuration: number
 }
 
+interface FormData {
+  id?: number;
+  type: string;
+  name: string;
+  description: string;
+  // 种族特有
+  parentRace: string | null;
+  combatStats: Record<string, number>;
+  // 生物特有
+  raceId: string;
+  level: number;
+  combat_multipliers: Record<string, number>;
+  drop_materials: DropMaterial[];
+  // 材料特有
+  // 药水特有
+  effect: {
+    type: string;
+    value: number;
+  };
+  // Map specific fields
+  bgImage: string;
+  width: number;
+  height: number;
+  startLocationId: number;
+  // Location specific fields
+  mapId: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  adjacentLocations: string[];
+  npc: {
+    forge: {
+      level: number;
+    };
+    shop: {
+      items: ShopItem[];
+    };
+  };
+  enemy: Record<string, Enemy>;
+  enemyUpdateDuration: number;
+}
+
 const route = useRoute()
 const router = useRouter()
 const formRef = ref<FormInstance>()
@@ -265,7 +308,7 @@ const maps = ref<Map[]>([])
 const locations = ref<Location[]>([])
 
 // 表单数据
-const formData = reactive({
+const formData = reactive<FormData>({
   type: '',
   name: '',
   description: '',

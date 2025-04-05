@@ -21,6 +21,7 @@ export interface LocationEnemy {
 }
 
 export interface LocationData {
+  id?: number;  // 创建时可选，更新时必需
   name: string;
   description: string;
   mapId: number;

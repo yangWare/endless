@@ -6,6 +6,7 @@
           <el-button type="primary" @click="handleCreate('map')">新建地图</el-button>
         </div>
         <el-table :data="maps" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
           <el-table-column prop="width" label="宽度" />
@@ -25,6 +26,7 @@
           <el-button type="primary" @click="handleCreate('location')">新建地点</el-button>
         </div>
         <el-table :data="locations" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
           <el-table-column prop="mapId" label="所属地图" />
@@ -47,6 +49,7 @@
           <el-button type="primary" @click="handleCreate('race')">新建种族</el-button>
         </div>
         <el-table :data="races" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
           <el-table-column prop="parentRace" label="父级种族">
@@ -68,6 +71,7 @@
           <el-button type="primary" @click="handleCreate('creature')">新建生物</el-button>
         </div>
         <el-table :data="creatures" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="raceId" label="种族" />
           <el-table-column prop="level" label="等级" />
@@ -86,6 +90,7 @@
           <el-button type="primary" @click="handleCreate('materialType')">新建材料类型</el-button>
         </div>
         <el-table :data="materialTypes" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="description" label="描述" />
           <el-table-column label="操作" width="150">
@@ -102,6 +107,7 @@
           <el-button type="primary" @click="handleCreate('material')">新建材料</el-button>
         </div>
         <el-table :data="materials" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="typeId" label="类型" />
           <el-table-column prop="level" label="等级" />
@@ -120,6 +126,7 @@
           <el-button type="primary" @click="handleCreate('potion')">新建药品</el-button>
         </div>
         <el-table :data="potions" style="width: 100%">
+          <el-table-column prop="id" label="ID" width="80" />
           <el-table-column prop="name" label="名称" />
           <el-table-column prop="effectType" label="效果类型" />
           <el-table-column prop="description" label="描述" />

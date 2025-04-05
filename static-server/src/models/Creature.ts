@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
+import { Counter } from './Counter';
 
 const creatureSchema = new mongoose.Schema({
+  id: {
+    type: Number,
+    required: true,
+    unique: true
+  },
   name: {
     type: String,
     required: true,
@@ -92,6 +98,23 @@ const creatureSchema = new mongoose.Schema({
 // 在保存前更新 updatedAt
 creatureSchema.pre('save', function(next) {
   this.updatedAt = new Date();
+  next();
+});
+
+// 在保存前自动生成递增的 ID
+creatureSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    try {
+      const counter = await Counter.findByIdAndUpdate(
+        'creatureId',
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      this.id = counter.seq;
+    } catch (error) {
+      return next(error as Error);
+    }
+  }
   next();
 });
 

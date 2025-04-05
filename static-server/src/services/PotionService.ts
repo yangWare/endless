@@ -7,6 +7,7 @@ export interface PotionEffect {
 }
 
 export interface PotionData {
+  id?: number;  // 创建时可选，更新时必需
   name: string;
   description: string;
   effect: PotionEffect;

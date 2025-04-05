@@ -2,6 +2,7 @@ import { MaterialType } from '../models/MaterialType';
 import { Types } from 'mongoose';
 
 export interface MaterialTypeData {
+  id?: number;  // 创建时可选，更新时必需
   name: string;
   description: string;
   combat_bonus: {
