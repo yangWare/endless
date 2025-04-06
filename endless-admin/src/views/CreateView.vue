@@ -6,10 +6,19 @@
           <span>新建</span>
         </div>
       </template>
-      
-      <el-form :model="formData" :rules="rules" ref="formRef" label-width="120px">
+
+      <el-form
+        :model="formData"
+        :rules="rules"
+        ref="formRef"
+        label-width="120px"
+      >
         <el-form-item label="类型" prop="type">
-          <el-select v-model="formData.type" placeholder="请选择类型" @change="handleTypeChange">
+          <el-select
+            v-model="formData.type"
+            placeholder="请选择类型"
+            @change="handleTypeChange"
+          >
             <el-option label="种族" value="race" />
             <el-option label="生物" value="creature" />
             <el-option label="材料类型" value="material-types" />
@@ -25,19 +34,40 @@
           <el-input v-model="formData.name" placeholder="请输入名称" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
-          <el-input type="textarea" v-model="formData.description" placeholder="请输入描述" />
+          <el-input
+            type="textarea"
+            v-model="formData.description"
+            placeholder="请输入描述"
+          />
         </el-form-item>
 
         <!-- 种族特有字段 -->
         <template v-if="formData.type === 'race'">
           <el-form-item label="父级种族" prop="parentRace">
-            <el-select v-model="formData.parentRace" placeholder="请选择父级种族" clearable>
-              <el-option v-for="race in races" :key="race._id" :label="race.name" :value="race._id" />
+            <el-select
+              v-model="formData.parentRace"
+              placeholder="请选择父级种族"
+              clearable
+            >
+              <el-option
+                v-for="race in races"
+                :key="race._id"
+                :label="race.name"
+                :value="race._id"
+              />
             </el-select>
           </el-form-item>
           <el-divider>战斗属性</el-divider>
-          <el-form-item v-for="(_, key) in formData.combatStats" :key="key" :label="getCombatStatLabel(key)">
-            <el-input-number v-model="formData.combatStats[key]" :min="0" :step="0.1" />
+          <el-form-item
+            v-for="(_, key) in formData.combatStats"
+            :key="key"
+            :label="getCombatStatLabel(key)"
+          >
+            <el-input-number
+              v-model="formData.combatStats[key]"
+              :min="0"
+              :step="0.1"
+            />
           </el-form-item>
         </template>
 
@@ -45,34 +75,73 @@
         <template v-if="formData.type === 'creature'">
           <el-form-item label="种族" prop="raceId">
             <el-select v-model="formData.raceId" placeholder="请选择种族">
-              <el-option v-for="race in races" :key="race._id" :label="race.name" :value="race._id" />
+              <el-option
+                v-for="race in races"
+                :key="race._id"
+                :label="race.name"
+                :value="race._id"
+              />
             </el-select>
           </el-form-item>
           <el-form-item label="等级" prop="level">
             <el-input-number v-model="formData.level" :min="1" />
           </el-form-item>
           <el-divider>战斗属性倍率</el-divider>
-          <el-form-item v-for="(_, key) in formData.combat_multipliers" :key="key" :label="getCombatStatLabel(key)">
-            <el-input-number v-model="formData.combat_multipliers[key]" :min="0" :step="0.1" />
+          <el-form-item
+            v-for="(_, key) in formData.combat_multipliers"
+            :key="key"
+            :label="getCombatStatLabel(key)"
+          >
+            <el-input-number
+              v-model="formData.combat_multipliers[key]"
+              :min="0"
+              :step="0.1"
+            />
           </el-form-item>
           <el-divider>掉落材料</el-divider>
-          <el-form-item v-for="(item, index) in formData.drop_materials" :key="index">
+          <el-form-item
+            v-for="(item, index) in formData.drop_materials"
+            :key="index"
+          >
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item :prop="'drop_materials.' + index + '.name'" :rules="{ required: true, message: '请选择材料' }">
-                  <el-select v-model="item.name" placeholder="请选择材料" style="width: 100%">
-                    <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material.name" />
+                <el-form-item
+                  :prop="'drop_materials.' + index + '.materialId'"
+                  :rules="{ required: true, message: '请选择材料' }"
+                >
+                  <el-select
+                    v-model="item.materialId"
+                    placeholder="请选择材料"
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="material in materials"
+                      :key="material._id"
+                      :label="material.name"
+                      :value="material._id"
+                    />
                   </el-select>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
-                <el-form-item :prop="'drop_materials.' + index + '.probability'" :rules="{ required: true, message: '请输入掉落概率' }">
-                  <el-input-number v-model="item.probability" :min="0" :max="1" :step="0.1" placeholder="掉落概率" />
+                <el-form-item
+                  :prop="'drop_materials.' + index + '.probability'"
+                  :rules="{ required: true, message: '请输入掉落概率' }"
+                >
+                  <el-input-number
+                    v-model="item.probability"
+                    :min="0"
+                    :max="1"
+                    :step="0.1"
+                    placeholder="掉落概率"
+                  />
                 </el-form-item>
               </el-col>
             </el-row>
           </el-form-item>
-          <el-button type="primary" @click="addDropMaterial">添加掉落材料</el-button>
+          <el-button type="primary" @click="addDropMaterial"
+            >添加掉落材料</el-button
+          >
         </template>
 
         <!-- 材料特有字段 -->
@@ -91,15 +160,26 @@
             <el-input-number v-model="formData.level" :min="1" />
           </el-form-item>
           <el-divider>战斗属性倍率</el-divider>
-          <el-form-item v-for="(_, key) in formData.combat_multipliers" :key="key" :label="getCombatStatLabel(key)">
-            <el-input-number v-model="formData.combat_multipliers[key]" :min="0" :step="0.1" />
+          <el-form-item
+            v-for="(_, key) in formData.combat_multipliers"
+            :key="key"
+            :label="getCombatStatLabel(key)"
+          >
+            <el-input-number
+              v-model="formData.combat_multipliers[key]"
+              :min="0"
+              :step="0.1"
+            />
           </el-form-item>
         </template>
 
         <!-- 药水特有字段 -->
         <template v-if="formData.type === 'potion'">
           <el-form-item label="效果类型" prop="effect.type">
-            <el-select v-model="formData.effect.type" placeholder="请选择效果类型">
+            <el-select
+              v-model="formData.effect.type"
+              placeholder="请选择效果类型"
+            >
               <el-option label="生命值" value="hp" />
               <el-option label="攻击力" value="attack" />
               <el-option label="防御力" value="defense" />
@@ -151,16 +231,32 @@
             <el-collapse>
               <el-collapse-item title="锻造所">
                 <el-form-item label="等级">
-                  <el-input-number v-model="formData.npc.forge.level" :min="1" />
+                  <el-input-number
+                    v-model="formData.npc.forge.level"
+                    :min="1"
+                  />
                 </el-form-item>
               </el-collapse-item>
               <el-collapse-item title="商店">
                 <el-button @click="addShopItem">添加商品</el-button>
-                <div v-for="(item, index) in formData.npc.shop.items" :key="index">
+                <div
+                  v-for="(item, index) in formData.npc.shop.items"
+                  :key="index"
+                >
                   <el-form-item :label="'商品' + (index + 1)">
-                    <el-input v-model="item.id" placeholder="商品ID" style="width: 200px" />
-                    <el-input-number v-model="item.price" :min="0" placeholder="价格" />
-                    <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
+                    <el-input
+                      v-model="item.id"
+                      placeholder="商品ID"
+                      style="width: 200px"
+                    />
+                    <el-input-number
+                      v-model="item.price"
+                      :min="0"
+                      placeholder="价格"
+                    />
+                    <el-button type="danger" @click="removeShopItem(index)"
+                      >删除</el-button
+                    >
                   </el-form-item>
                 </div>
               </el-collapse-item>
@@ -171,30 +267,67 @@
             <div v-for="(enemy, index) in formData.enemies" :key="index">
               <el-row :gutter="20">
                 <el-col :span="8">
-                  <el-form-item :label="'敌人' + (index + 1)" :prop="'enemies.' + index + '.creatureId'" :rules="{ required: true, message: '请选择敌人' }">
-                    <el-select v-model="enemy.creatureId" placeholder="请选择敌人" style="width: 100%">
-                      <el-option v-for="creature in creatures" :key="creature._id" :label="creature.name" :value="creature._id" />
+                  <el-form-item
+                    :label="'敌人' + (index + 1)"
+                    :prop="'enemies.' + index + '.creatureId'"
+                    :rules="{ required: true, message: '请选择敌人' }"
+                  >
+                    <el-select
+                      v-model="enemy.creatureId"
+                      placeholder="请选择敌人"
+                      style="width: 100%"
+                    >
+                      <el-option
+                        v-for="creature in creatures"
+                        :key="creature._id"
+                        :label="creature.name"
+                        :value="creature._id"
+                      />
                     </el-select>
                   </el-form-item>
                 </el-col>
                 <el-col :span="6">
-                  <el-form-item :prop="'enemies.' + index + '.probability'" :rules="{ required: true, message: '请输入概率' }">
-                    <el-input-number v-model="enemy.probability" :min="0" :max="1" :step="0.1" placeholder="概率" style="width: 100%" />
+                  <el-form-item
+                    :prop="'enemies.' + index + '.probability'"
+                    :rules="{ required: true, message: '请输入概率' }"
+                  >
+                    <el-input-number
+                      v-model="enemy.probability"
+                      :min="0"
+                      :max="1"
+                      :step="0.1"
+                      placeholder="概率"
+                      style="width: 100%"
+                    />
                   </el-form-item>
                 </el-col>
                 <el-col :span="6">
-                  <el-form-item :prop="'enemies.' + index + '.maxCount'" :rules="{ required: true, message: '请输入最大数量' }">
-                    <el-input-number v-model="enemy.maxCount" :min="1" placeholder="最大数量" style="width: 100%" />
+                  <el-form-item
+                    :prop="'enemies.' + index + '.maxCount'"
+                    :rules="{ required: true, message: '请输入最大数量' }"
+                  >
+                    <el-input-number
+                      v-model="enemy.maxCount"
+                      :min="1"
+                      placeholder="最大数量"
+                      style="width: 100%"
+                    />
                   </el-form-item>
                 </el-col>
                 <el-col :span="4">
-                  <el-button type="danger" @click="removeEnemy(index)">删除</el-button>
+                  <el-button type="danger" @click="removeEnemy(index)"
+                    >删除</el-button
+                  >
                 </el-col>
               </el-row>
             </div>
           </el-form-item>
           <el-form-item label="敌人刷新时间" prop="enemyUpdateDuration">
-            <el-input-number v-model="formData.enemyUpdateDuration" :min="0" :step="1000" />
+            <el-input-number
+              v-model="formData.enemyUpdateDuration"
+              :min="0"
+              :step="1000"
+            />
           </el-form-item>
         </template>
 
@@ -209,7 +342,10 @@
             <el-input-number v-model="formData.height" :min="1" />
           </el-form-item>
           <el-form-item label="起始位置" prop="startLocationId">
-            <el-select v-model="formData.startLocationId" placeholder="请选择起始位置">
+            <el-select
+              v-model="formData.startLocationId"
+              placeholder="请选择起始位置"
+            >
               <el-option
                 v-for="location in locations"
                 :key="location._id"
@@ -223,11 +359,15 @@
         <!-- 材料类型特有字段 -->
         <template v-if="formData.type === 'material-types'">
           <el-divider>战斗属性加成</el-divider>
-          <el-form-item v-for="(_, key) in formData.combat_bonus" :key="key" :label="getCombatStatLabel(key)">
-            <el-input-number 
-              v-model="formData.combat_bonus[key]" 
-              :min="-100" 
-              :max="100" 
+          <el-form-item
+            v-for="(_, key) in formData.combat_bonus"
+            :key="key"
+            :label="getCombatStatLabel(key)"
+          >
+            <el-input-number
+              v-model="formData.combat_bonus[key]"
+              :min="-100"
+              :max="100"
               :step="0.1"
               :controls-position="'right'"
               placeholder="留空表示无加成"
@@ -245,11 +385,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import type { FormInstance } from 'element-plus'
-import axios from 'axios'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, reactive, onMounted } from "vue"
+import { ElMessage } from "element-plus"
+import type { FormInstance } from "element-plus"
+import axios from "axios"
+import { useRoute, useRouter } from "vue-router"
 
 interface Race {
   _id: string
@@ -262,7 +402,7 @@ interface Material {
 }
 
 interface DropMaterial {
-  name: string
+  materialId: string
   probability: number
 }
 
@@ -277,9 +417,9 @@ interface Creature {
 }
 
 interface LocationEnemy {
-  creatureId: string;
-  probability: number;
-  maxCount: number;
+  creatureId: string
+  probability: number
+  maxCount: number
 }
 
 interface Map {
@@ -313,63 +453,63 @@ interface Location {
 }
 
 interface MaterialType {
-  _id: string;
-  name: string;
+  _id: string
+  name: string
 }
 
 interface FormData {
-  id?: number;
-  type: string;
-  name: string;
-  description: string;
+  id?: number
+  type: string
+  name: string
+  description: string
   // 种族特有
-  parentRace: string | null;
-  combatStats: Record<string, number>;
+  parentRace: string | null
+  combatStats: Record<string, number>
   // 生物特有
-  raceId: string;
-  level: number;
-  combat_multipliers: Record<string, number>;
-  drop_materials: DropMaterial[];
+  raceId: string
+  level: number
+  combat_multipliers: Record<string, number>
+  drop_materials: DropMaterial[]
   // 材料特有
-  typeId: string;
+  typeId: string
   // 药水特有
   effect: {
-    type: string;
-    value: number;
-  };
+    type: string
+    value: number
+  }
   // Map specific fields
-  bgImage: string;
-  width: number;
-  height: number;
-  startLocationId: string | null;
+  bgImage: string
+  width: number
+  height: number
+  startLocationId: string | null
   // Location specific fields
-  mapId: string;
+  mapId: string
   position: {
-    x: number;
-    y: number;
-  };
-  adjacentLocations: string[];
+    x: number
+    y: number
+  }
+  adjacentLocations: string[]
   npc: {
     forge: {
-      level: number;
-    };
+      level: number
+    }
     shop: {
-      items: ShopItem[];
-    };
-  };
-  enemies: LocationEnemy[];
-  enemyUpdateDuration: number;
+      items: ShopItem[]
+    }
+  }
+  enemies: LocationEnemy[]
+  enemyUpdateDuration: number
   combat_bonus: {
-    max_hp: number | null;
-    attack: number | null;
-    defense: number | null;
-    crit_rate: number | null;
-    crit_resist: number | null;
-    crit_damage: number | null;
-    crit_damage_resist: number | null;
-    hit_rate: number | null;
-    dodge_rate: number | null;
-  };
+    max_hp: number | null
+    attack: number | null
+    defense: number | null
+    crit_rate: number | null
+    crit_resist: number | null
+    crit_damage: number | null
+    crit_damage_resist: number | null
+    hit_rate: number | null
+    dodge_rate: number | null
+  }
 }
 
 const route = useRoute()
@@ -384,9 +524,9 @@ const materialTypes = ref<MaterialType[]>([])
 
 // 表单数据
 const formData = reactive<FormData>({
-  type: '',
-  name: '',
-  description: '',
+  type: "",
+  name: "",
+  description: "",
   // 种族特有
   parentRace: null as string | null,
   combatStats: {
@@ -398,10 +538,10 @@ const formData = reactive<FormData>({
     crit_damage: 1.0,
     crit_damage_resist: 1.0,
     hit_rate: 1.0,
-    dodge_rate: 1.0
+    dodge_rate: 1.0,
   },
   // 生物特有
-  raceId: '',
+  raceId: "",
   level: 1,
   combat_multipliers: {
     max_hp: 1.0,
@@ -412,35 +552,35 @@ const formData = reactive<FormData>({
     crit_damage: 1.0,
     crit_damage_resist: 1.0,
     hit_rate: 1.0,
-    dodge_rate: 1.0
+    dodge_rate: 1.0,
   },
   drop_materials: [] as DropMaterial[],
   // 材料特有
-  typeId: '',
+  typeId: "",
   // 药水特有
   effect: {
-    type: '',
-    value: 0
+    type: "",
+    value: 0,
   },
   // Map specific fields
-  bgImage: '',
+  bgImage: "",
   width: 1000,
   height: 1000,
   startLocationId: null,
   // Location specific fields
-  mapId: '',
+  mapId: "",
   position: {
     x: 0,
-    y: 0
+    y: 0,
   },
   adjacentLocations: [] as string[],
   npc: {
     forge: {
-      level: 1
+      level: 1,
     },
     shop: {
-      items: [] as ShopItem[]
-    }
+      items: [] as ShopItem[],
+    },
   },
   enemies: [] as LocationEnemy[],
   enemyUpdateDuration: 3600000,
@@ -453,43 +593,55 @@ const formData = reactive<FormData>({
     crit_damage: null,
     crit_damage_resist: null,
     hit_rate: null,
-    dodge_rate: null
-  }
+    dodge_rate: null,
+  },
 })
 
 // 表单验证规则
 const rules = {
-  type: [{ required: true, message: '请选择类型', trigger: 'change' }],
-  name: [{ required: true, message: '请输入名称', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入描述', trigger: 'blur' }],
-  raceId: [{ required: true, message: '请选择种族', trigger: 'change' }],
-  level: [{ required: true, message: '请输入等级', trigger: 'blur' }],
-  typeId: [{ required: true, message: '请选择材料类型', trigger: 'change' }],
-  'effect.type': [{ required: true, message: '请选择效果类型', trigger: 'change' }],
-  'effect.value': [{ required: true, message: '请输入效果值', trigger: 'blur' }],
-  mapId: [{ required: true, message: '请选择所属地图', trigger: 'change' }],
-  'position.x': [{ required: true, message: '请输入X坐标', trigger: 'blur' }],
-  'position.y': [{ required: true, message: '请输入Y坐标', trigger: 'blur' }],
-  'enemies.creatureId': [{ required: true, message: '请选择敌人', trigger: 'change' }],
-  'enemies.probability': [{ required: true, message: '请输入概率', trigger: 'blur' }],
-  'enemies.maxCount': [{ required: true, message: '请输入最大数量', trigger: 'blur' }],
-  'enemyUpdateDuration': [{ required: true, message: '请输入敌人刷新时间', trigger: 'blur' }],
+  type: [{ required: true, message: "请选择类型", trigger: "change" }],
+  name: [{ required: true, message: "请输入名称", trigger: "blur" }],
+  description: [{ required: true, message: "请输入描述", trigger: "blur" }],
+  raceId: [{ required: true, message: "请选择种族", trigger: "change" }],
+  level: [{ required: true, message: "请输入等级", trigger: "blur" }],
+  typeId: [{ required: true, message: "请选择材料类型", trigger: "change" }],
+  "effect.type": [
+    { required: true, message: "请选择效果类型", trigger: "change" },
+  ],
+  "effect.value": [
+    { required: true, message: "请输入效果值", trigger: "blur" },
+  ],
+  mapId: [{ required: true, message: "请选择所属地图", trigger: "change" }],
+  "position.x": [{ required: true, message: "请输入X坐标", trigger: "blur" }],
+  "position.y": [{ required: true, message: "请输入Y坐标", trigger: "blur" }],
+  "enemies.creatureId": [
+    { required: true, message: "请选择敌人", trigger: "change" },
+  ],
+  "enemies.probability": [
+    { required: true, message: "请输入概率", trigger: "blur" },
+  ],
+  "enemies.maxCount": [
+    { required: true, message: "请输入最大数量", trigger: "blur" },
+  ],
+  enemyUpdateDuration: [
+    { required: true, message: "请输入敌人刷新时间", trigger: "blur" },
+  ],
   // Map specific rules
-  bgImage: [{ required: true, message: '请输入背景图片路径', trigger: 'blur' }]
+  bgImage: [{ required: true, message: "请输入背景图片路径", trigger: "blur" }],
 }
 
 // 获取战斗属性标签
 const getCombatStatLabel = (key: string) => {
   const labels: Record<string, string> = {
-    max_hp: '最大生命值',
-    attack: '攻击力',
-    defense: '防御力',
-    crit_rate: '暴击率',
-    crit_resist: '暴击抗性',
-    crit_damage: '暴击伤害',
-    crit_damage_resist: '暴击伤害抗性',
-    hit_rate: '命中率',
-    dodge_rate: '闪避率'
+    max_hp: "最大生命值",
+    attack: "攻击力",
+    defense: "防御力",
+    crit_rate: "暴击率",
+    crit_resist: "暴击抗性",
+    crit_damage: "暴击伤害",
+    crit_damage_resist: "暴击伤害抗性",
+    hit_rate: "命中率",
+    dodge_rate: "闪避率",
   }
   return labels[key] || key
 }
@@ -497,28 +649,28 @@ const getCombatStatLabel = (key: string) => {
 // 获取材料列表
 const fetchMaterials = async () => {
   try {
-    const response = await axios.get('/endless/api/materials')
+    const response = await axios.get("/endless/api/materials")
     materials.value = response.data.data.materials || []
   } catch (error) {
-    ElMessage.error('获取材料列表失败')
+    ElMessage.error("获取材料列表失败")
   }
 }
 
 // 获取生物列表
 const fetchCreatures = async () => {
   try {
-    const response = await axios.get('/endless/api/creatures')
+    const response = await axios.get("/endless/api/creatures")
     creatures.value = response.data.data.creatures || []
   } catch (error) {
-    ElMessage.error('获取生物列表失败')
+    ElMessage.error("获取生物列表失败")
   }
 }
 
 // 添加掉落材料
 const addDropMaterial = () => {
   formData.drop_materials.push({
-    name: '',
-    probability: 0
+    materialId: "",
+    probability: 0,
   })
 }
 
@@ -528,19 +680,19 @@ const handleTypeChange = () => {
   const baseFields = {
     type: formData.type,
     name: formData.name,
-    description: formData.description
-  };
+    description: formData.description,
+  }
 
   // 重置表单
-  formRef.value?.resetFields();
+  formRef.value?.resetFields()
 
   // 恢复基础字段
-  Object.assign(formData, baseFields);
+  Object.assign(formData, baseFields)
 
   // 根据类型重置特定字段
   switch (formData.type) {
-    case 'race':
-      formData.parentRace = null;
+    case "race":
+      formData.parentRace = null
       formData.combatStats = {
         max_hp: 10.0,
         attack: 2.0,
@@ -550,12 +702,12 @@ const handleTypeChange = () => {
         crit_damage: 1.0,
         crit_damage_resist: 1.0,
         hit_rate: 1.0,
-        dodge_rate: 1.0
-      };
-      break;
-    case 'creature':
-      formData.raceId = '';
-      formData.level = 1;
+        dodge_rate: 1.0,
+      }
+      break
+    case "creature":
+      formData.raceId = ""
+      formData.level = 1
       formData.combat_multipliers = {
         max_hp: 1.0,
         attack: 1.0,
@@ -565,11 +717,11 @@ const handleTypeChange = () => {
         crit_damage: 1.0,
         crit_damage_resist: 1.0,
         hit_rate: 1.0,
-        dodge_rate: 1.0
-      };
-      formData.drop_materials = [];
-      break;
-    case 'material-types':
+        dodge_rate: 1.0,
+      }
+      formData.drop_materials = []
+      break
+    case "material-types":
       // 初始化战斗属性加成
       formData.combat_bonus = {
         max_hp: null,
@@ -580,11 +732,11 @@ const handleTypeChange = () => {
         crit_damage: null,
         crit_damage_resist: null,
         hit_rate: null,
-        dodge_rate: null
-      };
-      break;
-    case 'material':
-      formData.level = 1;
+        dodge_rate: null,
+      }
+      break
+    case "material":
+      formData.level = 1
       formData.combat_multipliers = {
         max_hp: 1.0,
         attack: 1.0,
@@ -594,139 +746,139 @@ const handleTypeChange = () => {
         crit_damage: 1.0,
         crit_damage_resist: 1.0,
         hit_rate: 1.0,
-        dodge_rate: 1.0
-      };
-      break;
-    case 'potion':
+        dodge_rate: 1.0,
+      }
+      break
+    case "potion":
       formData.effect = {
-        type: '',
-        value: 0
-      };
-      break;
-    case 'location':
-      formData.mapId = '';
-      formData.position = { x: 0, y: 0 };
-      formData.adjacentLocations = [];
+        type: "",
+        value: 0,
+      }
+      break
+    case "location":
+      formData.mapId = ""
+      formData.position = { x: 0, y: 0 }
+      formData.adjacentLocations = []
       formData.npc = {
         forge: {
-          level: 1
+          level: 1,
         },
         shop: {
-          items: []
-        }
-      };
-      formData.enemies = [];
-      formData.enemyUpdateDuration = 3600000;
-      break;
-    case 'map':
-      formData.bgImage = '';
-      formData.width = 1000;
-      formData.height = 1000;
-      formData.startLocationId = null;
-      break;
+          items: [],
+        },
+      }
+      formData.enemies = []
+      formData.enemyUpdateDuration = 3600000
+      break
+    case "map":
+      formData.bgImage = ""
+      formData.width = 1000
+      formData.height = 1000
+      formData.startLocationId = null
+      break
   }
 }
 
 // 获取种族列表
 const fetchRaces = async () => {
   try {
-    const response = await axios.get('/endless/api/races')
+    const response = await axios.get("/endless/api/races")
     races.value = response.data.data.races || []
   } catch (error) {
-    ElMessage.error('获取种族列表失败')
+    ElMessage.error("获取种族列表失败")
   }
 }
 
 // 获取地图列表
 const fetchMaps = async () => {
   try {
-    const response = await axios.get('/endless/api/maps')
+    const response = await axios.get("/endless/api/maps")
     maps.value = response.data.data.maps || []
   } catch (error) {
-    ElMessage.error('获取地图列表失败')
+    ElMessage.error("获取地图列表失败")
   }
 }
 
 // 获取地点列表
 const fetchLocations = async () => {
   try {
-    const response = await axios.get('/endless/api/locations')
+    const response = await axios.get("/endless/api/locations")
     locations.value = response.data.data.locations || []
   } catch (error) {
-    ElMessage.error('获取地点列表失败')
+    ElMessage.error("获取地点列表失败")
   }
 }
 
 // 获取材料类型列表
 const fetchMaterialTypes = async () => {
   try {
-    const response = await axios.get('/endless/api/material-types')
+    const response = await axios.get("/endless/api/material-types")
     materialTypes.value = response.data.data.materialTypes || []
   } catch (error) {
-    ElMessage.error('获取材料类型列表失败')
+    ElMessage.error("获取材料类型列表失败")
   }
 }
 
 // 提交表单
 const submitForm = async () => {
   if (!formRef.value) return
-  
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        let endpoint = '';
-        let data = {};
+        let endpoint = ""
+        let data = {}
 
         // 根据类型准备数据和端点
         switch (formData.type) {
-          case 'race':
-            endpoint = '/endless/api/races';
+          case "race":
+            endpoint = "/endless/api/races"
             data = {
               name: formData.name,
               description: formData.description,
               parentRace: formData.parentRace,
-              combatStats: formData.combatStats
-            };
-            break;
-          case 'creature':
-            endpoint = '/endless/api/creatures';
+              combatStats: formData.combatStats,
+            }
+            break
+          case "creature":
+            endpoint = "/endless/api/creatures"
             data = {
               name: formData.name,
               description: formData.description,
               raceId: formData.raceId,
               level: formData.level,
               combat_multipliers: formData.combat_multipliers,
-              drop_materials: formData.drop_materials
-            };
-            break;
-          case 'material-types':
-            endpoint = '/endless/api/material-types';
+              drop_materials: formData.drop_materials,
+            }
+            break
+          case "material-types":
+            endpoint = "/endless/api/material-types"
             data = {
               name: formData.name,
               description: formData.description,
-              combat_bonus: formData.combat_bonus
-            };
-            break;
-          case 'material':
-            endpoint = '/endless/api/materials';
+              combat_bonus: formData.combat_bonus,
+            }
+            break
+          case "material":
+            endpoint = "/endless/api/materials"
             data = {
               name: formData.name,
               description: formData.description,
               typeId: formData.typeId,
               level: formData.level,
-              combat_multipliers: formData.combat_multipliers
-            };
-            break;
-          case 'potion':
-            endpoint = '/endless/api/potions';
+              combat_multipliers: formData.combat_multipliers,
+            }
+            break
+          case "potion":
+            endpoint = "/endless/api/potions"
             data = {
               name: formData.name,
               description: formData.description,
-              effect: formData.effect
-            };
-            break;
-          case 'location':
-            endpoint = '/endless/api/locations';
+              effect: formData.effect,
+            }
+            break
+          case "location":
+            endpoint = "/endless/api/locations"
             data = {
               name: formData.name,
               description: formData.description,
@@ -735,36 +887,36 @@ const submitForm = async () => {
               adjacentLocations: formData.adjacentLocations,
               npc: formData.npc,
               enemies: formData.enemies,
-              enemyUpdateDuration: formData.enemyUpdateDuration
-            };
-            break;
-          case 'map':
-            endpoint = '/endless/api/maps';
+              enemyUpdateDuration: formData.enemyUpdateDuration,
+            }
+            break
+          case "map":
+            endpoint = "/endless/api/maps"
             data = {
               name: formData.name,
               description: formData.description,
               bgImage: formData.bgImage,
               width: formData.width,
               height: formData.height,
-              startLocationId: formData.startLocationId
-            };
-            break;
+              startLocationId: formData.startLocationId,
+            }
+            break
         }
 
-        const response = await axios.post(endpoint, data);
+        const response = await axios.post(endpoint, data)
         if (response.data.success) {
-          ElMessage.success('创建成功');
+          ElMessage.success("创建成功")
           // 跳转到编辑页面
           router.push({
-            name: 'Edit',
+            name: "Edit",
             params: { id: response.data.data._id },
-            query: { type: formData.type }
-          });
+            query: { type: formData.type },
+          })
         } else {
-          ElMessage.error(response.data.error || '创建失败');
+          ElMessage.error(response.data.error || "创建失败")
         }
       } catch (error: any) {
-        ElMessage.error(error.response?.data?.error || '创建失败');
+        ElMessage.error(error.response?.data?.error || "创建失败")
       }
     }
   })
@@ -779,31 +931,31 @@ const resetForm = () => {
 // 添加商店商品
 const addShopItem = () => {
   if (!formData.npc.shop.items) {
-    formData.npc.shop.items = [];
+    formData.npc.shop.items = []
   }
   formData.npc.shop.items.push({
-    id: '',
-    price: 0
-  });
+    id: "",
+    price: 0,
+  })
 }
 
 // 移除商店商品
 const removeShopItem = (index: number) => {
-  formData.npc.shop.items.splice(index, 1);
+  formData.npc.shop.items.splice(index, 1)
 }
 
 // 添加敌人
 const addEnemy = () => {
   formData.enemies.push({
-    creatureId: '',
+    creatureId: "",
     probability: 0.5,
-    maxCount: 1
-  });
+    maxCount: 1,
+  })
 }
 
 // 移除敌人
 const removeEnemy = (index: number) => {
-  formData.enemies.splice(index, 1);
+  formData.enemies.splice(index, 1)
 }
 
 onMounted(() => {
@@ -836,4 +988,4 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
 }
-</style> 
+</style>

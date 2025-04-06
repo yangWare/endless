@@ -68,8 +68,9 @@ const creatureSchema = new mongoose.Schema({
     }
   },
   drop_materials: [{
-    name: {
-      type: String,
+    materialId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Material',
       required: true
     },
     probability: {

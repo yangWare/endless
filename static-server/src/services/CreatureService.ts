@@ -2,7 +2,7 @@ import { Creature } from '../models/Creature';
 import { Types } from 'mongoose';
 
 export interface DropMaterial {
-  name: string;
+  materialId: Types.ObjectId;
   probability: number;
 }
 
@@ -31,6 +31,11 @@ export interface CreatureQueryParams {
   level?: number;
   page?: number;
   limit?: number;
+}
+
+export interface DroppedMaterial {
+  materialId: Types.ObjectId;
+  quantity: number;
 }
 
 export class CreatureService {
@@ -133,6 +138,37 @@ export class CreatureService {
       };
     } catch (error: any) {
       throw new Error(`获取生物列表失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 计算生物死亡时的掉落物品
+   * @param creatureId 生物ID
+   * @returns 掉落物品列表
+   */
+  static async calculateDrops(creatureId: string): Promise<DroppedMaterial[]> {
+    try {
+      const creature = await Creature.findById(creatureId).populate('drop_materials.materialId');
+      if (!creature) {
+        throw new Error('生物不存在');
+      }
+
+      const dropMaterials = creature.drop_materials || [];
+      const droppedMaterials: DroppedMaterial[] = [];
+
+      for (const drop of dropMaterials) {
+        const roll = Math.random();
+        if (roll < drop.probability) {
+          droppedMaterials.push({
+            materialId: drop.materialId,
+            quantity: 1 // 固定掉落1个
+          });
+        }
+      }
+
+      return droppedMaterials;
+    } catch (error: any) {
+      throw new Error(`计算掉落物品失败: ${error.message}`);
     }
   }
 } 

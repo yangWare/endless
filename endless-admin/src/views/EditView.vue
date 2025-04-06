@@ -47,9 +47,9 @@
           <el-form-item v-for="(item, index) in formData.drop_materials" :key="index">
             <el-row :gutter="20">
               <el-col :span="12">
-                <el-form-item :prop="'drop_materials.' + index + '.name'" :rules="{ required: true, message: '请选择材料' }">
-                  <el-select v-model="item.name" placeholder="请选择材料" style="width: 100%">
-                    <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material.name" />
+                <el-form-item :prop="'drop_materials.' + index + '.materialId'" :rules="{ required: true, message: '请选择材料' }">
+                  <el-select v-model="item.materialId" placeholder="请选择材料" style="width: 100%">
+                    <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material._id" />
                   </el-select>
                 </el-form-item>
               </el-col>
@@ -253,8 +253,8 @@ interface Material {
 }
 
 interface DropMaterial {
-  name: string
-  probability: number
+  materialId: string;
+  probability: number;
 }
 
 interface ShopItem {
@@ -495,7 +495,7 @@ const getCombatStatLabel = (key: string) => {
 // 添加掉落材料
 const addDropMaterial = () => {
   formData.drop_materials.push({
-    name: '',
+    materialId: '',
     probability: 0
   })
 }
