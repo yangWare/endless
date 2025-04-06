@@ -15,24 +15,55 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { state } from '../store/state'
 import LocationView from './LocationView.vue'
 import Message from './Message.vue'
+// @ts-ignore
 import mapConfig from '../config/map_config.json'
+// @ts-ignore
 import { move } from '../store/actions/map'
 
-const mapCanvas = ref(null)
-const showLocationView = ref(false)
-const currentMap = mapConfig[state.currentMapId]
+interface Position {
+  x: number
+  y: number
+}
+
+interface Location {
+  id: string | number
+  name: string
+  position: Position
+  adjacent_locations: (string | number)[]
+}
+
+interface MapConfig {
+  width: number
+  height: number
+  bg_image: string
+  locations: Record<string | number, Location>
+}
+
+const mapCanvas = ref<HTMLCanvasElement | null>(null)
+const showLocationView = ref<boolean>(false)
+const currentMap = mapConfig[state.currentMapId] as unknown as MapConfig
 const locations = currentMap.locations
 
-const showMovingMessage = ref(false)
-const movingMessage = ref('')
+const showMovingMessage = ref<boolean>(false)
+const movingMessage = ref<string>('')
 
 // 计算点与圆角矩形的交点
-const getIntersectionPoint = (x1, y1, x2, y2, rectX, rectY, rectWidth, rectHeight, radius) => {
+const getIntersectionPoint = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  rectX: number,
+  rectY: number,
+  rectWidth: number,
+  rectHeight: number,
+  radius: number
+): Position => {
   // 计算两点之间的角度
   const angle = Math.atan2(y2 - y1, x2 - x1)
   
@@ -45,7 +76,7 @@ const getIntersectionPoint = (x1, y1, x2, y2, rectX, rectY, rectWidth, rectHeigh
   const halfHeight = rectHeight / 2
   
   // 计算与矩形边框的交点
-  let intersectX, intersectY
+  let intersectX: number, intersectY: number
   
   // 根据角度确定与哪条边相交
   if (Math.abs(Math.tan(angle)) * halfWidth <= halfHeight) {
@@ -61,9 +92,12 @@ const getIntersectionPoint = (x1, y1, x2, y2, rectX, rectY, rectWidth, rectHeigh
   return { x: intersectX, y: intersectY }
 }
 
-const drawMap = () => {
+const drawMap = (): void => {
   const canvas = mapCanvas.value
+  if (!canvas) return
+  
   const ctx = canvas.getContext('2d')
+  if (!ctx) return
 
   // 清空画布
   ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -72,10 +106,10 @@ const drawMap = () => {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const drawnConnections = new Set()
+  const drawnConnections = new Set<string>()
 
   // 绘制地点和连线
-  Object.values(locations).forEach((location) => {
+  Object.values(locations).forEach((location: Location) => {
     const x = location.position.x
     const y = location.position.y
 
@@ -91,7 +125,7 @@ const drawMap = () => {
     const rectY = y - rectHeight/2
 
     // 绘制连线
-    location.adjacent_locations.forEach((adjacentId) => {
+    location.adjacent_locations.forEach((adjacentId: string | number) => {
       const connectionKey = [location.id, adjacentId].sort().join('-')
       if (!drawnConnections.has(connectionKey)) {
         const adjacentLocation = locations[adjacentId]
@@ -155,13 +189,15 @@ const drawMap = () => {
   })
 }
 
-const handleLocationClick = async (event) => {
+const handleLocationClick = async (event: MouseEvent): Promise<void> => {
   const canvas = mapCanvas.value
+  if (!canvas) return
+  
   const rect = canvas.getBoundingClientRect()
   const x = event.clientX - rect.left
   const y = event.clientY - rect.top
 
-  Object.keys(locations).forEach(async (id) => {
+  Object.keys(locations).forEach(async (id: string) => {
     const location = locations[id]
     const locX = location.position.x
     const locY = location.position.y
@@ -173,7 +209,7 @@ const handleLocationClick = async (event) => {
         showMovingMessage.value = false
         showLocationView.value = true
       } catch (error) {
-        movingMessage.value = error.message
+        movingMessage.value = error instanceof Error ? error.message : '移动失败'
         setTimeout(() => {
           showMovingMessage.value = false
         }, 2000)
@@ -183,9 +219,13 @@ const handleLocationClick = async (event) => {
 }
 
 // 聚焦到当前地点
-const focusOnCurrentLocation = () => {
+const focusOnCurrentLocation = (): void => {
   const canvas = mapCanvas.value
+  if (!canvas) return
+  
   const container = canvas.parentElement
+  if (!container) return
+  
   const currentLocation = locations[state.currentLocationId]
   
   if (currentLocation) {
@@ -207,6 +247,8 @@ const focusOnCurrentLocation = () => {
 
 onMounted(() => {
   const canvas = mapCanvas.value
+  if (!canvas) return
+  
   canvas.width = currentMap.width
   canvas.height = currentMap.height
   drawMap()
