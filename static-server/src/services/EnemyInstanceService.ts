@@ -250,7 +250,9 @@ export class EnemyInstanceService {
     // 计算暴击
     const critRoll = Math.random();
     if (critRoll < attackerStats.crit_rate - defenderStats.crit_resist) {
-      damage *= attackerStats.crit_damage;
+      // 计算暴击伤害，考虑防御者的暴击伤害抵抗
+      const critDamageMultiplier = Math.max(1, attackerStats.crit_damage - defenderStats.crit_damage_resist);
+      damage *= critDamageMultiplier;
     }
 
     // 计算闪避

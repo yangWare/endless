@@ -32,9 +32,9 @@ type PlayerDocument = Document & {
 
 // 玩家初始战斗属性
 const INITIAL_COMBAT_STATS = {
-  max_hp: 100,
-  attack: 10,
-  defense: 5,
+  max_hp: 10,
+  attack: 2,
+  defense: 1,
   crit_rate: 0.05,
   crit_resist: 0.05,
   crit_damage: 1.5,
