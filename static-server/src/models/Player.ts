@@ -65,10 +65,29 @@ const equipmentSchema = {
 };
 
 const playerSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
   nickname: {
     type: String,
     required: true,
     unique: true
+  },
+  currentMap: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Map',
+    default: null
+  },
+  currentLocation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Location',
+    default: null
   },
   levelInfo: {
     level: {

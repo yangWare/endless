@@ -9,6 +9,7 @@ import { CreatureAPI } from './apis/creature';
 import { PotionAPI } from './apis/potion';
 import { LocationAPI } from './apis/location';
 import { MapAPI } from './apis/map';
+import { PlayerAPI } from './apis/player';
 import { BaseContext, ParamContext } from './types/context';
 
 const app = new Koa();
@@ -242,6 +243,27 @@ app.use(async (ctx: BaseContext, next) => {
 
   if (ctx.path.match(/^\/api\/maps\/[a-zA-Z0-9]+$/) && ctx.method === 'DELETE') {
     await MapAPI.delete(ctxWithParams);
+    return;
+  }
+
+  // 玩家 API
+  if (ctx.path === '/api/players' && ctx.method === 'POST') {
+    await PlayerAPI.create(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/players/info' && ctx.method === 'POST') {
+    await PlayerAPI.getInfo(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/players/location' && ctx.method === 'POST') {
+    await PlayerAPI.getLocation(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/players/location/update' && ctx.method === 'POST') {
+    await PlayerAPI.updateLocation(ctxWithParams);
     return;
   }
 

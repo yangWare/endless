@@ -2,6 +2,8 @@ import { Player } from '../models/Player';
 import { Types, Document, Schema } from 'mongoose';
 import { Material } from '../models/Material';
 import { MaterialService } from './MaterialService';
+import { MapService } from './MapService';
+import { LocationService } from './LocationService';
 
 interface Equipment {
   name: string;
@@ -54,6 +56,84 @@ export interface CombatStats {
 }
 
 export class PlayerService {
+  /**
+   * 创建新玩家
+   * @param username 账号
+   * @param password 密码
+   * @param nickname 昵称
+   * @returns 新创建的玩家
+   */
+  static async createPlayer(username: string, password: string, nickname: string) {
+    try {
+      // 检查用户名是否已存在
+      const existingPlayer = await Player.findOne({ username });
+      if (existingPlayer) {
+        throw new Error('用户名已存在');
+      }
+
+      // 检查昵称是否已存在
+      const existingNickname = await Player.findOne({ nickname });
+      if (existingNickname) {
+        throw new Error('昵称已存在');
+      }
+
+      // 获取第一张地图
+      const firstMap = await MapService.getFirstMap();
+      if (!firstMap) {
+        throw new Error('没有可用的地图');
+      }
+
+      if (!firstMap.startLocationId) {
+        throw new Error('地图没有设置起始点');
+      }
+
+      // 创建新玩家
+      const newPlayer = new Player({
+        username,
+        password,
+        nickname,
+        currentMap: firstMap._id,
+        currentLocation: firstMap.startLocationId,
+        levelInfo: {
+          level: 1,
+          exp: 0
+        },
+        inventory: {
+          materials: [],
+          potions: [],
+          equipments: []
+        },
+        equipped: {
+          weapon: null,
+          armor: null,
+          accessory: null,
+          helmet: null,
+          boots: null
+        }
+      });
+
+      await newPlayer.save();
+      return newPlayer;
+    } catch (error: any) {
+      throw new Error(`创建玩家失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 通过账号密码获取玩家信息
+   * @param username 账号
+   * @param password 密码
+   * @returns 玩家信息，如果验证失败则返回 null
+   */
+  static async getPlayerByCredentials(username: string, password: string) {
+    try {
+      const player = await Player.findOne({ username, password });
+      return player;
+    } catch (error: any) {
+      throw new Error(`获取玩家信息失败: ${error.message}`);
+    }
+  }
+
   /**
    * 计算玩家的战斗属性
    * @param playerId 玩家ID
@@ -226,6 +306,74 @@ export class PlayerService {
       }
     } catch (error: any) {
       throw new Error(`批量添加材料到背包失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 更新玩家位置
+   * @param playerId 玩家ID
+   * @param mapId 地图ID
+   * @param locationId 地点ID
+   */
+  static async updatePlayerLocation(playerId: string, mapId: string, locationId: string) {
+    try {
+      // 验证地图是否存在
+      const map = await MapService.getMapById(mapId);
+      if (!map) {
+        throw new Error('地图不存在');
+      }
+
+      // 验证地点是否存在
+      const location = await LocationService.getLocationById(locationId);
+      if (!location) {
+        throw new Error('地点不存在');
+      }
+
+      // 验证地点是否属于该地图
+      if (location.mapId.toString() !== mapId) {
+        throw new Error('该地点不属于指定地图');
+      }
+
+      // 更新玩家位置
+      const player = await Player.findByIdAndUpdate(
+        playerId,
+        {
+          currentMap: mapId,
+          currentLocation: locationId
+        },
+        { new: true }
+      );
+
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      return player;
+    } catch (error: any) {
+      throw new Error(`更新玩家位置失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 获取玩家当前位置信息
+   * @param playerId 玩家ID
+   */
+  static async getPlayerLocation(playerId: string) {
+    try {
+      const player = await Player.findById(playerId)
+        .populate('currentMap')
+        .populate('currentLocation');
+
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      return {
+        map: player.currentMap,
+        location: player.currentLocation
+      };
+    } catch (error: any) {
+      throw new Error(`获取玩家位置失败: ${error.message}`);
     }
   }
 } 

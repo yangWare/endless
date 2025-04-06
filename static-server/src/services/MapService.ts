@@ -65,17 +65,25 @@ export class MapService {
   }
 
   /**
-   * 获取指定地图详情
+   * 获取第一张地图（按创建时间排序）
    */
-  static async getMapById(id: string) {
+  static async getFirstMap() {
     try {
-      const map = await Map.findById(id);
-      if (!map) {
-        throw new Error('地图不存在');
-      }
-      return map;
+      return await Map.findOne().sort({ createdAt: 1 });
     } catch (error: any) {
-      throw new Error(`获取地图详情失败: ${error.message}`);
+      throw new Error(`获取第一张地图失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 根据ID获取地图
+   * @param mapId 地图ID
+   */
+  static async getMapById(mapId: string) {
+    try {
+      return await Map.findById(mapId);
+    } catch (error: any) {
+      throw new Error(`获取地图失败: ${error.message}`);
     }
   }
 
