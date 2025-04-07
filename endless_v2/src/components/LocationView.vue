@@ -86,8 +86,9 @@
 
 <script setup lang="ts">
 import { ref, computed, defineEmits, onMounted, watch, nextTick } from 'vue'
+import type { EnemyInstance } from '../api'
 import { state } from '../store/state'
-import {  generateEnemyCombatStats } from '../store/actions/enemy'
+import {  generateEnemyCombatStats, generateEnemies } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
 import materialConfig from '../config/material_config.json'
 import i18nConfig from '../config/i18n_config.json'
@@ -103,10 +104,7 @@ interface CombatLog {
 interface Enemy {
   instanceId: string
   name: string
-  enemy: {
-    enemyId: string
-    hp: number
-  }
+  enemy: EnemyInstance
 }
 
 interface DroppedItem {
@@ -157,17 +155,16 @@ const ensureValidTab = (): void => {
 
 const updateLocationEnemies = (): void => {
   const currentLocationEnemies = state.enemyInstances
-  
   const possibleEnemies = Object.entries(currentLocationEnemies)
     .filter(([_, enemy]) => {
-      const creatureId = enemy.enemyId
+      const creatureId = enemy.creatureId
       const enemyConfigOfLocation = location.value.enemies.find((enemy) => enemy.creatureId._id === creatureId)
       if (!enemyConfigOfLocation) return false
       
       return Math.random() < enemyConfigOfLocation.probability
     })
     .map(([instanceId, enemy]) => {
-      const creatureId = enemy.enemyId
+      const creatureId = enemy.creatureId
       const enemyConfigOfLocation = location.value.enemies.find((enemy) => enemy.creatureId._id === creatureId)
       return {
         instanceId,
@@ -188,7 +185,9 @@ onMounted(async () => {
     message: `${location.value.description || ''}`,
   })
   ensureValidTab()
-  updateLocationEnemies()
+  generateEnemies().then(() => {
+    updateLocationEnemies()
+  })
 })
 
 const npcs = computed(() => {
@@ -321,7 +320,7 @@ const hasEnemies = computed((): boolean => {
 })
 
 const showEnemiesTab = computed((): boolean => {
-  return location.value.enemy && Object.keys(location.value.enemy).length > 0
+  return location.value.enemies && location.value.enemies.length > 0
 })
 
 const showEnemyInfo = (enemy: Enemy): void => {

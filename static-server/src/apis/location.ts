@@ -124,7 +124,7 @@ export class LocationAPI {
    */
   static async generateEnemies(ctx: BaseContext) {
     try {
-      const { locationId } = ctx.params;
+      const { locationId } = ctx.request.body;
 
       // 参数验证
       if (!locationId) {
@@ -138,6 +138,7 @@ export class LocationAPI {
         data: result
       };
     } catch (error: any) {
+      console.log(error)
       ctx.status = 400;
       ctx.body = {
         success: false,

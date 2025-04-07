@@ -1,4 +1,4 @@
-import { state, updateEnemyInstance } from '../state'
+import { deleteLocationEnemies, state, updateEnemyInstance } from '../state'
 import { locationApi, enemyApi } from '../../api'
 import type { EnemyInstance, CombatStats } from '../../api'
 
@@ -27,6 +27,8 @@ export const generateEnemyCombatStats = async (creatureId: string): Promise<Comb
 export const generateEnemies = async (): Promise<void> => {
   const locationId = state.currentLocationId
   const currentLocation = state.mapLocations[locationId]
+
+  console.log(currentLocation)
   
   if (!currentLocation || !currentLocation.enemies || currentLocation.enemies.length === 0) {
     return Promise.resolve()
@@ -34,13 +36,16 @@ export const generateEnemies = async (): Promise<void> => {
 
   try {
     // 调用后端 API 生成敌人
-    const { enemies } = await locationApi.generateEnemies(locationId)
+    const enemies = await locationApi.generateEnemies(locationId)
+
+    // 清理state中同地点的敌人实例
+    deleteLocationEnemies(locationId)
 
     // 将后端返回的敌人实例添加到状态中
     enemies.forEach((enemy: EnemyInstance) => {
-      updateEnemyInstance(enemy.id, {
+      updateEnemyInstance(enemy._id, {
         hp: enemy.hp,
-        enemyId: enemy.enemyId,
+        creatureId: enemy.creatureId,
         locationId: enemy.locationId
       })
     })

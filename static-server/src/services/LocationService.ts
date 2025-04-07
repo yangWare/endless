@@ -184,6 +184,7 @@ export class LocationService {
             locationId: locationId,
             hp: 100 // 临时值，后面会更新
           });
+          await enemyInstance.save();
           // 使用 EnemyInstanceService 计算战斗属性
           const combatStats = await EnemyInstanceService.calculateCombatStats(enemyInstance._id.toString());
           // 更新敌人实例的 HP

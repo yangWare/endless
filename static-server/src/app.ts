@@ -28,7 +28,7 @@ app.use(async (ctx: BaseContext, next) => {
         data += chunk;
       });
       ctx.req.on('end', () => {
-        resolve(JSON.parse(data));
+        resolve(JSON.parse(data || '{}'));
       });
     });
   }
@@ -295,7 +295,7 @@ app.use(async (ctx: BaseContext, next) => {
   }
 
   // 地点生成敌人 API
-  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+\/generate-enemies$/) && ctx.method === 'POST') {
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+\/enemies$/) && ctx.method === 'POST') {
     await LocationAPI.generateEnemies(ctxWithParams);
     return;
   }

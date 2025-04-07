@@ -41,8 +41,8 @@ export interface Player {
 
 // 敌人实例类型
 export interface EnemyInstance {
-  id: string;
-  enemyId: string;
+  _id: string;
+  creatureId: string;
   locationId: string;
   hp: number;
   createdAt: string;
@@ -221,7 +221,9 @@ export const locationApi = {
    * @param locationId 地点ID
    */
   generateEnemies: async (locationId: string) => {
-    const response = await axios.post(`/api/locations/${locationId}/enemies`);
+    const response = await api.post<EnemyInstance[]>(`/locations/${locationId}/enemies`, {
+      locationId
+    });
     return response.data;
   },
 

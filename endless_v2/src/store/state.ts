@@ -56,8 +56,7 @@ export async function initState(): Promise<void> {
     state.currentLocationId = response.data.currentLocation
     
     await Promise.all([
-      loadMap(state.currentMapId),
-      loadLocationEnemies(state.currentLocationId)
+      loadMap(state.currentMapId)
     ])
   } catch (error) {
     console.error('初始化状态失败:', error)
@@ -95,30 +94,6 @@ export async function loadMap(mapId: string): Promise<void> {
     console.error('加载地图信息失败:', error)
     throw error
   }
-} 
-
-/**
- * 加载地点敌人列表
- * @param {string} locationId 地点ID
- * @returns {Promise<void>}
- * @throws {Error} 加载失败时抛出错误
- */
-export async function loadLocationEnemies(locationId: string): Promise<void> {
-  try {
-    const response = await locationApi.getLocationEnemies(locationId)
-    if (!response.success) {
-      throw new Error(response.message || '获取地点敌人列表失败')
-    }
-    
-    // 更新敌人实例缓存
-    state.enemyInstances = {}
-    response.data.forEach((enemy: EnemyInstance) => {
-      state.enemyInstances[enemy.id] = enemy
-    })
-  } catch (error) {
-    console.error('加载地点敌人列表失败:', error)
-    throw error
-  }
 }
 
 /**
@@ -151,13 +126,23 @@ export function updateCurrentLocation(locationId: string): void {
  * @param {Partial<EnemyInstance>} data 要更新的数据
  */
 export function updateEnemyInstance(instanceId: string, data: Partial<EnemyInstance>): void {
-  // 更新本地缓存
-  if (state.enemyInstances[instanceId]) {
-    state.enemyInstances[instanceId] = {
-      ...state.enemyInstances[instanceId],
-      ...data
-    }
+  state.enemyInstances[instanceId] = {
+    ...state.enemyInstances[instanceId],
+    ...data
   }
+}
+
+/**
+ * 删除指定地点中的所有敌人实例
+ * @param {string} locationId 地点ID
+ */
+export function deleteLocationEnemies(locationId: string): void {
+  // 遍历所有敌人实例，删除属于指定地点的实例
+  Object.keys(state.enemyInstances).forEach(instanceId => {
+    if (state.enemyInstances[instanceId].locationId === locationId) {
+      delete state.enemyInstances[instanceId]
+    }
+  })
 }
 
 /**
