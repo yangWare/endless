@@ -176,6 +176,7 @@ export class LocationService {
           // 创建敌人实例
           const enemyInstance = new EnemyInstance({
             creatureId: creature._id,
+            creatureName: creature.name,
             locationId: locationId,
             hp: 100 // 临时值，后面会更新
           });
