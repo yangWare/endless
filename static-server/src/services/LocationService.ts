@@ -1,6 +1,5 @@
 import { Location } from '../models/Location';
 import { Types } from 'mongoose';
-import { Creature } from '../models/Creature';
 import { EnemyInstanceService } from './EnemyInstanceService';
 import { EnemyInstance } from '../models/EnemyInstance';
 
@@ -156,23 +155,29 @@ export class LocationService {
         throw new Error('地点不存在');
       }
 
+      // 获取当前地点所有敌人实例
+      const enemyInstances = await EnemyInstance.find({ locationId: locationId });
+
       const currentTime = Date.now();
       const lastUpdateTime = location.enemyUpdateTime || 0;
       const updateDuration = location.enemyUpdateDuration || 3600000; // 默认1小时
 
       // 如果未超过刷新时间，返回空数组
       if (currentTime - lastUpdateTime < updateDuration) {
-        return [];
+        return enemyInstances;
       }
-
-      const enemyInstances = [];
 
       // 生成新的敌人实例
       for (const enemyConfig of location.enemies || []) {
         const creature = enemyConfig.creatureId as any;
         const maxCount = enemyConfig.maxCount;
+        // 现存实例数量
+        const currentCount = enemyInstances.filter(instance => instance.creatureId === creature._id).length;
+        // 需要新增的实例数量
+        const needAddCount = maxCount - currentCount;
 
-        for (let i = 0; i < maxCount; i++) {
+
+        for (let i = 0; i < needAddCount; i++) {
           // 创建敌人实例
           const enemyInstance = new EnemyInstance({
             creatureId: creature._id,
@@ -185,14 +190,7 @@ export class LocationService {
           // 更新敌人实例的 HP
           enemyInstance.hp = combatStats.max_hp;
           await enemyInstance.save();
-
-          enemyInstances.push({
-            instanceId: enemyInstance._id.toString(),
-            enemyId: creature._id.toString(),
-            locationId: locationId,
-            hp: combatStats.max_hp,
-            combatStats
-          });
+          enemyInstances.push(enemyInstance);
         }
       }
 
