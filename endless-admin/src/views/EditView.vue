@@ -175,22 +175,30 @@
           <el-form-item label="NPC配置" prop="npc">
             <el-collapse>
               <el-collapse-item title="锻造所">
-                <el-form-item label="等级">
+                <el-form-item label="开启锻造所">
+                  <el-switch v-model="formData.npc.forge.enabled" />
+                </el-form-item>
+                <el-form-item label="等级" v-if="formData.npc.forge.enabled">
                   <el-input-number v-model="formData.npc.forge.level" :min="1" />
                 </el-form-item>
               </el-collapse-item>
               <el-collapse-item title="商店">
-                <el-button @click="addShopItem">添加商品</el-button>
-                <div v-for="(item, index) in formData.npc.shop.items" :key="index">
-                  <el-form-item :label="'商品' + (index + 1)">
-                    <el-select v-model="item.id" placeholder="请选择商品" style="width: 200px">
-                      <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material._id" />
-                      <el-option v-for="potion in potions" :key="potion._id" :label="potion.name" :value="potion._id" />
-                    </el-select>
-                    <el-input-number v-model="item.price" :min="0" placeholder="价格" />
-                    <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
-                  </el-form-item>
-                </div>
+                <el-form-item label="开启商店">
+                  <el-switch v-model="formData.npc.shop.enabled" />
+                </el-form-item>
+                <template v-if="formData.npc.shop.enabled">
+                  <el-button @click="addShopItem">添加商品</el-button>
+                  <div v-for="(item, index) in formData.npc.shop.items" :key="index">
+                    <el-form-item :label="'商品' + (index + 1)">
+                      <el-select v-model="item.id" placeholder="请选择商品" style="width: 200px">
+                        <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material._id" />
+                        <el-option v-for="potion in potions" :key="potion._id" :label="potion.name" :value="potion._id" />
+                      </el-select>
+                      <el-input-number v-model="item.price" :min="0" placeholder="价格" />
+                      <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
+                    </el-form-item>
+                  </div>
+                </template>
               </el-collapse-item>
             </el-collapse>
           </el-form-item>
@@ -293,11 +301,13 @@ interface Location {
   adjacentLocations: string[]
   npc: {
     forge: {
+      enabled: boolean
       level: number
-    }
+    } | null
     shop: {
+      enabled: boolean
       items: ShopItem[]
-    }
+    } | null
   }
   enemies: LocationEnemy[]
   enemyUpdateDuration: number
@@ -346,11 +356,13 @@ interface FormData {
   adjacentLocations: string[];
   npc: {
     forge: {
-      level: number;
-    };
+      enabled: boolean
+      level: number
+    }
     shop: {
-      items: ShopItem[];
-    };
+      enabled: boolean
+      items: ShopItem[]
+    }
   };
   enemies: LocationEnemy[];
   enemyUpdateDuration: number;
@@ -435,11 +447,13 @@ const formData = reactive<FormData>({
   adjacentLocations: [] as string[],
   npc: {
     forge: {
-      level: 1
+      enabled: false,
+      level: 1,
     },
     shop: {
-      items: [] as ShopItem[]
-    }
+      enabled: false,
+      items: [] as ShopItem[],
+    },
   },
   enemies: [] as LocationEnemy[],
   enemyUpdateDuration: 3600000,
@@ -600,7 +614,15 @@ const fetchDetail = async () => {
 
     const response = await axios.get(endpoint);
     if (response.data.success) {
-      Object.assign(formData, response.data.data);
+      const data = response.data.data;
+      // 处理 NPC 配置
+      if (data.npc) {
+        data.npc = {
+          forge: data.npc.forge ? { ...data.npc.forge, enabled: true } : { enabled: false, level: 1 },
+          shop: data.npc.shop ? { ...data.npc.shop, enabled: true } : { enabled: false, items: [] }
+        };
+      }
+      Object.assign(formData, data);
     }
   } catch (error) {
     ElMessage.error('获取详情失败');
@@ -684,7 +706,10 @@ const submitForm = async () => {
               mapId: formData.mapId,
               position: formData.position,
               adjacentLocations: formData.adjacentLocations,
-              npc: formData.npc,
+              npc: {
+                forge: formData.npc.forge.enabled ? formData.npc.forge : null,
+                shop: formData.npc.shop.enabled ? formData.npc.shop : null
+              },
               enemies: formData.enemies,
               enemyUpdateDuration: formData.enemyUpdateDuration
             };

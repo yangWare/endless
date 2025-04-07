@@ -194,8 +194,14 @@ onMounted(async () => {
 const npcs = computed(() => {
   const list: string[] = []
   Object.keys(location.value.npc).forEach((key) => {
+    if (!location.value.npc.hasOwnProperty(key)) {
+      return
+    }
     if (key === '_id') return
-    list.push(key)
+    const value = location.value.npc[key as keyof typeof location.value.npc]
+    if (value) {
+      list.push(key)
+    }
   })
   return list
 })
@@ -207,6 +213,10 @@ const getNpcName = (npcType: string): string => {
   }
   return npcNames[npcType] || npcType
 }
+
+const hasNpcs = computed((): boolean => {
+  return npcs.value.length > 0
+})
 
 const handleNpcClick = (npcType: string): void => {
   if (npcType === 'forge') {
@@ -312,10 +322,6 @@ const hasEnemies = computed((): boolean => {
 
 const showEnemiesTab = computed((): boolean => {
   return location.value.enemy && Object.keys(location.value.enemy).length > 0
-})
-
-const hasNpcs = computed((): boolean => {
-  return location.value.npc && Object.keys(location.value.npc).length > 0
 })
 
 const showEnemyInfo = (enemy: Enemy): void => {

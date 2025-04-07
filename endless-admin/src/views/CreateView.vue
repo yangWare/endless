@@ -230,35 +230,27 @@
           <el-form-item label="NPC配置" prop="npc">
             <el-collapse>
               <el-collapse-item title="锻造所">
-                <el-form-item label="等级">
-                  <el-input-number
-                    v-model="formData.npc.forge.level"
-                    :min="1"
-                  />
+                <el-form-item label="开启锻造所">
+                  <el-switch v-model="formData.npc.forge.enabled" />
+                </el-form-item>
+                <el-form-item label="等级" v-if="formData.npc.forge.enabled">
+                  <el-input-number v-model="formData.npc.forge.level" :min="1" />
                 </el-form-item>
               </el-collapse-item>
               <el-collapse-item title="商店">
-                <el-button @click="addShopItem">添加商品</el-button>
-                <div
-                  v-for="(item, index) in formData.npc.shop.items"
-                  :key="index"
-                >
-                  <el-form-item :label="'商品' + (index + 1)">
-                    <el-input
-                      v-model="item.id"
-                      placeholder="商品ID"
-                      style="width: 200px"
-                    />
-                    <el-input-number
-                      v-model="item.price"
-                      :min="0"
-                      placeholder="价格"
-                    />
-                    <el-button type="danger" @click="removeShopItem(index)"
-                      >删除</el-button
-                    >
-                  </el-form-item>
-                </div>
+                <el-form-item label="开启商店">
+                  <el-switch v-model="formData.npc.shop.enabled" />
+                </el-form-item>
+                <template v-if="formData.npc.shop.enabled">
+                  <el-button @click="addShopItem">添加商品</el-button>
+                  <div v-for="(item, index) in formData.npc.shop.items" :key="index">
+                    <el-form-item :label="'商品' + (index + 1)">
+                      <el-input v-model="item.id" placeholder="商品ID" style="width: 200px" />
+                      <el-input-number v-model="item.price" :min="0" placeholder="价格" />
+                      <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
+                    </el-form-item>
+                  </div>
+                </template>
               </el-collapse-item>
             </el-collapse>
           </el-form-item>
@@ -442,9 +434,11 @@ interface Location {
   adjacentLocations: string[]
   npc: {
     forge: {
+      enabled: boolean
       level: number
     }
     shop: {
+      enabled: boolean
       items: ShopItem[]
     }
   }
@@ -491,9 +485,11 @@ interface FormData {
   adjacentLocations: string[]
   npc: {
     forge: {
+      enabled: boolean
       level: number
     }
     shop: {
+      enabled: boolean
       items: ShopItem[]
     }
   }
@@ -576,9 +572,11 @@ const formData = reactive<FormData>({
   adjacentLocations: [] as string[],
   npc: {
     forge: {
+      enabled: false,
       level: 1,
     },
     shop: {
+      enabled: false,
       items: [] as ShopItem[],
     },
   },
@@ -761,9 +759,11 @@ const handleTypeChange = () => {
       formData.adjacentLocations = []
       formData.npc = {
         forge: {
+          enabled: false,
           level: 1,
         },
         shop: {
+          enabled: false,
           items: [],
         },
       }
@@ -885,7 +885,10 @@ const submitForm = async () => {
               mapId: formData.mapId,
               position: formData.position,
               adjacentLocations: formData.adjacentLocations,
-              npc: formData.npc,
+              npc: {
+                forge: formData.npc.forge.enabled ? formData.npc.forge : null,
+                shop: formData.npc.shop.enabled ? formData.npc.shop : null
+              },
               enemies: formData.enemies,
               enemyUpdateDuration: formData.enemyUpdateDuration,
             }

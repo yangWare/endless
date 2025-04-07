@@ -79,10 +79,10 @@ export interface Location {
   npc: {
     forge: {
       level: number
-    }
+    } | null
     shop: {
       items: []
-    }
+    } | null
     _id: string
   }
   enemies: Array<{
