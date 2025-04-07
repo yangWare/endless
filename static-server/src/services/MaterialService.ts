@@ -130,4 +130,25 @@ export class MaterialService {
       throw new Error(`获取材料列表失败: ${error.message}`);
     }
   }
+
+  /**
+   * 根据ID列表批量获取材料信息
+   * @param ids 材料ID数组
+   * @returns 材料列表
+   */
+  static async getMaterialsByIds(ids: string[]) {
+    try {
+      if (!ids || ids.length === 0) {
+        return [];
+      }
+      
+      const materials = await Material.find({
+        _id: { $in: ids }
+      }).populate('typeId', 'name');
+      
+      return materials;
+    } catch (error: any) {
+      throw new Error(`批量获取材料信息失败: ${error.message}`);
+    }
+  }
 } 

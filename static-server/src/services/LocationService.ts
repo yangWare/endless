@@ -176,7 +176,6 @@ export class LocationService {
         // 需要新增的实例数量
         const needAddCount = maxCount - currentCount;
 
-
         for (let i = 0; i < needAddCount; i++) {
           // 创建敌人实例
           const enemyInstance = new EnemyInstance({

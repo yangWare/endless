@@ -5,8 +5,12 @@ import type { Player, DroppedMaterial } from '../../api'
 
 interface AttackResult {
   result: 'enemy_dead' | 'continue' | 'player_dead'
+  damage?: number
+  isCritical?: boolean
   remainingHp?: number
   counterDamage?: number
+  isCounterCritical?: boolean
+  isPlayerDead?: boolean
   droppedMaterials?: DroppedMaterial[]
 }
 
@@ -81,14 +85,14 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
       // 敌人死亡，从状态中移除
       if (enemyInstances[enemyInstanceId]) {
         delete enemyInstances[enemyInstanceId]
-        await updatePlayer(player)
+        updatePlayer(player)
       }
       
       // 如果有掉落物品，更新玩家物品
       if (result.droppedMaterials && result.droppedMaterials.length > 0) {
         const newPlayer = { ...player }
         newPlayer.inventory.materials = [...newPlayer.inventory.materials, ...result.droppedMaterials.map(m => m.materialId)]
-        await updatePlayer(newPlayer)
+        updatePlayer(newPlayer)
       }
     } else if (result.result === 'continue' && result.remainingHp !== undefined) {
       // 战斗继续，更新敌人血量
@@ -100,7 +104,7 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
       if (result.counterDamage && player.combat_stats) {
         const newHp = Math.max(0, player.combat_stats.max_hp - result.counterDamage)
         const newCombatStats = { ...player.combat_stats, max_hp: newHp }
-        await updatePlayer({
+        updatePlayer({
           ...player,
           combat_stats: newCombatStats
         })
@@ -108,10 +112,11 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
     } else if (result.result === 'player_dead' && player.combat_stats) {
       // 玩家死亡
       const newCombatStats = { ...player.combat_stats, max_hp: 0 }
-      await updatePlayer({
+      updatePlayer({
         ...player,
         combat_stats: newCombatStats
       })
+      // TODO: 复活逻辑
     }
     
     return result

@@ -260,53 +260,52 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
   if (isAttacking.value) return
   isAttacking.value = true
   try {
-    const result = await attackEnemy(enemy.instanceId) as CombatResult
+    const result = await attackEnemy(enemy.instanceId)
 
-    if (!result.player.hit) {
+    if (!result.damage) {
       await addMessageWithDelay(`你的攻击未命中${enemy.name}`)
     } else {
-      let message = `你对${enemy.name}造成了${result.player.damage}点伤害`
-      if (result.player.isCrit) {
+      let message = `你对${enemy.name}造成了${result.damage}点伤害`
+      if (result.isCritical) {
         message += '（暴击！）'
       }
       await addMessageWithDelay(message)
-      if (!state.enemyStatus[state.currentLocationId]?.[enemy.instanceId]) {
+      if (result.result === 'enemy_dead') {
         await addMessageWithDelay(`${enemy.name}被击败了！`)
-        if (result.droppedItems && result.droppedItems.length > 0) {
-          const dropsMessage = result.droppedItems
-            .map((drop) => {
-              for (const typeKey in materialConfig.material_types) {
-                const type = materialConfig.material_types[typeKey]
-                if (type.materials[drop.id]) {
-                  return type.materials[drop.id].name
-                }
-              }
-              return drop.id
-            })
-            .join('、')
-          await addMessageWithDelay(`获得了：${dropsMessage}`)
-        }
+        // TODO: 展示掉落物品
+        // if (result.droppedItems && result.droppedItems.length > 0) {
+        //   const dropsMessage = result.droppedItems
+        //     .map((drop) => {
+        //       for (const typeKey in materialConfig.material_types) {
+        //         const type = materialConfig.material_types[typeKey]
+        //         if (type.materials[drop.id]) {
+        //           return type.materials[drop.id].name
+        //         }
+        //       }
+        //       return drop.id
+        //     })
+        //     .join('、')
+        //   await addMessageWithDelay(`获得了：${dropsMessage}`)
+        // }
         updateLocationEnemies()
         return
       }
     }
 
-    if (result.enemy) {
-      if (!result.enemy.hit) {
+    if (!result.counterDamage) {
         await addMessageWithDelay(`${enemy.name}的反击未命中你`)
       } else {
-        let counterMessage = `${enemy.name}反击对你造成了${result.enemy.damage}点伤害`
-        if (result.enemy.isCrit) {
+        let counterMessage = `${enemy.name}反击对你造成了${result.counterDamage}点伤害`
+        if (result.isCounterCritical) {
           counterMessage += '（暴击！）'
         }
         await addMessageWithDelay(counterMessage)
 
-        if (!result.enemy.isPlayerAlive) {
+        if (result.isPlayerDead) {
           await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
           return
         }
       }
-    }
   } catch (error) {
     console.error('Attack failed:', error)
     await addMessageWithDelay('你脚下一滑，攻击没有发起')

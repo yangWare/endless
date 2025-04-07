@@ -27,8 +27,6 @@ export const generateEnemyCombatStats = async (creatureId: string): Promise<Comb
 export const generateEnemies = async (): Promise<void> => {
   const locationId = state.currentLocationId
   const currentLocation = state.mapLocations[locationId]
-
-  console.log(currentLocation)
   
   if (!currentLocation || !currentLocation.enemies || currentLocation.enemies.length === 0) {
     return Promise.resolve()

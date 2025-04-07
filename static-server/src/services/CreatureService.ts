@@ -146,14 +146,14 @@ export class CreatureService {
    * @param creatureId 生物ID
    * @returns 掉落物品列表
    */
-  static async calculateDrops(creatureId: string): Promise<DroppedMaterial[]> {
+  static async calculateDrops(creatureId: Types.ObjectId): Promise<DroppedMaterial[]> {
     try {
-      const creature = await Creature.findById(creatureId).populate('drop_materials.materialId');
+      const creature = await Creature.findById(creatureId).populate('drop_materials.materialId', 'name');
       if (!creature) {
         throw new Error('生物不存在');
       }
 
-      const dropMaterials = creature.drop_materials || [];
+      const dropMaterials = creature.drop_materials || []
       const droppedMaterials: DroppedMaterial[] = [];
 
       for (const drop of dropMaterials) {

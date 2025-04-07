@@ -1,7 +1,6 @@
 import { EnemyInstance } from '../models/EnemyInstance';
 import { Types } from 'mongoose';
 import { Creature } from '../models/Creature';
-import { Race } from '../models/Race';
 import { PlayerService } from './PlayerService';
 import { CreatureService } from './CreatureService';
 
@@ -294,7 +293,7 @@ export class EnemyInstanceService {
       }
 
       // 使用CreatureService计算掉落物品
-      const droppedMaterials = await CreatureService.calculateDrops(enemyInstance.creatureId.toString());
+      const droppedMaterials = await CreatureService.calculateDrops(enemyInstance.creatureId._id);
 
       // 删除敌人实例
       await EnemyInstance.findByIdAndDelete(enemyInstanceId);
