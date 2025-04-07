@@ -10,38 +10,6 @@
     "hit_rate": "命中率",
     "dodge_rate": "闪避率"
   },
-  "equipment_levels": {
-    "common": {
-      "name": "普通的",
-      "multiplier": 0.5,
-      "chance": 0.4399
-    },
-    "uncommon": {
-      "name": "优秀的",
-      "multiplier": 1,
-      "chance": 0.3
-    },
-    "rare": {
-      "name": "精良的",
-      "multiplier": 3,
-      "chance": 0.159
-    },
-    "epic": {
-      "name": "史诗的",
-      "multiplier": 12,
-      "chance": 0.1
-    },
-    "legendary": {
-      "name": "传说的",
-      "multiplier": 60,
-      "chance": 0.001
-    },
-    "mythic": {
-      "name": "神话的",
-      "multiplier": 360,
-      "chance": 0.0001
-    }
-  },
   "equipment_position": {
     "weapon": {
       "name": "武器"
