@@ -10,7 +10,7 @@ export interface BaseResponse<T = any> {
 
 // 玩家相关类型
 export interface Player {
-  id: string;
+  _id: string;
   username: string;
   password: string;
   nickname: string;

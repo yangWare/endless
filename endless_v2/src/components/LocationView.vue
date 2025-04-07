@@ -246,6 +246,17 @@ const addMessageWithDelay = (message: string, delay = 500): Promise<void> => {
   })
 }
 
+const scrollToBottom = (): void => {
+  nextTick(() => {
+    const container = document.querySelector('.combat-log-content')
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
+  })
+}
+
+watch(combatLogs, scrollToBottom, { deep: true })
+
 const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
   if (isAttacking.value) return
   isAttacking.value = true
@@ -304,17 +315,6 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
     isAttacking.value = false
   }
 }
-
-const scrollToBottom = (): void => {
-  nextTick(() => {
-    const container = document.querySelector('.combat-log-content')
-    if (container) {
-      container.scrollTop = container.scrollHeight
-    }
-  })
-}
-
-watch(combatLogs, scrollToBottom, { deep: true })
 
 const hasEnemies = computed((): boolean => {
   return locationEnemies.value.length > 0

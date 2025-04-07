@@ -36,7 +36,7 @@ export const move = async (toId: string): Promise<void> => {
 
   // 调用API更新玩家位置
   const response = await playerApi.updateLocation({
-    playerId: state.player?.id || '',
+    playerId: state.player?._id || '',
     mapId: state.currentMapId,
     locationId: toId
   })
@@ -47,4 +47,4 @@ export const move = async (toId: string): Promise<void> => {
 
   // 更新状态
   state.currentLocationId = toId
-} 
+}
