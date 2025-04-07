@@ -16,6 +16,8 @@ export interface Player {
   nickname: string;
   currentMap: string;
   currentLocation: string;
+  hp: number;
+  coins: number;
   levelInfo: {
     level: number;
     exp: number;
@@ -65,7 +67,7 @@ export interface Map {
 
 // 地点相关类型
 export interface Location {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   mapId: string;
@@ -171,7 +173,11 @@ export const playerApi = {
 
   // 穿戴装备
   equipItem: (data: { playerId: string; equipmentId: string }): Promise<BaseResponse<Player>> =>
-    api.post('/players/equip', data)
+    api.post('/players/equip', data),
+
+  // 删除玩家
+  delete: (data: { username: string; password: string }): Promise<BaseResponse<{ message: string }>> =>
+    api.post('/players/delete', data)
 };
 
 export const mapApi = {
@@ -186,7 +192,9 @@ export const mapApi = {
 
 export const locationApi = {
   // 获取地点列表
-  list: (params?: { mapId?: string; page?: number; limit?: number }): Promise<BaseResponse<Location[]>> => 
+  list: (params?: { mapId?: string; page?: number; limit?: number }): Promise<BaseResponse<{
+    locations: Location[];
+  }>> => 
     api.get('/locations', { params }),
   
   // 获取地点详情
@@ -200,7 +208,15 @@ export const locationApi = {
   generateEnemies: async (locationId: string) => {
     const response = await axios.post(`/api/locations/${locationId}/enemies`);
     return response.data;
-  }
+  },
+
+  /**
+   * 获取指定地点的敌人实例列表
+   * @param locationId 地点ID
+   * @returns 敌人实例列表
+   */
+  getLocationEnemies: (locationId: string): Promise<BaseResponse<EnemyInstance[]>> =>
+    api.get(`/locations/${locationId}/enemies`)
 };
 
 export const enemyInstanceApi = {

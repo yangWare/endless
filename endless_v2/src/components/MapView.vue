@@ -16,40 +16,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { state, loadMap } from '../store/state'
+import { ref, onMounted, watch, computed } from 'vue'
+import { state } from '../store/state'
 import LocationView from './LocationView.vue'
 import Message from './Message.vue'
 import { move } from '../store/actions/map'
-import { mapApi, locationApi } from '../api'
-
-interface Position {
-  x: number
-  y: number
-}
-
-interface Location {
-  id: string | number
-  name: string
-  position: Position
-  adjacentLocations: (string | number)[]
-}
-
-interface MapConfig {
-  id: string
-  name: string
-  description: string
-  startLocationId: string
-  width: number
-  height: number
-  bgImage: string
-  locations: Record<string | number, Location>
-}
+import type { Map, Location } from '../api'
 
 const mapCanvas = ref<HTMLCanvasElement | null>(null)
 const showLocationView = ref<boolean>(false)
-const currentMap = ref<MapConfig | null>(null)
-const locations = ref<Record<string | number, Location>>({})
+const currentMap = computed<Map | null>(() => state.currentMap)
 
 const showMovingMessage = ref<boolean>(false)
 const movingMessage = ref<string>('')
@@ -65,7 +41,7 @@ const getIntersectionPoint = (
   rectWidth: number,
   rectHeight: number,
   radius: number
-): Position => {
+) => {
   // 计算两点之间的角度
   const angle = Math.atan2(y2 - y1, x2 - x1)
   
@@ -96,7 +72,7 @@ const getIntersectionPoint = (
 
 const drawMap = (): void => {
   const canvas = mapCanvas.value
-  if (!canvas || !state.currentMap) return
+  if (!canvas || !currentMap.value) return
   
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -104,9 +80,13 @@ const drawMap = (): void => {
   // 清空画布
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  // 设置 canvas 尺寸
+  canvas.width = currentMap.value.width
+  canvas.height = currentMap.value.height
+
   // 绘制半透明蒙层
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, currentMap.value.width, currentMap.value.height)
 
   const drawnConnections = new Set<string>()
 
@@ -165,7 +145,7 @@ const drawMap = (): void => {
 
     // 绘制圆角矩形
     ctx.beginPath()
-    ctx.strokeStyle = state.currentLocationId === location.id ? '#ff4444' : '#ffd700'
+    ctx.strokeStyle = state.currentLocationId === location._id ? '#ff4444' : '#ffd700'
     ctx.lineWidth = 2
     ctx.roundRect(rectX, rectY, rectWidth, rectHeight, 8)
     ctx.stroke()
@@ -247,66 +227,15 @@ const focusOnCurrentLocation = (): void => {
   }
 }
 
-// 从服务端获取地图配置
-const fetchMapConfig = async () => {
-  try {
-    // 获取地图基本信息
-    const mapResult = await mapApi.getById(state.currentMapId)
-    if (!mapResult.success) {
-      console.error('获取地图配置失败:', mapResult.message)
-      return
-    }
-
-    // 获取地图的所有地点
-    const locationsResult = await locationApi.list({ mapId: state.currentMapId })
-    if (!locationsResult.success) {
-      console.error('获取地点列表失败:', locationsResult.message)
-      return
-    }
-
-    // 构建地图配置
-    const mapConfig: MapConfig = {
-      id: mapResult.data.id,
-      name: mapResult.data.name,
-      description: mapResult.data.description,
-      startLocationId: mapResult.data.startLocationId,
-      width: mapResult.data.width,
-      height: mapResult.data.height,
-      bgImage: mapResult.data.bgImage,
-      locations: {}
-    }
-
-    // 处理地点数据
-    locationsResult.data.forEach(location => {
-      mapConfig.locations[location.id] = {
-        id: location.id,
-        name: location.name,
-        position: location.position,
-        adjacentLocations: location.adjacentLocations
-      }
-    })
-
-    currentMap.value = mapConfig
-    locations.value = mapConfig.locations
-    drawMap()
-  } catch (error) {
-    console.error('获取地图配置出错:', error)
-  }
-}
-
 onMounted(() => {
   const canvas = mapCanvas.value
   if (!canvas) return
   
-  loadMap(state.currentMapId)
   canvas.addEventListener('click', handleLocationClick)
-  
+  drawMap()
+
   // 初始定位
   focusOnCurrentLocation()
-})
-
-watch(() => state.currentMapId, () => {
-  loadMap(state.currentMapId)
 })
 
 watch(() => state.currentLocationId, drawMap)

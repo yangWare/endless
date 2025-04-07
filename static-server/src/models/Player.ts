@@ -94,6 +94,8 @@ export interface IPlayer {
   nickname: string;
   currentMap: mongoose.Types.ObjectId | null;
   currentLocation: mongoose.Types.ObjectId | null;
+  hp: number;
+  coins: number;
   levelInfo: {
     level: number;
     exp: number;
@@ -132,6 +134,16 @@ const playerSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  hp: {
+    type: Number,
+    required: true,
+    default: 100
+  },
+  coins: {
+    type: Number,
+    required: true,
+    default: 0
+  },
   currentMap: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Map',
@@ -166,10 +178,15 @@ const playerSchema = new mongoose.Schema({
     equipments: [equipmentSchema]
   },
   equipped: {
+    // 武器
     weapon: equipmentSchema,
+    // 盔甲 
     armor: equipmentSchema,
+    // 饰品
     accessory: equipmentSchema,
+    // 头盔
     helmet: equipmentSchema,
+    // 靴子
     boots: equipmentSchema
   },
   createdAt: {

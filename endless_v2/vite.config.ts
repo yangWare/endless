@@ -1,10 +1,11 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import type { UserConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/endless/static/',
+  base: '/endless/static',
   plugins: [vue()],
   build: {
     assetsDir: 'assets',
@@ -21,4 +22,12 @@ export default defineConfig({
       'assets': path.resolve(__dirname, 'src/assets')
     },
   },
-})
+  server: {
+    proxy: {
+      '/endless/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+    }
+  }
+} as UserConfig) 

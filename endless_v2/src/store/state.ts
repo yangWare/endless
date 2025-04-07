@@ -1,13 +1,12 @@
 import { reactive } from 'vue'
-import { playerApi, locationStateApi, mapApi, locationApi } from '../api'
-import type { Player, LocationState, EnemyInstance, Map, Location } from '../api'
+import { playerApi, mapApi, locationApi } from '../api'
+import type { Player, EnemyInstance, Map, Location } from '../api'
 
 // 定义状态类型
 interface State {
   currentMapId: string
   currentLocationId: string
   player: Player | null
-  locationState: LocationState | null
   enemyInstances: Record<string, EnemyInstance>
   currentMap: Map | null
   mapLocations: Record<string, Location>
@@ -17,12 +16,13 @@ export const state = reactive<State>({
   currentMapId: '1',
   currentLocationId: '1',
   player: null,
-  locationState: null,
   enemyInstances: {},
   currentMap: null,
   mapLocations: {}
 })
 
+;(window as any).createUser = playerApi.create
+;(window as any).deleteUser = playerApi.delete
 /**
  * 从后端API初始化玩家状态
  * @returns {Promise<void>}
@@ -30,23 +30,20 @@ export const state = reactive<State>({
  */
 export async function initState(): Promise<void> {
   try {
-    // 从本地存储获取登录信息
-    const savedState = localStorage.getItem('gameState')
-    if (!savedState) {
-      throw new Error('未找到保存的游戏状态')
-    }
+    // 从 URL query 参数获取登录信息
+    const urlParams = new URLSearchParams(window.location.search)
+    const username = urlParams.get('username')
+    const password = urlParams.get('password')
 
-    const stateData = JSON.parse(savedState)
-    
     // 检查登录信息
-    if (!stateData.username || !stateData.password) {
-      throw new Error('未找到登录信息')
+    if (!username || !password) {
+      throw new Error('URL 参数中未找到登录信息')
     }
     
     // 从后端获取玩家数据
     const response = await playerApi.getInfo({
-      username: stateData.username,
-      password: stateData.password
+      username,
+      password
     })
     
     if (!response.success) {
@@ -58,8 +55,10 @@ export async function initState(): Promise<void> {
     state.currentMapId = response.data.currentMap
     state.currentLocationId = response.data.currentLocation
     
-    // 获取当前位置状态
-    await loadLocationState(state.currentLocationId)
+    await Promise.all([
+      loadMap(state.currentMapId),
+      loadLocationEnemies(state.currentLocationId)
+    ])
   } catch (error) {
     console.error('初始化状态失败:', error)
     throw error
@@ -67,26 +66,25 @@ export async function initState(): Promise<void> {
 }
 
 /**
- * 加载地点状态
+ * 加载地点敌人列表
  * @param {string} locationId 地点ID
  * @returns {Promise<void>}
  * @throws {Error} 加载失败时抛出错误
  */
-export async function loadLocationState(locationId: string): Promise<void> {
+export async function loadLocationEnemies(locationId: string): Promise<void> {
   try {
-    const response = await locationStateApi.getByLocationId(locationId)
+    const response = await locationApi.getLocationEnemies(locationId)
     if (!response.success) {
-      throw new Error(response.message || '获取地点状态失败')
+      throw new Error(response.message || '获取地点敌人列表失败')
     }
     
-    state.locationState = response.data
     // 更新敌人实例缓存
     state.enemyInstances = {}
-    response.data.enemyInstances.forEach(instance => {
-      state.enemyInstances[instance.id] = instance
+    response.data.forEach((enemy: EnemyInstance) => {
+      state.enemyInstances[enemy.id] = enemy
     })
   } catch (error) {
-    console.error('加载地点状态失败:', error)
+    console.error('加载地点敌人列表失败:', error)
     throw error
   }
 }
@@ -128,17 +126,6 @@ export function updateEnemyInstance(instanceId: string, data: Partial<EnemyInsta
       ...data
     }
   }
-  
-  // 如果当前地点状态存在，更新其中的敌人实例
-  if (state.locationState) {
-    const index = state.locationState.enemyInstances.findIndex(instance => instance.id === instanceId)
-    if (index !== -1) {
-      state.locationState.enemyInstances[index] = {
-        ...state.locationState.enemyInstances[index],
-        ...data
-      }
-    }
-  }
 }
 
 /**
@@ -176,8 +163,8 @@ export async function loadMap(mapId: string): Promise<void> {
     // 更新状态
     state.currentMap = mapResult.data
     state.mapLocations = {}
-    locationsResult.data.forEach(location => {
-      state.mapLocations[location.id] = location
+    locationsResult.data.locations.forEach(location => {
+      state.mapLocations[location._id] = location
     })
   } catch (error) {
     console.error('加载地图信息失败:', error)

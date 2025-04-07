@@ -68,6 +68,8 @@ export class PlayerService {
         nickname,
         currentMap: firstMap._id,
         currentLocation: firstMap.startLocationId,
+        hp: 40,
+        coins: 0,
         levelInfo: {
           level: 1,
           exp: 0
@@ -78,11 +80,91 @@ export class PlayerService {
           equipments: []
         },
         equipped: {
-          weapon: null,
-          armor: null,
-          accessory: null,
-          helmet: null,
-          boots: null
+          weapon: {
+            id: `default_weapon_${Date.now()}`,
+            name: `木剑`,
+            slot: 'weapon',
+            level: 1,
+            combatStats: {
+              max_hp: 0,
+              attack: 2,
+              defense: 1,
+              crit_rate: 0,
+              crit_resist: 0,
+              crit_damage: 0,
+              crit_damage_resist: 0,
+              hit_rate: 0,
+              dodge_rate: 0
+            }
+          },
+          armor: {
+            id: `default_armor_${Date.now()}`,
+            name: `兽皮短衣`,
+            slot: 'armor',
+            level: 1,
+            combatStats: {
+              max_hp: 20,
+              attack: 0,
+              defense: 2,
+              crit_rate: 0,
+              crit_resist: 0,
+              crit_damage: 0,
+              crit_damage_resist: 0,
+              hit_rate: 0,
+              dodge_rate: 0
+            }
+          },
+          accessory: {
+            id: `default_accessory_${Date.now()}`,
+            name: `羽毛挂坠`,
+            slot: 'accessory',
+            level: 1,
+            combatStats: {
+              max_hp: 0,
+              attack: 0,
+              defense: 0,
+              crit_rate: 0,
+              crit_resist: 0,
+              crit_damage: 0,
+              crit_damage_resist: 0,
+              hit_rate: 0.01,
+              dodge_rate: 0
+            }
+          },
+          helmet: {
+            id: `default_helmet_${Date.now()}`,
+            name: `藤帽`,
+            slot: 'helmet',
+            level: 1,
+            combatStats: {
+              max_hp: 10,
+              attack: 0,
+              defense: 2,
+              crit_rate: 0,
+              crit_resist: 0,
+              crit_damage: 0,
+              crit_damage_resist: 0,
+              hit_rate: 0,
+              dodge_rate: 0
+            }
+          },
+          boots: {
+            id: `default_boots_${Date.now()}`,
+            name: `藤鞋`,
+            slot: 'boots',
+            level: 1,
+            combatStats: {
+              max_hp: 0,
+              attack: 1,
+              defense: 0,
+              crit_rate: 0,
+              crit_resist: 0,
+              crit_damage: 0,
+              crit_damage_resist: 0,
+              hit_rate: 0.01,
+              dodge_rate: 0.01
+            }
+          }
         }
       });
 
@@ -462,6 +544,28 @@ export class PlayerService {
       return player;
     } catch (error: any) {
       throw new Error(`穿戴装备失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 删除玩家
+   * @param username 用户名
+   * @param password 密码
+   * @returns 删除是否成功
+   */
+  static async deletePlayer(username: string, password: string): Promise<boolean> {
+    try {
+      // 先验证用户名和密码
+      const player = await Player.findOne({ username, password });
+      if (!player) {
+        throw new Error('用户名或密码错误');
+      }
+
+      // 删除玩家
+      const result = await Player.findByIdAndDelete(player._id);
+      return result !== null;
+    } catch (error: any) {
+      throw new Error(`删除玩家失败: ${error.message}`);
     }
   }
 } 

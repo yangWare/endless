@@ -24,6 +24,7 @@ export class PlayerAPI {
         data: playerWithoutPassword
       };
     } catch (error: any) {
+      console.log(error)
       ctx.status = 400;
       ctx.body = {
         success: false,
@@ -168,6 +169,38 @@ export class PlayerAPI {
         data: playerWithoutPassword
       };
     } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 删除玩家
+   */
+  static async delete(ctx: BaseContext) {
+    try {
+      const { username, password } = ctx.request.body;
+
+      // 参数验证
+      if (!username || !password) {
+        throw new Error('缺少用户名或密码');
+      }
+
+      // 删除玩家
+      const success = await PlayerService.deletePlayer(username, password);
+      if (!success) {
+        throw new Error('删除玩家失败');
+      }
+
+      ctx.body = {
+        success: true,
+        message: '玩家删除成功'
+      };
+    } catch (error: any) {
+      console.log(error)
       ctx.status = 400;
       ctx.body = {
         success: false,
