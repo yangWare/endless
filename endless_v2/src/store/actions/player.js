@@ -106,37 +106,46 @@ export async function attackEnemy(enemyInstanceId) {
     
     const result = response.data;
     
-    // 更新玩家状态
-    if (result.player && typeof result.player.hp !== 'undefined') {
-      await updatePlayer({
-        ...player,
-        hp: result.player.hp
-      });
-    }
-    
+    // 根据新的返回类型更新状态
     // 更新敌人状态
-    if (result.enemy) {
-      const newEnemyStatus = { ...state.enemyStatus };
-      
-      // 如果敌人死亡，从状态中移除
-      if (result.enemy.hp <= 0) {
+    const newEnemyStatus = { ...state.enemyStatus };
+    
+    if (result.result === 'enemy_dead') {
+      // 敌人死亡，从状态中移除
+      if (newEnemyStatus[state.currentLocationId] && 
+          newEnemyStatus[state.currentLocationId][enemyInstanceId]) {
         delete newEnemyStatus[state.currentLocationId][enemyInstanceId];
-      } else {
-        // 更新敌人血量
-        if (newEnemyStatus[state.currentLocationId] && 
-            newEnemyStatus[state.currentLocationId][enemyInstanceId]) {
-          newEnemyStatus[state.currentLocationId][enemyInstanceId].hp = result.enemy.hp;
-        }
+        await updateState({ enemyStatus: newEnemyStatus });
       }
       
-      await updateState({ enemyStatus: newEnemyStatus });
-    }
-    
-    // 如果有掉落物品，更新玩家物品
-    if (result.droppedItems && result.droppedItems.length > 0) {
-      const newPlayer = { ...player };
-      newPlayer.materials = [...newPlayer.materials, ...result.droppedItems];
-      await updatePlayer(newPlayer);
+      // 如果有掉落物品，更新玩家物品
+      if (result.droppedMaterials && result.droppedMaterials.length > 0) {
+        const newPlayer = { ...player };
+        newPlayer.materials = [...newPlayer.materials, ...result.droppedMaterials];
+        updatePlayer(newPlayer);
+      }
+    } else if (result.result === 'continue') {
+      // 战斗继续，更新敌人血量
+      if (newEnemyStatus[state.currentLocationId] && 
+          newEnemyStatus[state.currentLocationId][enemyInstanceId]) {
+        newEnemyStatus[state.currentLocationId][enemyInstanceId].hp = result.remainingHp;
+        await updateState({ enemyStatus: newEnemyStatus });
+      }
+      
+      // 更新玩家血量（如果受到反击伤害）
+      if (result.counterDamage) {
+        const newHp = Math.max(0, player.hp - result.counterDamage);
+        updatePlayer({
+          ...player,
+          hp: newHp
+        });
+      }
+    } else if (result.result === 'player_dead') {
+      // 玩家死亡
+      updatePlayer({
+        ...player,
+        hp: 0
+      });
     }
     
     return result;
