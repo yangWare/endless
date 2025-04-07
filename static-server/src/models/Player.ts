@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const equipmentSchema = {
+  id: {
+    type: String,
+    required: true
+  },
   name: {
     type: String,
     required: true
@@ -63,6 +67,55 @@ const equipmentSchema = {
     default: 1
   }
 };
+
+// 导出装备类型接口
+export interface IEquipment {
+  id: string;
+  name: string;
+  level: number;
+  slot: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  combatStats: {
+    max_hp: number;
+    attack: number;
+    defense: number;
+    crit_rate: number;
+    crit_resist: number;
+    crit_damage: number;
+    crit_damage_resist: number;
+    hit_rate: number;
+    dodge_rate: number;
+  };
+}
+
+// 导出玩家类型接口
+export interface IPlayer {
+  username: string;
+  password: string;
+  nickname: string;
+  currentMap: mongoose.Types.ObjectId | null;
+  currentLocation: mongoose.Types.ObjectId | null;
+  levelInfo: {
+    level: number;
+    exp: number;
+  };
+  inventory: {
+    materials: mongoose.Types.ObjectId[];
+    potions: mongoose.Types.ObjectId[];
+    equipments: IEquipment[];
+  };
+  equipped: {
+    weapon: IEquipment | null;
+    armor: IEquipment | null;
+    accessory: IEquipment | null;
+    helmet: IEquipment | null;
+    boots: IEquipment | null;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 导出玩家文档类型
+export type PlayerDocument = mongoose.Document & IPlayer;
 
 const playerSchema = new mongoose.Schema({
   username: {

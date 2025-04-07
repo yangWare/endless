@@ -13,9 +13,28 @@ export interface Player {
   id: string;
   username: string;
   password: string;
+  nickname: string;
   currentMap: string;
   currentLocation: string;
-  // 其他玩家属性...
+  levelInfo: {
+    level: number;
+    exp: number;
+  };
+  inventory: {
+    materials: string[];
+    potions: string[];
+    equipments: Equipment[];
+  };
+  equipped: {
+    weapon: Equipment | null;
+    armor: Equipment | null;
+    accessory: Equipment | null;
+    helmet: Equipment | null;
+    boots: Equipment | null;
+  };
+  combat_stats?: CombatStats;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // 敌人实例类型
@@ -79,6 +98,15 @@ export interface CombatStats {
   crit_damage_resist: number;
   hit_rate: number;
   dodge_rate: number;
+}
+
+// 装备类型
+export interface Equipment {
+  id: string;
+  name: string;
+  level: number;
+  slot: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  combatStats: CombatStats;
 }
 
 // 掉落物品类型
@@ -149,7 +177,11 @@ export const playerApi = {
     
   // 获取玩家战斗属性
   getCombatStats: (data: { playerId: string }): Promise<BaseResponse<CombatStats>> => 
-    api.post('/players/combat-stats', data)
+    api.post('/players/combat-stats', data),
+
+  // 穿戴装备
+  equipItem: (data: { playerId: string; equipmentId: string }): Promise<BaseResponse<Player>> =>
+    api.post('/players/equip', data)
 };
 
 export const mapApi = {

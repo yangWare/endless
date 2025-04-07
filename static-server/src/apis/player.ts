@@ -145,4 +145,34 @@ export class PlayerAPI {
       };
     }
   }
+
+  /**
+   * 穿戴装备
+   */
+  static async equipItem(ctx: BaseContext) {
+    try {
+      const { playerId, equipmentId } = ctx.request.body;
+
+      // 参数验证
+      if (!playerId || !equipmentId) {
+        throw new Error('缺少必要参数');
+      }
+
+      // 穿戴装备
+      const player = await PlayerService.equipItem(playerId, equipmentId);
+      
+      // 返回更新后的玩家信息（不包含密码）
+      const { password: _, ...playerWithoutPassword } = player.toObject();
+      ctx.body = {
+        success: true,
+        data: playerWithoutPassword
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 

@@ -1,34 +1,8 @@
-import { Player } from '../models/Player';
-import { Types, Document, Schema } from 'mongoose';
+import { Player, IEquipment, PlayerDocument } from '../models/Player';
+import { Types } from 'mongoose';
 import { Material } from '../models/Material';
-import { MaterialService } from './MaterialService';
 import { MapService } from './MapService';
 import { LocationService } from './LocationService';
-
-interface Equipment {
-  name: string;
-  level: number;
-  slot: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
-  combatStats: {
-    max_hp: number;
-    attack: number;
-    defense: number;
-    crit_rate: number;
-    crit_resist: number;
-    crit_damage: number;
-    crit_damage_resist: number;
-    hit_rate: number;
-    dodge_rate: number;
-  };
-}
-
-type PlayerDocument = Document & {
-  inventory?: {
-    materials: Types.ObjectId[];
-    potions: Types.ObjectId[];
-    equipments: Equipment[];
-  };
-};
 
 // 玩家初始战斗属性
 const INITIAL_COMBAT_STATS = {
@@ -267,7 +241,7 @@ export class PlayerService {
         player.inventory = {
           materials: [] as Types.ObjectId[],
           potions: [] as Types.ObjectId[],
-          equipments: [] as Equipment[]
+          equipments: [] as IEquipment[]
         };
       }
 
@@ -374,6 +348,120 @@ export class PlayerService {
       };
     } catch (error: any) {
       throw new Error(`获取玩家位置失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 穿戴装备
+   * @param playerId 玩家ID
+   * @param equipmentId 要穿戴的装备ID
+   * @returns 更新后的玩家信息
+   */
+  static async equipItem(playerId: string, equipmentId: string) {
+    try {
+      const player = await Player.findById(playerId) as PlayerDocument;
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      // 确保inventory存在
+      if (!player.inventory) {
+        throw new Error('玩家背包不存在');
+      }
+
+      // 在背包中查找装备
+      const equipmentIndex = player.inventory.equipments.findIndex(
+        (equip) => equip.id === equipmentId
+      );
+
+      if (equipmentIndex === -1) {
+        throw new Error('装备不存在于玩家背包中');
+      }
+
+      const equipment = player.inventory.equipments[equipmentIndex];
+      
+      // 处理不同的装备槽位
+      if (equipment.slot === 'weapon') {
+        if (player.equipped && player.equipped.weapon) {
+          player.inventory.equipments.push(player.equipped.weapon);
+        }
+        if (!player.equipped) {
+          player.equipped = {
+            weapon: null,
+            armor: null,
+            accessory: null,
+            helmet: null,
+            boots: null
+          };
+        }
+        player.equipped.weapon = equipment;
+      } else if (equipment.slot === 'armor') {
+        if (player.equipped && player.equipped.armor) {
+          player.inventory.equipments.push(player.equipped.armor);
+        }
+        if (!player.equipped) {
+          player.equipped = {
+            weapon: null,
+            armor: null,
+            accessory: null,
+            helmet: null,
+            boots: null
+          };
+        }
+        player.equipped.armor = equipment;
+      } else if (equipment.slot === 'accessory') {
+        if (player.equipped && player.equipped.accessory) {
+          player.inventory.equipments.push(player.equipped.accessory);
+        }
+        if (!player.equipped) {
+          player.equipped = {
+            weapon: null,
+            armor: null,
+            accessory: null,
+            helmet: null,
+            boots: null
+          };
+        }
+        player.equipped.accessory = equipment;
+      } else if (equipment.slot === 'helmet') {
+        if (player.equipped && player.equipped.helmet) {
+          player.inventory.equipments.push(player.equipped.helmet);
+        }
+        if (!player.equipped) {
+          player.equipped = {
+            weapon: null,
+            armor: null,
+            accessory: null,
+            helmet: null,
+            boots: null
+          };
+        }
+        player.equipped.helmet = equipment;
+      } else if (equipment.slot === 'boots') {
+        if (player.equipped && player.equipped.boots) {
+          player.inventory.equipments.push(player.equipped.boots);
+        }
+        if (!player.equipped) {
+          player.equipped = {
+            weapon: null,
+            armor: null,
+            accessory: null,
+            helmet: null,
+            boots: null
+          };
+        }
+        player.equipped.boots = equipment;
+      } else {
+        throw new Error(`无效的装备槽位: ${equipment.slot}`);
+      }
+
+      // 从背包中移除该装备
+      player.inventory.equipments.splice(equipmentIndex, 1);
+
+      await player.save();
+      return player;
+    } catch (error: any) {
+      throw new Error(`穿戴装备失败: ${error.message}`);
     }
   }
 } 
