@@ -1,23 +1,7 @@
 import { state, updatePlayer } from '../state'
 import { enemyApi, playerApi } from '../../api'
-import type { Player, Equipment, CombatStats, BaseResponse, AttackEnemyResult, DroppedMaterial } from '../../api'
+import type { Player, DroppedMaterial } from '../../api'
 
-interface EnemyInstance {
-  id: string
-  hp: number
-}
-
-// 从state中导入的类型
-interface GameState {
-  currentMapId: string
-  currentLocationId: string
-  player: Player | null
-  enemyInstances: {
-    [locationId: string]: {
-      [enemyId: string]: EnemyInstance
-    }
-  }
-}
 
 interface AttackResult {
   result: 'enemy_dead' | 'continue' | 'player_dead'
@@ -33,7 +17,7 @@ interface AttackResult {
 export async function generateCombatStats(): Promise<void> {
   const player = state.player as Player
   
-  if (!player?.id) {
+  if (!player?._id) {
     console.error('玩家ID不存在')
     throw new Error('玩家ID不存在')
   }
@@ -41,7 +25,7 @@ export async function generateCombatStats(): Promise<void> {
   try {
     // 调用后端API获取战斗属性
     const response = await playerApi.getCombatStats({
-      playerId: player.id
+      playerId: player._id
     })
     
     if (!response.success) {
@@ -71,7 +55,7 @@ export async function generateCombatStats(): Promise<void> {
 export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult> {
   const player = state.player as Player
   
-  if (!player?.id) {
+  if (!player?._id) {
     console.error('玩家ID不存在')
     throw new Error('玩家ID不存在')
   }
@@ -79,7 +63,7 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
   try {
     // 调用后端 API 进行攻击
     const response = await enemyApi.attack({
-      playerId: player.id,
+      playerId: player._id,
       enemyInstanceId
     })
     
@@ -145,7 +129,7 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
 export async function equipItem(equipmentId: string): Promise<void> {
   const player = state.player as Player
 
-  if (!player?.id) {
+  if (!player?._id) {
     console.error('玩家ID不存在')
     throw new Error('玩家ID不存在')
   }
@@ -153,7 +137,7 @@ export async function equipItem(equipmentId: string): Promise<void> {
   try {
     // 调用后端API穿戴装备
     const response = await playerApi.equipItem({
-      playerId: player.id,
+      playerId: player._id,
       equipmentId
     })
 
