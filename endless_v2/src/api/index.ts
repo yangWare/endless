@@ -47,16 +47,6 @@ export interface EnemyInstance {
   updatedAt: string;
 }
 
-// 地点状态类型
-export interface LocationState {
-  id: string;
-  locationId: string;
-  enemyInstances: EnemyInstance[];
-  lastUpdateTime: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface PlayerInfoRequest {
   username: string;
   password: string;
@@ -211,16 +201,6 @@ export const locationApi = {
     const response = await axios.post(`/api/locations/${locationId}/enemies`);
     return response.data;
   }
-};
-
-export const locationStateApi = {
-  // 获取地点状态
-  getByLocationId: (locationId: string): Promise<BaseResponse<LocationState>> => 
-    api.get(`/location-states/${locationId}`),
-  
-  // 更新地点状态
-  update: (data: Partial<LocationState>): Promise<BaseResponse<LocationState>> => 
-    api.post('/location-states/update', data)
 };
 
 export const enemyInstanceApi = {

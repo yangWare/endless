@@ -181,7 +181,6 @@ export class LocationService {
           // 创建敌人实例
           const enemyInstance = new EnemyInstance({
             creatureId: creature._id,
-            creatureName: creature.name,
             locationId: locationId,
             hp: 100 // 临时值，后面会更新
           });
@@ -202,6 +201,30 @@ export class LocationService {
       return enemyInstances;
     } catch (error: any) {
       throw new Error(`生成敌人失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 获取指定地点的敌人实例列表
+   * @param locationId 地点ID
+   * @returns 敌人实例列表
+   */
+  static async getLocationEnemyInstances(locationId: string) {
+    try {
+      // 验证地点是否存在
+      const location = await Location.findById(locationId);
+      if (!location) {
+        throw new Error('地点不存在');
+      }
+
+      // 获取该地点的所有敌人实例
+      const enemyInstances = await EnemyInstance.find({ 
+        locationId: locationId 
+      }).populate('creatureId', 'name');
+
+      return enemyInstances;
+    } catch (error: any) {
+      throw new Error(`获取地点敌人列表失败: ${error.message}`);
     }
   }
 } 

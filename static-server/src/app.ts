@@ -290,7 +290,7 @@ app.use(async (ctx: BaseContext, next) => {
   }
 
   // 地点生成敌人 API
-  if (ctx.path.match(/^\/locations\/[a-zA-Z0-9]+\/generate-enemies$/) && ctx.method === 'POST') {
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+\/generate-enemies$/) && ctx.method === 'POST') {
     await LocationAPI.generateEnemies(ctxWithParams);
     return;
   }

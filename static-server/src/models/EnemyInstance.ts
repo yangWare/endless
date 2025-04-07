@@ -6,10 +6,6 @@ const enemyInstanceSchema = new mongoose.Schema({
     ref: 'Creature',
     required: true
   },
-  creatureName: {
-    type: String,
-    required: true
-  },
   hp: {
     type: Number,
     required: true

@@ -7,7 +7,6 @@ import { CreatureService } from './CreatureService';
 
 export interface EnemyInstanceData {
   creatureId: Types.ObjectId;
-  creatureName: string;
   hp: number;
   locationId: Types.ObjectId;
 }
@@ -51,14 +50,7 @@ export class EnemyInstanceService {
         throw new Error('部分生物ID不存在');
       }
 
-      // 确保每个实例都有对应的生物名称
-      const creatureMap = new Map(creatures.map(c => [c._id.toString(), c.name]));
-      const enrichedInstancesData = instancesData.map(data => ({
-        ...data,
-        creatureName: data.creatureName || creatureMap.get(data.creatureId.toString()) || '未知生物'
-      }));
-
-      const instances = await EnemyInstance.insertMany(enrichedInstancesData);
+      const instances = await EnemyInstance.insertMany(instancesData);
       return instances;
     } catch (error: any) {
       throw new Error(`批量创建敌人实例失败: ${error.message}`);
