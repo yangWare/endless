@@ -84,12 +84,11 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, defineEmits, onMounted, watch, nextTick } from 'vue'
-import { state } from '../store/state'
+import { state, loadMap } from '../store/state'
 import { generateEnemies, generateEnemyCombatStats } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
-import mapConfig from '../config/map_config.json'
 import enemyConfig from '../config/enemy_config.json'
 import materialConfig from '../config/material_config.json'
 import i18nConfig from '../config/i18n_config.json'
@@ -97,30 +96,62 @@ import ForgeView from './ForgeView.vue'
 import ShopView from './ShopView.vue'
 import Message from './Message.vue'
 
-const activeTab = ref('enemies')
-const locationEnemies = ref([])
+interface CombatLog {
+  id: number
+  message: string
+}
 
-generateEnemies()
+interface Enemy {
+  instanceId: string
+  name: string
+  enemy: {
+    enemyId: string
+    hp: number
+  }
+}
 
-const location = computed(
-  () => mapConfig[state.currentMapId].locations[state.currentLocationId],
-)
-const combatLogs = ref([])
+interface DroppedItem {
+  id: string
+  quantity: number
+}
+
+interface CombatResult {
+  player: {
+    hit: boolean
+    damage: number
+    isCrit: boolean
+  }
+  enemy?: {
+    hit: boolean
+    damage: number
+    isCrit: boolean
+    isPlayerAlive: boolean
+  }
+  droppedItems?: DroppedItem[]
+}
+
+const activeTab = ref<'enemies' | 'npcs'>('enemies')
+const locationEnemies = ref<Enemy[]>([])
+const combatLogs = ref<CombatLog[]>([])
 const isAttacking = ref(false)
+const showForge = ref(false)
+const showShop = ref(false)
+const showEnemyInfoModal = ref(false)
+const enemyInfoContent = ref('')
 
-const updateLocationEnemies = () => {
+const location = computed(() => state.mapLocations[state.currentLocationId])
+
+const updateLocationEnemies = (): void => {
   const currentLocationEnemies = state.enemyStatus[state.currentLocationId] || {}
   const locationConfig = location.value
   const enemyConfigs = locationConfig.enemy || {}
   
-  // 获取所有可能的敌人
   const possibleEnemies = Object.entries(currentLocationEnemies)
     .filter(([_, enemy]) => {
       const creatureId = enemy.enemyId
       const enemyConfigOfLocation = enemyConfigs[creatureId]
       if (!enemyConfigOfLocation) return false
       
-      // 根据概率决定是否显示
       return Math.random() < enemyConfigOfLocation.probability
     })
     .map(([instanceId, enemy]) => {
@@ -131,16 +162,21 @@ const updateLocationEnemies = () => {
       }
     })
   
-  // 随机打乱顺序，最多显示5个或实际可用敌人数量
   const maxEnemies = Math.min(5, possibleEnemies.length)
   locationEnemies.value = possibleEnemies
     .sort(() => Math.random() - 0.5)
     .slice(0, maxEnemies)
 }
 
-const emit = defineEmits(['close'])
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
 
-onMounted(() => {
+onMounted(async () => {
+  if (!state.currentMap) {
+    await loadMap(state.currentMapId)
+  }
+  
   combatLogs.value.push({
     id: Date.now(),
     message: `${location.value.description || ''}`,
@@ -149,22 +185,19 @@ onMounted(() => {
   updateLocationEnemies()
 })
 
-const closeLocationView = () => {
+const closeLocationView = (): void => {
   emit('close')
 }
 
-const getNpcName = (npcType) => {
-  const npcNames = {
+const getNpcName = (npcType: string): string => {
+  const npcNames: Record<string, string> = {
     forge: '锻造所',
     shop: '商店',
   }
   return npcNames[npcType] || npcType
 }
 
-const showForge = ref(false)
-const showShop = ref(false)
-
-const handleNpcClick = (npcType) => {
+const handleNpcClick = (npcType: string): void => {
   if (npcType === 'forge') {
     showForge.value = true
   } else if (npcType === 'shop') {
@@ -172,15 +205,15 @@ const handleNpcClick = (npcType) => {
   }
 }
 
-const closeForge = () => {
+const closeForge = (): void => {
   showForge.value = false
 }
 
-const closeShop = () => {
+const closeShop = (): void => {
   showShop.value = false
 }
 
-const addMessageWithDelay = (message, delay = 500) => {
+const addMessageWithDelay = (message: string, delay = 500): Promise<void> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       combatLogs.value.push({
@@ -192,13 +225,12 @@ const addMessageWithDelay = (message, delay = 500) => {
   })
 }
 
-const handleAttackEnemy = async (enemy) => {
+const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
   if (isAttacking.value) return
   isAttacking.value = true
   try {
-    const result = await attackEnemy(enemy.instanceId)
+    const result = await attackEnemy(enemy.instanceId) as CombatResult
 
-    // 处理玩家攻击结果
     if (!result.player.hit) {
       await addMessageWithDelay(`你的攻击未命中${enemy.name}`)
     } else {
@@ -207,22 +239,18 @@ const handleAttackEnemy = async (enemy) => {
         message += '（暴击！）'
       }
       await addMessageWithDelay(message)
-      // 如果敌人被击败
       if (!state.enemyStatus[state.currentLocationId]?.[enemy.instanceId]) {
         await addMessageWithDelay(`${enemy.name}被击败了！`)
-        // 检查掉落物品
         if (result.droppedItems && result.droppedItems.length > 0) {
           const dropsMessage = result.droppedItems
             .map((drop) => {
-              // 遍历所有材料类型
               for (const typeKey in materialConfig.material_types) {
                 const type = materialConfig.material_types[typeKey]
-                // 在每个类型中查找材料
-                if (type.materials[drop]) {
-                  return type.materials[drop].name
+                if (type.materials[drop.id]) {
+                  return type.materials[drop.id].name
                 }
               }
-              return drop // 如果没找到对应的材料配置，返回原始key
+              return drop.id
             })
             .join('、')
           await addMessageWithDelay(`获得了：${dropsMessage}`)
@@ -232,7 +260,6 @@ const handleAttackEnemy = async (enemy) => {
       }
     }
 
-    // 处理敌人反击结果
     if (result.enemy) {
       if (!result.enemy.hit) {
         await addMessageWithDelay(`${enemy.name}的反击未命中你`)
@@ -243,7 +270,6 @@ const handleAttackEnemy = async (enemy) => {
         }
         await addMessageWithDelay(counterMessage)
 
-        // 检查玩家是否存活
         if (!result.enemy.isPlayerAlive) {
           await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
           return
@@ -258,7 +284,7 @@ const handleAttackEnemy = async (enemy) => {
   }
 }
 
-const scrollToBottom = () => {
+const scrollToBottom = (): void => {
   nextTick(() => {
     const container = document.querySelector('.combat-log-content')
     if (container) {
@@ -269,23 +295,19 @@ const scrollToBottom = () => {
 
 watch(combatLogs, scrollToBottom, { deep: true })
 
-// 计算是否有敌人
-const hasEnemies = computed(() => {
+const hasEnemies = computed((): boolean => {
   return locationEnemies.value.length > 0
 })
 
-// 是否展示敌人tab
-const showEnemiesTab = computed(() => {
+const showEnemiesTab = computed((): boolean => {
   return location.value.enemy && Object.keys(location.value.enemy).length > 0
 })
 
-// 计算是否有NPC
-const hasNpcs = computed(() => {
+const hasNpcs = computed((): boolean => {
   return location.value.npc && Object.keys(location.value.npc).length > 0
 })
 
-// 确保当前激活的tab是可展示的
-const ensureValidTab = () => {
+const ensureValidTab = (): void => {
   if (activeTab.value === 'enemies' && !showEnemiesTab.value) {
     activeTab.value = hasNpcs.value ? 'npcs' : null
   } else if (activeTab.value === 'npcs' && !hasNpcs.value) {
@@ -293,14 +315,10 @@ const ensureValidTab = () => {
   }
 }
 
-const showEnemyInfoModal = ref(false)
-const enemyInfoContent = ref('')
-
-const showEnemyInfo = (enemy) => {
+const showEnemyInfo = (enemy: Enemy): void => {
   const creatureId = enemy.enemy.enemyId
   const stats = generateEnemyCombatStats(creatureId)
   
-  // 构建属性信息字符串
   let content = `${enemy.name}<br>`
   for (const [key, value] of Object.entries(stats)) {
     content += `${i18nConfig.combat_stats[key]}: ${value}<br>`
@@ -309,7 +327,7 @@ const showEnemyInfo = (enemy) => {
   showEnemyInfoModal.value = true
 }
 
-const closeEnemyInfo = () => {
+const closeEnemyInfo = (): void => {
   showEnemyInfoModal.value = false
   enemyInfoContent.value = ''
 }
