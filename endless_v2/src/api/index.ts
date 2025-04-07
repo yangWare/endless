@@ -145,7 +145,11 @@ export const playerApi = {
   
   // 获取玩家位置
   getLocation: (data: { playerId: string }): Promise<BaseResponse<{ locationId: string }>> => 
-    api.post('/players/location', data)
+    api.post('/players/location', data),
+    
+  // 获取玩家战斗属性
+  getCombatStats: (data: { playerId: string }): Promise<BaseResponse<CombatStats>> => 
+    api.post('/players/combat-stats', data)
 };
 
 export const mapApi = {

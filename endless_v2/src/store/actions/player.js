@@ -1,5 +1,5 @@
 import { state, updatePlayer, updateState } from '../state'
-import { enemyApi } from '../../api'
+import { enemyApi, playerApi } from '../../api'
 
 /**
  * 玩家基础属性
@@ -40,44 +40,35 @@ const LEVEL_GROWTH = {
  */
 export async function generateCombatStats() {
   const player = state.player
-  const level = player.level
-
-  // 计算等级加成后的属性
-  const combatStats = {
-    max_hp: Math.floor(
-      BASE_STATS.max_hp * Math.pow(LEVEL_GROWTH.max_hp, level - 1),
-    ),
-    attack: Math.floor(
-      BASE_STATS.attack * Math.pow(LEVEL_GROWTH.attack, level - 1),
-    ),
-    defense: Math.floor(
-      BASE_STATS.defense * Math.pow(LEVEL_GROWTH.defense, level - 1),
-    ),
-    // 这些属性不随等级变化
-    crit_rate: BASE_STATS.crit_rate,
-    crit_resist: BASE_STATS.crit_resist,
-    crit_damage: BASE_STATS.crit_damage,
-    crit_damage_resist: BASE_STATS.crit_damage_resist,
-    hit_rate: BASE_STATS.hit_rate,
-    dodge_rate: BASE_STATS.dodge_rate,
+  
+  if (!player.id) {
+    console.error('玩家ID不存在')
+    throw new Error('玩家ID不存在')
   }
-
-  // 遍历当前已穿戴装备，将装备属性加成计入最终属性
-  Object.values(player.equipment).forEach((equipment) => {
-    if (equipment) {
-      Object.keys(equipment.combat_info).forEach((stat) => {
-        combatStats[stat] += equipment.combat_info[stat]
-      })
+  
+  try {
+    // 调用后端API获取战斗属性
+    const response = await playerApi.getCombatStats({
+      playerId: player.id
+    })
+    
+    if (!response.success) {
+      throw new Error(response.error || '获取战斗属性失败')
     }
-  })
-
-  // 更新玩家状态
-  await updatePlayer({
-    ...player,
-    combat_stats: combatStats,
-  })
-
-  return Promise.resolve()
+    
+    const combatStats = response.data
+    
+    // 更新玩家状态
+    await updatePlayer({
+      ...player,
+      combat_stats: combatStats,
+    })
+    
+    return Promise.resolve()
+  } catch (error) {
+    console.error('获取战斗属性失败:', error)
+    throw error
+  }
 }
 
 /**

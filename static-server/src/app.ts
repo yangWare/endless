@@ -268,6 +268,11 @@ app.use(async (ctx: BaseContext, next) => {
     return;
   }
 
+  if (ctx.path === '/api/players/combat-stats' && ctx.method === 'POST') {
+    await PlayerAPI.getCombatStats(ctxWithParams);
+    return;
+  }
+
   // 敌人 API
   if (ctx.path === '/api/enemies/combat-stats/:enemyInstanceId' && ctx.method === 'GET') {
     await EnemyAPI.calculateCombatStats(ctxWithParams);

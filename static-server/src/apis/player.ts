@@ -118,4 +118,31 @@ export class PlayerAPI {
       };
     }
   }
+
+  /**
+   * 获取玩家战斗属性
+   */
+  static async getCombatStats(ctx: BaseContext) {
+    try {
+      const { playerId } = ctx.request.body;
+
+      // 参数验证
+      if (!playerId) {
+        throw new Error('缺少玩家ID');
+      }
+
+      // 获取玩家战斗属性
+      const combatStats = await PlayerService.calculateCombatStats(playerId);
+      ctx.body = {
+        success: true,
+        data: combatStats
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 
