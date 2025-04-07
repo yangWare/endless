@@ -11,43 +11,38 @@
   </Modal>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import Modal from './Modal.vue'
 
-const props = defineProps({
-  content: {
-    type: String,
-    required: true,
-  },
-  visible: {
-    type: Boolean,
-    default: false,
-  },
-  showButton: {
-    type: Boolean,
-    default: false,
-  },
-  buttonText: {
-    type: String,
-    default: '确定',
-  },
-  allowClose: {
-    type: Boolean,
-    default: true,
-  },
+interface MessageProps {
+  content: string
+  visible: boolean
+  showButton?: boolean
+  buttonText?: string
+  allowClose?: boolean
+}
+
+const props = withDefaults(defineProps<MessageProps>(), {
+  visible: false,
+  showButton: false,
+  buttonText: '确定',
+  allowClose: true
 })
 
-const emit = defineEmits(['update:visible', 'action'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+  (e: 'action'): void
+}>()
 
-const handleAction = () => {
+const handleAction = (): void => {
   emit('action')
   emit('update:visible', false)
 }
 
 const visible = computed({
   get: () => props.visible,
-  set: (value) => {
+  set: (value: boolean) => {
     if (!props.allowClose && !value) return
     emit('update:visible', value)
   },

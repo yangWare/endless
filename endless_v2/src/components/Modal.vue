@@ -6,18 +6,25 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  visible: {
-    type: Boolean,
-    default: false,
-  },
+<script setup lang="ts">
+interface ModalProps {
+  visible: boolean
+  allowClose?: boolean
+}
+
+const props = withDefaults(defineProps<ModalProps>(), {
+  visible: false,
+  allowClose: true
 })
 
-const emit = defineEmits(['update:visible'])
+const emit = defineEmits<{
+  (e: 'update:visible', value: boolean): void
+}>()
 
-const handleOverlayClick = () => {
-  emit('update:visible', false)
+const handleOverlayClick = (): void => {
+  if (props.allowClose) {
+    emit('update:visible', false)
+  }
 }
 </script>
 
