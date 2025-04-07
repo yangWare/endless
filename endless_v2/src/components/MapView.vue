@@ -108,7 +108,7 @@ const drawMap = (): void => {
 
     // 绘制连线
     location.adjacentLocations.forEach((adjacentId: string | number) => {
-      const connectionKey = [location.id, adjacentId].sort().join('-')
+      const connectionKey = [location._id, adjacentId].sort().join('-')
       if (!drawnConnections.has(connectionKey)) {
         const adjacentLocation = state.mapLocations[adjacentId]
         if (adjacentLocation) {
@@ -151,7 +151,7 @@ const drawMap = (): void => {
     ctx.stroke()
 
     // 为当前地点添加特殊效果
-    if (Number(state.currentLocationId) === Number(location.id)) {
+    if (state.currentLocationId === location._id) {
       // 添加发光效果
       ctx.save()
       ctx.shadowColor = '#ff4444'
