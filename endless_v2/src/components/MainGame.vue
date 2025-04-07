@@ -32,36 +32,44 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, defineAsyncComponent, watch, computed } from 'vue'
-
 import { state, updatePlayer, initState } from '../store/state'
+
+type ViewType = 'map' | 'bag' | 'character'
+
+interface Player {
+  hp: number
+  name: string
+  level: number
+  gold: number
+}
 
 initState()
 
-const player = computed(() => state.player)
+const player = computed<Player>(() => state.player)
 
-const currentView = ref('map')
+const currentView = ref<ViewType>('map')
 
 const MapView = defineAsyncComponent(() => import('./MapView.vue'))
 const BagView = defineAsyncComponent(() => import('./BagView.vue'))
 const CharacterView = defineAsyncComponent(() => import('./CharacterView.vue'))
 
-const openMap = () => {
+const openMap = (): void => {
   currentView.value = 'map'
 }
 
-const openBag = () => {
+const openBag = (): void => {
   currentView.value = 'bag'
 }
 
-const openCharacter = () => {
+const openCharacter = (): void => {
   currentView.value = 'character'
 }
 
 watch(
   player,
-  (newValue) => {
+  (newValue: Player) => {
     updatePlayer(newValue)
   },
   { deep: true },

@@ -68,6 +68,19 @@ export interface Location {
   enemies: string[];
 }
 
+// 战斗属性类型
+export interface CombatStats {
+  max_hp: number;
+  attack: number;
+  defense: number;
+  crit_rate: number;
+  crit_resist: number;
+  crit_damage: number;
+  crit_damage_resist: number;
+  hit_rate: number;
+  dodge_rate: number;
+}
+
 const baseURL = '/endless/api';
 
 const api: AxiosInstance = axios.create({
@@ -134,7 +147,16 @@ export const locationApi = {
   
   // 获取地点详情
   getById: (id: string): Promise<BaseResponse<Location>> => 
-    api.get(`/locations/${id}`)
+    api.get(`/locations/${id}`),
+
+  /**
+   * 生成指定地点的敌人
+   * @param locationId 地点ID
+   */
+  generateEnemies: async (locationId: string) => {
+    const response = await axios.post(`/api/locations/${locationId}/enemies`);
+    return response.data;
+  }
 };
 
 export const locationStateApi = {
@@ -155,6 +177,16 @@ export const enemyInstanceApi = {
   // 更新敌人实例
   update: (data: Partial<EnemyInstance>): Promise<BaseResponse<EnemyInstance>> => 
     api.post('/enemy-instances/update', data)
+};
+
+export const enemyApi = {
+  /**
+   * 计算生物的战斗属性
+   * @param creatureId 生物ID
+   */
+  calculateCombatStats: async (creatureId: string): Promise<BaseResponse<CombatStats>> => {
+    return api.get(`/enemies/combat-stats/${creatureId}`);
+  }
 };
 
 export default api; 

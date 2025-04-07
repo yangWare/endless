@@ -1,5 +1,8 @@
 import { Location } from '../models/Location';
 import { Types } from 'mongoose';
+import { Creature } from '../models/Creature';
+import { EnemyInstanceService } from './EnemyInstanceService';
+import { EnemyInstance } from '../models/EnemyInstance';
 
 export interface LocationNPC {
   forge?: {
@@ -138,6 +141,71 @@ export class LocationService {
       };
     } catch (error: any) {
       throw new Error(`获取地点列表失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 生成指定地点的敌人
+   */
+  static async generateEnemies(locationId: string) {
+    try {
+      const location = await Location.findById(locationId)
+        .populate('enemies.creatureId');
+      
+      if (!location) {
+        throw new Error('地点不存在');
+      }
+
+      const currentTime = Date.now();
+      const lastUpdateTime = location.enemyUpdateTime || 0;
+      const updateDuration = location.enemyUpdateDuration || 3600000; // 默认1小时
+
+      // 如果未超过刷新时间，返回空数组
+      if (currentTime - lastUpdateTime < updateDuration) {
+        return [];
+      }
+
+      const enemyInstances = [];
+
+      // 生成新的敌人实例
+      for (const enemyConfig of location.enemies || []) {
+        const creature = enemyConfig.creatureId as any;
+        const maxCount = enemyConfig.maxCount;
+
+        for (let i = 0; i < maxCount; i++) {
+          // 创建敌人实例
+          const enemyInstance = new EnemyInstance({
+            creatureId: creature._id,
+            locationId: locationId,
+            hp: 100 // 临时值，后面会更新
+          });
+          await enemyInstance.save();
+
+          // 使用 EnemyInstanceService 计算战斗属性
+          const combatStats = await EnemyInstanceService.calculateCombatStats(enemyInstance._id.toString());
+
+          // 更新敌人实例的 HP
+          enemyInstance.hp = combatStats.max_hp;
+          await enemyInstance.save();
+
+          enemyInstances.push({
+            instanceId: enemyInstance._id.toString(),
+            enemyId: creature._id.toString(),
+            locationId: locationId,
+            hp: combatStats.max_hp,
+            combatStats
+          });
+        }
+      }
+
+      // 更新地点的敌人更新时间
+      await Location.findByIdAndUpdate(locationId, {
+        enemyUpdateTime: currentTime
+      });
+
+      return enemyInstances;
+    } catch (error: any) {
+      throw new Error(`生成敌人失败: ${error.message}`);
     }
   }
 } 

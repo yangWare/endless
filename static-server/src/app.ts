@@ -11,6 +11,7 @@ import { LocationAPI } from './apis/location';
 import { MapAPI } from './apis/map';
 import { PlayerAPI } from './apis/player';
 import { BaseContext, ParamContext } from './types/context';
+import { EnemyAPI } from './apis/enemy';
 
 const app = new Koa();
 const PORT = process.env.PORT || 3000;
@@ -264,6 +265,23 @@ app.use(async (ctx: BaseContext, next) => {
 
   if (ctx.path === '/api/players/location/update' && ctx.method === 'POST') {
     await PlayerAPI.updateLocation(ctxWithParams);
+    return;
+  }
+
+  // 敌人 API
+  if (ctx.path === '/api/enemies/combat-stats/:enemyInstanceId' && ctx.method === 'GET') {
+    await EnemyAPI.calculateCombatStats(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/enemies/attack' && ctx.method === 'POST') {
+    await EnemyAPI.attack(ctxWithParams);
+    return;
+  }
+
+  // 地点生成敌人 API
+  if (ctx.path.match(/^\/locations\/[a-zA-Z0-9]+\/generate-enemies$/) && ctx.method === 'POST') {
+    await LocationAPI.generateEnemies(ctxWithParams);
     return;
   }
 

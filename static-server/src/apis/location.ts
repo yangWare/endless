@@ -1,6 +1,6 @@
 import { LocationService, LocationData, LocationQueryParams } from '../services/LocationService';
 import { Types } from 'mongoose';
-import { LocationContext } from '../types/context';
+import { LocationContext, BaseContext } from '../types/context';
 
 export class LocationAPI {
   /**
@@ -106,6 +106,33 @@ export class LocationAPI {
       };
       
       const result = await LocationService.getLocations(queryParams);
+      ctx.body = {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 生成敌人
+   */
+  static async generateEnemies(ctx: BaseContext) {
+    try {
+      const { locationId } = ctx.params;
+
+      // 参数验证
+      if (!locationId) {
+        throw new Error('缺少位置ID');
+      }
+
+      // 生成敌人
+      const result = await LocationService.generateEnemies(locationId);
       ctx.body = {
         success: true,
         data: result

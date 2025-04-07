@@ -77,6 +77,10 @@ const locationSchema = new mongoose.Schema({
     type: Number,
     default: 3600000 // 默认1小时
   },
+  enemyUpdateTime: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: () => new Date()
@@ -85,6 +89,8 @@ const locationSchema = new mongoose.Schema({
     type: Date,
     default: () => new Date()
   }
+}, {
+  timestamps: true
 });
 
 // 在保存前更新 updatedAt
