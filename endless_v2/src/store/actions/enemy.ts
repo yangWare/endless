@@ -1,66 +1,6 @@
-import mapConfig from '../../config/map_config.json'
-import enemyConfig from '../../config/enemy_config.json'
 import { state, updateEnemyInstance } from '../state'
 import { locationApi, enemyApi } from '../../api'
 import type { EnemyInstance, CombatStats } from '../../api'
-
-interface EnemyConfig {
-  name: string
-  desc: string
-  raceId: string
-  level: number
-  combat_multipliers: CombatStats
-  drop_materials: Array<{
-    name: string
-    probability: number
-  }>
-}
-
-interface RaceConfig {
-  name: string
-  desc: string
-  combat_multipliers: CombatStats
-}
-
-interface EnemyConfigFile {
-  base_combat_stats: CombatStats
-  creatures: Record<string, EnemyConfig>
-  races: Record<string, RaceConfig>
-}
-
-interface MapConfig {
-  id: number
-  name: string
-  description: string
-  bg_image: string
-  width: number
-  height: number
-  start_location_id: number
-  locations: Record<string, {
-    id: number
-    name: string
-    description: string
-    adjacent_locations: number[]
-    position: {
-      x: number
-      y: number
-    }
-    npc?: {
-      shop?: {
-        items: Array<{
-          id: string
-          price: number
-        }>
-      }
-      forge?: {
-        level: number
-      }
-    }
-    enemy?: Record<string, {
-      max_count: number
-    }>
-  }>
-}
 
 /**
  * 生成敌人的战斗属性
@@ -86,9 +26,9 @@ export const generateEnemyCombatStats = async (creatureId: string): Promise<Comb
  */
 export const generateEnemies = async (): Promise<void> => {
   const locationId = state.currentLocationId
-  const config = mapConfig as unknown as Record<string, MapConfig>
-  const currentLocation = config[state.currentMapId].locations[locationId]
-  if (!currentLocation || !currentLocation.enemy) {
+  const currentLocation = state.mapLocations[locationId]
+  
+  if (!currentLocation || !currentLocation.enemies || currentLocation.enemies.length === 0) {
     return Promise.resolve()
   }
 
