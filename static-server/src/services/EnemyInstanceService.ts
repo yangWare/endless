@@ -30,6 +30,12 @@ export interface CombatStats {
   dodge_rate: number;
 }
 
+// 添加伤害计算结果接口
+export interface DamageResult {
+  damage: number;
+  isCritical: boolean;
+}
+
 export class EnemyInstanceService {
   /**
    * 批量创建敌人实例
@@ -203,7 +209,7 @@ export class EnemyInstanceService {
       }
 
       // 计算伤害
-      const damage = this.calculateDamage(playerStats, enemyStats);
+      const { damage, isCritical } = this.calculateDamage(playerStats, enemyStats);
       enemyInstance.hp = Math.max(0, enemyInstance.hp - damage);
       await enemyInstance.save();
 
@@ -215,21 +221,24 @@ export class EnemyInstanceService {
         return {
           result: 'enemy_dead',
           damage,
+          isCritical,
           remainingHp: 0,
           droppedMaterials
         };
       }
 
       // 敌人反击
-      const counterDamage = this.calculateDamage(enemyStats, playerStats);
+      const { damage: counterDamage, isCritical: isCounterCritical } = this.calculateDamage(enemyStats, playerStats);
       // 处理玩家受伤
       const isPlayerDead = await PlayerService.handlePlayerDamage(playerId, counterDamage);
 
       return {
         result: isPlayerDead ? 'player_dead' : 'continue',
         damage,
+        isCritical,
         remainingHp: enemyInstance.hp,
         counterDamage,
+        isCounterCritical,
         isPlayerDead
       };
     } catch (error: any) {
@@ -241,11 +250,12 @@ export class EnemyInstanceService {
    * 计算伤害
    * @param attackerStats 攻击者属性
    * @param defenderStats 防御者属性
-   * @returns 造成的伤害
+   * @returns 伤害计算结果，包含伤害值和是否暴击
    */
-  private static calculateDamage(attackerStats: CombatStats, defenderStats: CombatStats): number {
+  private static calculateDamage(attackerStats: CombatStats, defenderStats: CombatStats): DamageResult {
     // 基础伤害 = 攻击力 - 防御力
     let damage = Math.max(1, attackerStats.attack - defenderStats.defense);
+    let isCritical = false;
 
     // 计算暴击
     const critRoll = Math.random();
@@ -253,15 +263,16 @@ export class EnemyInstanceService {
       // 计算暴击伤害，考虑防御者的暴击伤害抵抗
       const critDamageMultiplier = Math.max(1, attackerStats.crit_damage - defenderStats.crit_damage_resist);
       damage *= critDamageMultiplier;
+      isCritical = true;
     }
 
     // 计算闪避
     const dodgeRoll = Math.random();
     if (dodgeRoll < defenderStats.dodge_rate - attackerStats.hit_rate) {
-      return 0;
+      return { damage: 0, isCritical: false };
     }
 
-    return Math.floor(damage);
+    return { damage: Math.floor(damage), isCritical };
   }
 
   /**

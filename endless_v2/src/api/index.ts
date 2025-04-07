@@ -91,8 +91,10 @@ export interface DroppedMaterial {
 export interface AttackEnemyResult {
   result: 'enemy_dead' | 'player_dead' | 'continue';
   damage: number;
+  isCritical: boolean;
   remainingHp: number;
   counterDamage?: number;
+  isCounterCritical?: boolean;
   isPlayerDead?: boolean;
   droppedMaterials?: DroppedMaterial[];
 }
