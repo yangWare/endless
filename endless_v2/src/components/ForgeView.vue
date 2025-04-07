@@ -80,26 +80,51 @@
   </div>
 </template>
 
-<script>
-import { ref, computed, watch } from 'vue'
+<script lang="ts">
+import { ref, computed, watch, defineComponent } from 'vue'
 import { state } from '../store/state'
 import materialConfig from '../config/material_config.json'
 import i18n from '../config/i18n_config.json'
 import { forgeEquipment } from '../store/actions/forge'
 
-export default {
+interface Material {
+  id: string
+  name: string
+  type: string
+}
+
+interface SelectedMaterial {
+  material: Material
+  index: number
+}
+
+interface ForgeResult {
+  success: boolean
+  message: string
+  equipment?: {
+    name: string
+    [key: string]: any
+  }
+}
+
+interface EquipmentType {
+  name: string
+  [key: string]: any
+}
+
+export default defineComponent({
   name: 'ForgeView',
   emits: ['close'],
   setup(props, { emit }) {
-    const selectedMaterials = ref([])
-    const selectedType = ref('')
-    const forgeResult = ref(null)
-    const isForging = ref(false)
+    const selectedMaterials = ref<SelectedMaterial[]>([])
+    const selectedType = ref<string>('')
+    const forgeResult = ref<ForgeResult | null>(null)
+    const isForging = ref<boolean>(false)
 
-    const equipmentTypes = i18n.equipment_position
+    const equipmentTypes = i18n.equipment_position as Record<string, EquipmentType>
 
     // 获取玩家当前拥有的材料
-    const availableMaterials = computed(() => state.player.materials)
+    const availableMaterials = computed<Material[]>(() => state.player.materials)
 
     // 监听材料列表变化
     watch(availableMaterials, () => {
@@ -108,18 +133,18 @@ export default {
     })
 
     // 获取材料显示名称
-    const getMaterialName = (materialId) => {
+    const getMaterialName = (material: Material): string => {
       for (const type in materialConfig.material_types) {
         const materials = materialConfig.material_types[type].materials
-        if (materials[materialId]) {
-          return materials[materialId].name
+        if (materials[material.id]) {
+          return materials[material.id].name
         }
       }
-      return materialId
+      return material.id
     }
 
     // 切换材料选择状态
-    const toggleMaterial = (material, index) => {
+    const toggleMaterial = (material: Material, index: number): void => {
       const existingIndex = selectedMaterials.value.findIndex(
         (item) => item.index === index,
       )
@@ -131,19 +156,19 @@ export default {
     }
 
     // 移除已选材料
-    const removeMaterial = (index) => {
+    const removeMaterial = (index: number): void => {
       selectedMaterials.value = selectedMaterials.value.filter(
         (item) => item.index !== index,
       )
     }
 
     // 选择装备类型
-    const selectEquipmentType = (type) => {
+    const selectEquipmentType = (type: string): void => {
       selectedType.value = type
     }
 
     // 开始锻造
-    const startForge = async () => {
+    const startForge = async (): Promise<void> => {
       if (
         !selectedType.value ||
         selectedMaterials.value.length === 0 ||
@@ -175,9 +200,9 @@ export default {
       }
     }
 
-    const handleCloseClick = (event) => {
+    const handleCloseClick = (event: MouseEvent): void => {
       // 检查点击是否在关闭区域内
-      const rect = event.currentTarget.getBoundingClientRect()
+      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
       if (event.clientY - rect.top < 100) {
         emit('close')
       }
@@ -197,7 +222,7 @@ export default {
       handleCloseClick,
     }
   },
-}
+})
 </script>
 
 <style scoped>
