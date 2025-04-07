@@ -2,39 +2,6 @@ import { state, updatePlayer, updateState } from '../state'
 import { enemyApi, playerApi } from '../../api'
 
 /**
- * 玩家基础属性
- */
-const BASE_STATS = {
-  // 最大血量
-  max_hp: 10,
-  // 攻击力
-  attack: 1,
-  // 防御力
-  defense: 1,
-  // 暴击率
-  crit_rate: 0.05,
-  // 暴击抵抗
-  crit_resist: 0.01,
-  // 暴击伤害
-  crit_damage: 1.5,
-  // 暴击伤害抵抗
-  crit_damage_resist: 0.1,
-  // 命中率
-  hit_rate: 1,
-  // 闪避率
-  dodge_rate: 0.1,
-}
-
-/**
- * 等级成长系数
- */
-const LEVEL_GROWTH = {
-  max_hp: 1.2, // 每级血量增长20%
-  attack: 1.15, // 每级攻击增长15%
-  defense: 1.1, // 每级防御增长10%
-}
-
-/**
  * 生成玩家战斗属性
  * @returns {Promise<void>}
  */
@@ -187,21 +154,14 @@ export async function equipItem(equipmentName) {
  * 计算玩家最大生命值
  * @returns {number} 最大生命值
  */
-export function calculateMaxHp() {
+export async function calculateMaxHp() {
   const player = state.player
-  const level = player.level
-
-  // 计算基础生命值
-  let maxHp = Math.floor(
-    BASE_STATS.max_hp * Math.pow(LEVEL_GROWTH.max_hp, level - 1)
-  )
-
-  // 加上装备加成
-  Object.values(player.equipment).forEach((equipment) => {
-    if (equipment && equipment.combat_info.max_hp) {
-      maxHp += equipment.combat_info.max_hp
-    }
-  })
-
-  return maxHp
+  
+  // 如果combat_stats不存在或需要刷新，先获取战斗属性
+  if (!player.combat_stats) {
+    await generateCombatStats()
+  }
+  
+  // 使用来自后端的战斗属性
+  return player.combat_stats.max_hp
 }
