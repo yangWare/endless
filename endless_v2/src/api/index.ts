@@ -44,19 +44,27 @@ interface PlayerInfoRequest {
 }
 
 // 地图相关类型
-interface Map {
+export interface Map {
   id: string;
   name: string;
   description: string;
   startLocationId: string;
+  width: number;
+  height: number;
+  bgImage: string;
 }
 
 // 地点相关类型
-interface Location {
+export interface Location {
   id: string;
   name: string;
   description: string;
   mapId: string;
+  position: {
+    x: number;
+    y: number;
+  };
+  adjacentLocations: string[];
   enemies: string[];
 }
 
@@ -101,7 +109,7 @@ export const playerApi = {
     api.post('/players/info', data),
   
   // 更新玩家位置
-  updateLocation: (data: { playerId: string; locationId: string }): Promise<BaseResponse<Player>> => 
+  updateLocation: (data: { playerId: string; locationId: string; mapId: string }): Promise<BaseResponse<Player>> => 
     api.post('/players/location/update', data),
   
   // 获取玩家位置

@@ -1,5 +1,5 @@
 <template>
-  <div class="map-container" :style="{ backgroundImage: `url(${currentMap.bg_image})` }">
+  <div class="map-container" :style="{ backgroundImage: currentMap ? `url(${currentMap.bgImage})` : '' }">
     <canvas ref="mapCanvas" class="map-canvas"></canvas>
     <LocationView v-if="showLocationView" @close="showLocationView = false" />
     <button class="focus-button" @click="focusOnCurrentLocation">
@@ -17,13 +17,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { state } from '../store/state'
+import { state, loadMap } from '../store/state'
 import LocationView from './LocationView.vue'
 import Message from './Message.vue'
-// @ts-ignore
-import mapConfig from '../config/map_config.json'
-// @ts-ignore
 import { move } from '../store/actions/map'
+import { mapApi, locationApi } from '../api'
 
 interface Position {
   x: number
@@ -34,20 +32,24 @@ interface Location {
   id: string | number
   name: string
   position: Position
-  adjacent_locations: (string | number)[]
+  adjacentLocations: (string | number)[]
 }
 
 interface MapConfig {
+  id: string
+  name: string
+  description: string
+  startLocationId: string
   width: number
   height: number
-  bg_image: string
+  bgImage: string
   locations: Record<string | number, Location>
 }
 
 const mapCanvas = ref<HTMLCanvasElement | null>(null)
 const showLocationView = ref<boolean>(false)
-const currentMap = mapConfig[state.currentMapId] as unknown as MapConfig
-const locations = currentMap.locations
+const currentMap = ref<MapConfig | null>(null)
+const locations = ref<Record<string | number, Location>>({})
 
 const showMovingMessage = ref<boolean>(false)
 const movingMessage = ref<string>('')
@@ -94,7 +96,7 @@ const getIntersectionPoint = (
 
 const drawMap = (): void => {
   const canvas = mapCanvas.value
-  if (!canvas) return
+  if (!canvas || !state.currentMap) return
   
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -109,7 +111,7 @@ const drawMap = (): void => {
   const drawnConnections = new Set<string>()
 
   // 绘制地点和连线
-  Object.values(locations).forEach((location: Location) => {
+  Object.values(state.mapLocations).forEach((location: Location) => {
     const x = location.position.x
     const y = location.position.y
 
@@ -125,10 +127,10 @@ const drawMap = (): void => {
     const rectY = y - rectHeight/2
 
     // 绘制连线
-    location.adjacent_locations.forEach((adjacentId: string | number) => {
+    location.adjacentLocations.forEach((adjacentId: string | number) => {
       const connectionKey = [location.id, adjacentId].sort().join('-')
       if (!drawnConnections.has(connectionKey)) {
-        const adjacentLocation = locations[adjacentId]
+        const adjacentLocation = state.mapLocations[adjacentId]
         if (adjacentLocation) {
           // 计算相邻地点的矩形尺寸
           const adjText = adjacentLocation.name || '未命名'
@@ -197,8 +199,8 @@ const handleLocationClick = async (event: MouseEvent): Promise<void> => {
   const x = event.clientX - rect.left
   const y = event.clientY - rect.top
 
-  Object.keys(locations).forEach(async (id: string) => {
-    const location = locations[id]
+  Object.keys(state.mapLocations).forEach(async (id: string) => {
+    const location = state.mapLocations[id]
     const locX = location.position.x
     const locY = location.position.y
     if (Math.abs(x - locX) < 20 && Math.abs(y - locY) < 20) {
@@ -226,7 +228,7 @@ const focusOnCurrentLocation = (): void => {
   const container = canvas.parentElement
   if (!container) return
   
-  const currentLocation = locations[state.currentLocationId]
+  const currentLocation = state.mapLocations[state.currentLocationId]
   
   if (currentLocation) {
     const x = currentLocation.position.x
@@ -245,17 +247,66 @@ const focusOnCurrentLocation = (): void => {
   }
 }
 
+// 从服务端获取地图配置
+const fetchMapConfig = async () => {
+  try {
+    // 获取地图基本信息
+    const mapResult = await mapApi.getById(state.currentMapId)
+    if (!mapResult.success) {
+      console.error('获取地图配置失败:', mapResult.message)
+      return
+    }
+
+    // 获取地图的所有地点
+    const locationsResult = await locationApi.list({ mapId: state.currentMapId })
+    if (!locationsResult.success) {
+      console.error('获取地点列表失败:', locationsResult.message)
+      return
+    }
+
+    // 构建地图配置
+    const mapConfig: MapConfig = {
+      id: mapResult.data.id,
+      name: mapResult.data.name,
+      description: mapResult.data.description,
+      startLocationId: mapResult.data.startLocationId,
+      width: mapResult.data.width,
+      height: mapResult.data.height,
+      bgImage: mapResult.data.bgImage,
+      locations: {}
+    }
+
+    // 处理地点数据
+    locationsResult.data.forEach(location => {
+      mapConfig.locations[location.id] = {
+        id: location.id,
+        name: location.name,
+        position: location.position,
+        adjacentLocations: location.adjacentLocations
+      }
+    })
+
+    currentMap.value = mapConfig
+    locations.value = mapConfig.locations
+    drawMap()
+  } catch (error) {
+    console.error('获取地图配置出错:', error)
+  }
+}
+
 onMounted(() => {
   const canvas = mapCanvas.value
   if (!canvas) return
   
-  canvas.width = currentMap.width
-  canvas.height = currentMap.height
-  drawMap()
+  loadMap(state.currentMapId)
   canvas.addEventListener('click', handleLocationClick)
   
   // 初始定位
   focusOnCurrentLocation()
+})
+
+watch(() => state.currentMapId, () => {
+  loadMap(state.currentMapId)
 })
 
 watch(() => state.currentLocationId, drawMap)

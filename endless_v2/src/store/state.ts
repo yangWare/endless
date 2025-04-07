@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
-import { playerApi, locationStateApi } from '../api'
-import type { Player, LocationState, EnemyInstance } from '../api'
+import { playerApi, locationStateApi, mapApi, locationApi } from '../api'
+import type { Player, LocationState, EnemyInstance, Map, Location } from '../api'
 
 // 定义状态类型
 interface State {
@@ -9,6 +9,8 @@ interface State {
   player: Player | null
   locationState: LocationState | null
   enemyInstances: Record<string, EnemyInstance>
+  currentMap: Map | null
+  mapLocations: Record<string, Location>
 }
 
 export const state = reactive<State>({
@@ -16,7 +18,9 @@ export const state = reactive<State>({
   currentLocationId: '1',
   player: null,
   locationState: null,
-  enemyInstances: {}
+  enemyInstances: {},
+  currentMap: null,
+  mapLocations: {}
 })
 
 /**
@@ -147,4 +151,36 @@ export function updatePlayer(playerData: Partial<Player>): void {
   }
 
   Object.assign(state.player, playerData)
+}
+
+/**
+ * 加载地图信息
+ * @param {string} mapId 地图ID
+ * @returns {Promise<void>}
+ * @throws {Error} 加载失败时抛出错误
+ */
+export async function loadMap(mapId: string): Promise<void> {
+  try {
+    // 获取地图基本信息
+    const mapResult = await mapApi.getById(mapId)
+    if (!mapResult.success) {
+      throw new Error(mapResult.message || '获取地图信息失败')
+    }
+    
+    // 获取地图的所有地点
+    const locationsResult = await locationApi.list({ mapId })
+    if (!locationsResult.success) {
+      throw new Error(locationsResult.message || '获取地点列表失败')
+    }
+    
+    // 更新状态
+    state.currentMap = mapResult.data
+    state.mapLocations = {}
+    locationsResult.data.forEach(location => {
+      state.mapLocations[location.id] = location
+    })
+  } catch (error) {
+    console.error('加载地图信息失败:', error)
+    throw error
+  }
 } 
