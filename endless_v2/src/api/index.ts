@@ -81,6 +81,22 @@ export interface CombatStats {
   dodge_rate: number;
 }
 
+// 掉落物品类型
+export interface DroppedMaterial {
+  materialId: string;
+  quantity: number;
+}
+
+// 攻击敌人的结果类型
+export interface AttackEnemyResult {
+  result: 'enemy_dead' | 'player_dead' | 'continue';
+  damage: number;
+  remainingHp: number;
+  counterDamage?: number;
+  isPlayerDead?: boolean;
+  droppedMaterials?: DroppedMaterial[];
+}
+
 const baseURL = '/endless/api';
 
 const api: AxiosInstance = axios.create({
@@ -186,6 +202,14 @@ export const enemyApi = {
    */
   calculateCombatStats: async (creatureId: string): Promise<BaseResponse<CombatStats>> => {
     return api.get(`/enemies/combat-stats/${creatureId}`);
+  },
+  
+  /**
+   * 攻击敌人
+   * @param data 攻击参数，包含 playerId 和 enemyInstanceId
+   */
+  attack: async (data: { playerId: string; enemyInstanceId: string }): Promise<BaseResponse<AttackEnemyResult>> => {
+    return api.post('/enemies/attack', data);
   }
 };
 
