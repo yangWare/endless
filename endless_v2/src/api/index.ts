@@ -127,7 +127,7 @@ export interface DroppedMaterial {
 
 // 攻击敌人的结果类型
 export interface AttackEnemyResult {
-  result: 'enemy_dead' | 'player_dead' | 'continue';
+  result: 'enemy_dead' | 'player_dead' | 'continue' | 'enemy_refresh';
   damage: number;
   isCritical: boolean;
   remainingHp: number;
@@ -141,7 +141,7 @@ const baseURL = '/endless/api';
 
 const api: AxiosInstance = axios.create({
   baseURL,
-  timeout: 5000
+  timeout: 60 * 1000
 });
 
 // 请求拦截器
@@ -195,7 +195,11 @@ export const playerApi = {
 
   // 删除玩家
   delete: (data: { username: string; password: string }): Promise<BaseResponse<{ message: string }>> =>
-    api.post('/players/delete', data)
+    api.post('/players/delete', data),
+
+  // 复活玩家
+  revive: (data: { playerId: string }): Promise<BaseResponse<Player>> =>
+    api.post('/players/revive', data)
 };
 
 export const mapApi = {

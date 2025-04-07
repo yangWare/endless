@@ -144,6 +144,29 @@ export class LocationService {
   }
 
   /**
+   * 检查是否需要刷新敌人
+   * @param locationId 地点ID
+   * @returns 如果需要刷新返回 true，否则返回 false
+   */
+  static async checkEnemyRefreshNeeded(locationId: string): Promise<boolean> {
+    try {
+      const location = await Location.findById(locationId);
+      
+      if (!location) {
+        throw new Error('地点不存在');
+      }
+
+      const currentTime = Date.now();
+      const lastUpdateTime = location.enemyUpdateTime || 0;
+      const updateDuration = location.enemyUpdateDuration || 3600000; // 默认1小时
+
+      return currentTime - lastUpdateTime >= updateDuration;
+    } catch (error: any) {
+      throw new Error(`检查敌人刷新状态失败: ${error.message}`);
+    }
+  }
+
+  /**
    * 生成指定地点的敌人
    */
   static async generateEnemies(locationId: string) {
@@ -155,28 +178,27 @@ export class LocationService {
         throw new Error('地点不存在');
       }
 
-      // 获取当前地点所有敌人实例
-      const enemyInstances = await EnemyInstance.find({ locationId: locationId });
-
       const currentTime = Date.now();
       const lastUpdateTime = location.enemyUpdateTime || 0;
       const updateDuration = location.enemyUpdateDuration || 3600000; // 默认1小时
 
-      // 如果未超过刷新时间，返回空数组
+      // 如果未超过刷新时间，返回当前实例列表
       if (currentTime - lastUpdateTime < updateDuration) {
+        // 获取当前地点所有敌人实例
+        const enemyInstances = await EnemyInstance.find({ locationId: locationId });
         return enemyInstances;
       }
 
+      // 清理当前地点的敌人实例
+      await EnemyInstance.deleteMany({ locationId: locationId });
+
+      const enemyInstances = [];
       // 生成新的敌人实例
       for (const enemyConfig of location.enemies || []) {
         const creature = enemyConfig.creatureId as any;
         const maxCount = enemyConfig.maxCount;
-        // 现存实例数量
-        const currentCount = enemyInstances.filter(instance => instance.creatureId === creature._id).length;
-        // 需要新增的实例数量
-        const needAddCount = maxCount - currentCount;
 
-        for (let i = 0; i < needAddCount; i++) {
+        for (let i = 0; i < maxCount; i++) {
           // 创建敌人实例
           const enemyInstance = new EnemyInstance({
             creatureId: creature._id,

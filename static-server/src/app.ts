@@ -283,6 +283,11 @@ app.use(async (ctx: BaseContext, next) => {
     return;
   }
 
+  if (ctx.path === '/api/players/revive' && ctx.method === 'POST') {
+    await PlayerAPI.revive(ctxWithParams);
+    return;
+  }
+
   // 敌人 API
   if (ctx.path.match(/^\/api\/enemies\/[a-zA-Z0-9]+\/combat-stats$/) && ctx.method === 'GET') {
     await EnemyAPI.calculateCombatStats(ctxWithParams);

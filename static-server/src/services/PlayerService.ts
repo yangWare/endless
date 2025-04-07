@@ -31,6 +31,116 @@ export interface CombatStats {
 
 export class PlayerService {
   /**
+   * 获取玩家的初始状态
+   * @param firstMap 第一张地图
+   * @returns 玩家的初始状态
+   */
+  private static getInitialPlayerState(firstMap: any) {
+    return {
+      hp: 40,
+      coins: 0,
+      levelInfo: {
+        level: 1,
+        exp: 0
+      },
+      inventory: {
+        materials: [] as Types.ObjectId[],
+        potions: [] as Types.ObjectId[],
+        equipments: [] as any
+      },
+      currentMap: firstMap._id,
+      currentLocation: firstMap.startLocationId,
+      equipped: {
+        weapon: {
+          id: `default_weapon_${Date.now()}`,
+          name: `木剑`,
+          slot: 'weapon',
+          level: 1,
+          combatStats: {
+            max_hp: 0,
+            attack: 2,
+            defense: 1,
+            crit_rate: 0,
+            crit_resist: 0,
+            crit_damage: 0,
+            crit_damage_resist: 0,
+            hit_rate: 0,
+            dodge_rate: 0
+          }
+        },
+        armor: {
+          id: `default_armor_${Date.now()}`,
+          name: `兽皮短衣`,
+          slot: 'armor',
+          level: 1,
+          combatStats: {
+            max_hp: 20,
+            attack: 0,
+            defense: 2,
+            crit_rate: 0,
+            crit_resist: 0,
+            crit_damage: 0,
+            crit_damage_resist: 0,
+            hit_rate: 0,
+            dodge_rate: 0
+          }
+        },
+        accessory: {
+          id: `default_accessory_${Date.now()}`,
+          name: `羽毛挂坠`,
+          slot: 'accessory',
+          level: 1,
+          combatStats: {
+            max_hp: 0,
+            attack: 0,
+            defense: 0,
+            crit_rate: 0,
+            crit_resist: 0,
+            crit_damage: 0,
+            crit_damage_resist: 0,
+            hit_rate: 0.01,
+            dodge_rate: 0
+          }
+        },
+        helmet: {
+          id: `default_helmet_${Date.now()}`,
+          name: `藤帽`,
+          slot: 'helmet',
+          level: 1,
+          combatStats: {
+            max_hp: 10,
+            attack: 0,
+            defense: 2,
+            crit_rate: 0,
+            crit_resist: 0,
+            crit_damage: 0,
+            crit_damage_resist: 0,
+            hit_rate: 0,
+            dodge_rate: 0
+          }
+        },
+        boots: {
+          id: `default_boots_${Date.now()}`,
+          name: `藤鞋`,
+          slot: 'boots',
+          level: 1,
+          combatStats: {
+            max_hp: 0,
+            attack: 1,
+            defense: 0,
+            crit_rate: 0,
+            crit_resist: 0,
+            crit_damage: 0,
+            crit_damage_resist: 0,
+            hit_rate: 0.01,
+            dodge_rate: 0.01
+          }
+        }
+      }
+    };
+  }
+
+  /**
    * 创建新玩家
    * @param username 账号
    * @param password 密码
@@ -66,106 +176,7 @@ export class PlayerService {
         username,
         password,
         nickname,
-        currentMap: firstMap._id,
-        currentLocation: firstMap.startLocationId,
-        hp: 40,
-        coins: 0,
-        levelInfo: {
-          level: 1,
-          exp: 0
-        },
-        inventory: {
-          materials: [],
-          potions: [],
-          equipments: []
-        },
-        equipped: {
-          weapon: {
-            id: `default_weapon_${Date.now()}`,
-            name: `木剑`,
-            slot: 'weapon',
-            level: 1,
-            combatStats: {
-              max_hp: 0,
-              attack: 2,
-              defense: 1,
-              crit_rate: 0,
-              crit_resist: 0,
-              crit_damage: 0,
-              crit_damage_resist: 0,
-              hit_rate: 0,
-              dodge_rate: 0
-            }
-          },
-          armor: {
-            id: `default_armor_${Date.now()}`,
-            name: `兽皮短衣`,
-            slot: 'armor',
-            level: 1,
-            combatStats: {
-              max_hp: 20,
-              attack: 0,
-              defense: 2,
-              crit_rate: 0,
-              crit_resist: 0,
-              crit_damage: 0,
-              crit_damage_resist: 0,
-              hit_rate: 0,
-              dodge_rate: 0
-            }
-          },
-          accessory: {
-            id: `default_accessory_${Date.now()}`,
-            name: `羽毛挂坠`,
-            slot: 'accessory',
-            level: 1,
-            combatStats: {
-              max_hp: 0,
-              attack: 0,
-              defense: 0,
-              crit_rate: 0,
-              crit_resist: 0,
-              crit_damage: 0,
-              crit_damage_resist: 0,
-              hit_rate: 0.01,
-              dodge_rate: 0
-            }
-          },
-          helmet: {
-            id: `default_helmet_${Date.now()}`,
-            name: `藤帽`,
-            slot: 'helmet',
-            level: 1,
-            combatStats: {
-              max_hp: 10,
-              attack: 0,
-              defense: 2,
-              crit_rate: 0,
-              crit_resist: 0,
-              crit_damage: 0,
-              crit_damage_resist: 0,
-              hit_rate: 0,
-              dodge_rate: 0
-            }
-          },
-          boots: {
-            id: `default_boots_${Date.now()}`,
-            name: `藤鞋`,
-            slot: 'boots',
-            level: 1,
-            combatStats: {
-              max_hp: 0,
-              attack: 1,
-              defense: 0,
-              crit_rate: 0,
-              crit_resist: 0,
-              crit_damage: 0,
-              crit_damage_resist: 0,
-              hit_rate: 0.01,
-              dodge_rate: 0.01
-            }
-          }
-        }
+        ...this.getInitialPlayerState(firstMap)
       });
 
       await newPlayer.save();
@@ -551,6 +562,38 @@ export class PlayerService {
       return result !== null;
     } catch (error: any) {
       throw new Error(`删除玩家失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 复活玩家
+   * @param playerId 玩家ID
+   * @returns 复活后的玩家信息
+   */
+  static async revivePlayer(playerId: string) {
+    try {
+      const player = await Player.findById(playerId);
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      // 获取第一张地图
+      const firstMap = await MapService.getFirstMap();
+      if (!firstMap) {
+        throw new Error('没有可用的地图');
+      }
+
+      if (!firstMap.startLocationId) {
+        throw new Error('地图没有设置起始点');
+      }
+
+      // 重置玩家状态为初始状态
+      Object.assign(player, this.getInitialPlayerState(firstMap));
+
+      await player.save();
+      return player;
+    } catch (error: any) {
+      throw new Error(`复活玩家失败: ${error.message}`);
     }
   }
 } 

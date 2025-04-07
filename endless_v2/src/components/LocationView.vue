@@ -37,7 +37,12 @@
         </div>
 
         <div class="enemies-list" v-if="activeTab === 'enemies'">
-          <div v-if="hasEnemies" class="enemies-list-content">
+          <div v-if="isPlayerDead" class="empty-enemies">
+            <span class="revive-button" @click="handleRevive">
+              复活
+            </span>
+          </div>
+          <div v-else-if="hasEnemies" class="enemies-list-content">
             <div
               v-for="enemy in locationEnemies"
               :key="enemy.instanceId"
@@ -51,7 +56,7 @@
             </div>
           </div>
           <div v-else class="empty-enemies">
-            <span class="explore-button" @click="updateLocationEnemies">
+            <span class="explore-button" @click="handleExplore">
               继续探索
             </span>
           </div>
@@ -90,10 +95,13 @@ import type { EnemyInstance } from '../api'
 import { state, updatePlayer } from '../store/state'
 import {  generateEnemyCombatStats, generateEnemies } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
+import { playerApi } from '../api'
 import i18nConfig from '../config/i18n_config.json'
 import ForgeView from './ForgeView.vue'
 import ShopView from './ShopView.vue'
 import Message from './Message.vue'
+import { updateCurrentMap } from '../store/state'
+import { updateCurrentLocation } from '../store/state'
 
 interface CombatLog {
   id: number
@@ -184,9 +192,13 @@ onMounted(async () => {
     message: `${location.value.description || ''}`,
   })
   ensureValidTab()
-  generateEnemies().then(() => {
+  if (state.locationOfEnemy !== state.currentLocationId) {
+    generateEnemies().then(() => {
+      updateLocationEnemies()
+    })
+  } else {
     updateLocationEnemies()
-  })
+  }
 })
 
 const npcs = computed(() => {
@@ -261,6 +273,15 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
   try {
     const result = await attackEnemy(enemy.instanceId)
 
+    if (result.result === 'enemy_refresh') {
+      generateEnemies().then(() => {
+        updateLocationEnemies()
+      })
+      locationEnemies.value = []
+      await addMessageWithDelay(`${enemy.name}逃跑了，请继续探索`)
+      return
+    }
+
     if (!result.damage) {
       await addMessageWithDelay(`你的攻击未命中${enemy.name}`)
     } else {
@@ -295,13 +316,11 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
 
       if (result.isPlayerDead) {
         await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
-        return
-      } else {
-        updatePlayer({
-          ...state.player,
-          hp: state.player ? state.player.hp - result.counterDamage : 0,
-        })
       }
+      updatePlayer({
+          ...state.player,
+          hp: state.player ? Math.max(0, state.player.hp - result.counterDamage) : 0,
+        })
     }
   } catch (error) {
     console.error('Attack failed:', error)
@@ -329,6 +348,45 @@ const showEnemyInfo = async (enemy: Enemy): Promise<void> => {
     content += `${i18nConfig.combat_stats[key as keyof typeof i18nConfig.combat_stats]}: ${value}<br>`
   }
   enemyInfoContent.value = content.trim()
+}
+
+const isPlayerDead = computed(() => {
+  if (!state.player) return false
+  return state.player.hp <= 0
+})
+
+const handleRevive = async (): Promise<void> => {
+  try {
+    const response = await playerApi.revive({ playerId: state.player?._id || '' })
+    if (response.success) {
+      updatePlayer(response.data)
+      updateCurrentMap(response.data.currentMap)
+      updateCurrentLocation(response.data.currentLocation)
+      closeLocationView()
+    } else {
+      await addMessageWithDelay('复活失败，请稍后再试')
+    }
+  } catch (error) {
+    console.error('Revive failed:', error)
+    await addMessageWithDelay('复活失败，请稍后再试')
+  }
+}
+
+const isExploring = ref(false)
+const handleExplore = async (): Promise<void> => {
+  // 添加拦截，避免反复触发
+  if (isExploring.value) return
+  isExploring.value = true
+  await addMessageWithDelay('你继续向前探索，发现前方似乎有动静，你谨慎的摸了过去...')
+  // 添加等待效果，等待效果为2~4秒
+  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
+  updateLocationEnemies()
+  if (locationEnemies.value.length === 0) {
+    await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
+  } else {
+    await addMessageWithDelay('发现敌对生物，准备战斗吧')
+  }
+  isExploring.value = false
 }
 </script>
 
@@ -601,5 +659,32 @@ const showEnemyInfo = async (enemy: Enemy): Promise<void> => {
 
 .explore-button:disabled::before {
   display: none;
+}
+
+.revive-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b6b, #ff4757);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.revive-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
+  background: linear-gradient(135deg, #ff4757, #ff6b6b);
+}
+
+.revive-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(255, 71, 87, 0.2);
 }
 </style>

@@ -1,18 +1,7 @@
 import { state, updatePlayer } from '../state'
 import { enemyApi, playerApi } from '../../api'
-import type { Player, DroppedMaterial } from '../../api'
+import type { Player, AttackEnemyResult } from '../../api'
 
-
-interface AttackResult {
-  result: 'enemy_dead' | 'continue' | 'player_dead'
-  damage?: number
-  isCritical?: boolean
-  remainingHp?: number
-  counterDamage?: number
-  isCounterCritical?: boolean
-  isPlayerDead?: boolean
-  droppedMaterials?: DroppedMaterial[]
-}
 
 /**
  * 生成玩家战斗属性
@@ -54,9 +43,9 @@ export async function generateCombatStats(): Promise<void> {
 /**
  * 玩家攻击敌人
  * @param {string} enemyInstanceId 敌人实例ID
- * @returns {Promise<AttackResult>} 攻击结果
+ * @returns {Promise<AttackEnemyResult>} 攻击结果
  */
-export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult> {
+export async function attackEnemy(enemyInstanceId: string): Promise<AttackEnemyResult> {
   const player = state.player as Player
   
   if (!player?._id) {
@@ -76,6 +65,10 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
     }
     
     const result = response.data
+
+    if (result.result === 'enemy_refresh') {
+      return result
+    }
     
     // 根据新的返回类型更新状态
     // 更新敌人状态

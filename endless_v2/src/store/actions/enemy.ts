@@ -1,4 +1,4 @@
-import { deleteLocationEnemies, state, updateEnemyInstance } from '../state'
+import { deleteAllEnemies, state, updateEnemyInstance, updateLocationOfEnemy } from '../state'
 import { locationApi, enemyApi } from '../../api'
 import type { EnemyInstance, CombatStats } from '../../api'
 
@@ -33,11 +33,11 @@ export const generateEnemies = async (): Promise<void> => {
   }
 
   try {
+    // 清理state中所有敌人实例
+    deleteAllEnemies()
+
     // 调用后端 API 生成敌人
     const enemies = await locationApi.generateEnemies(locationId)
-
-    // 清理state中同地点的敌人实例
-    deleteLocationEnemies(locationId)
 
     // 将后端返回的敌人实例添加到状态中
     enemies.forEach((enemy: EnemyInstance) => {
@@ -47,6 +47,8 @@ export const generateEnemies = async (): Promise<void> => {
         locationId: enemy.locationId
       })
     })
+
+    updateLocationOfEnemy(locationId)
   } catch (error) {
     console.error('生成敌人失败:', error)
     throw error

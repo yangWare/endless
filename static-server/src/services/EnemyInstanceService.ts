@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { Creature } from '../models/Creature';
 import { PlayerService } from './PlayerService';
 import { CreatureService } from './CreatureService';
+import { LocationService } from './LocationService';
 
 export interface EnemyInstanceData {
   creatureId: Types.ObjectId;
@@ -36,6 +37,8 @@ export interface DamageResult {
 }
 
 export class EnemyInstanceService {
+  private static combatLocks = new Map<string, boolean>();
+
   /**
    * 批量创建敌人实例
    */
@@ -194,18 +197,50 @@ export class EnemyInstanceService {
    * @returns 战斗结果
    */
   static async attackEnemy(playerId: string, enemyInstanceId: string) {
+    const lockKey = `${playerId}-${enemyInstanceId}`;
+    
+    // 检查是否已经有战斗在进行
+    if (this.combatLocks.get(lockKey)) {
+      throw new Error('该战斗正在进行中，请稍后再试');
+    }
+
     try {
+      // 设置战斗锁
+      this.combatLocks.set(lockKey, true);
+
+      // 获取敌人实例
+      const enemyInstance = await EnemyInstance.findById(enemyInstanceId);
+      if (!enemyInstance) {
+        return {
+          result: 'enemy_refresh',
+          damage: 0,
+          isCritical: false,
+          remainingHp: 0,
+          counterDamage: 0,
+          isCounterCritical: false,
+          isPlayerDead: false
+        }
+      }
+
+      // 检查当前地图是否需要刷新敌人
+      const isNeedRefresh = await LocationService.checkEnemyRefreshNeeded(enemyInstance.locationId.toString());
+      if (isNeedRefresh) {
+        return {
+          result: 'enemy_refresh',
+          damage: 0,
+          isCritical: false,
+          remainingHp: 0,
+          counterDamage: 0,
+          isCounterCritical: false,
+          isPlayerDead: false
+        }
+      }
+
       // 获取玩家和敌人的战斗属性
       const [playerStats, enemyStats] = await Promise.all([
         PlayerService.calculateCombatStats(playerId),
         this.calculateCombatStats(enemyInstanceId)
       ]);
-
-      // 获取敌人实例
-      const enemyInstance = await EnemyInstance.findById(enemyInstanceId);
-      if (!enemyInstance) {
-        throw new Error('敌人实例不存在');
-      }
 
       // 计算伤害
       const { damage, isCritical } = this.calculateDamage(playerStats, enemyStats);
@@ -242,6 +277,9 @@ export class EnemyInstanceService {
       };
     } catch (error: any) {
       throw new Error(`攻击敌人失败: ${error.message}`);
+    } finally {
+      // 释放战斗锁
+      this.combatLocks.delete(lockKey);
     }
   }
 

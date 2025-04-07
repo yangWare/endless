@@ -208,4 +208,35 @@ export class PlayerAPI {
       };
     }
   }
+
+  /**
+   * 复活玩家
+   */
+  static async revive(ctx: BaseContext) {
+    try {
+      const { playerId } = ctx.request.body;
+
+      // 参数验证
+      if (!playerId) {
+        throw new Error('缺少必要参数');
+      }
+
+      // 复活玩家
+      const player = await PlayerService.revivePlayer(playerId);
+
+      // 返回复活后的玩家信息（不包含密码）
+      const { password: _, ...playerWithoutPassword } = player.toObject();
+      ctx.body = {
+        success: true,
+        data: playerWithoutPassword
+      };
+    } catch (error: any) {
+      console.log(error)
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 

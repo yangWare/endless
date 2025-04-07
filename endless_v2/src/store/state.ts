@@ -8,6 +8,7 @@ interface State {
   currentLocationId: string
   player: Player | null
   enemyInstances: Record<string, EnemyInstance>
+  locationOfEnemy: string
   currentMap: Map | null
   mapLocations: Record<string, Location>
 }
@@ -18,7 +19,8 @@ export const state = reactive<State>({
   player: null,
   enemyInstances: {},
   currentMap: null,
-  mapLocations: {}
+  mapLocations: {},
+  locationOfEnemy: ''
 })
 
 ;(window as any).createUser = playerApi.create
@@ -132,16 +134,17 @@ export function updateEnemyInstance(instanceId: string, data: Partial<EnemyInsta
   }
 }
 
+export function updateLocationOfEnemy(locationId: string): void {
+  state.locationOfEnemy = locationId
+}
+
 /**
- * 删除指定地点中的所有敌人实例
- * @param {string} locationId 地点ID
+ * 删除所有敌人实例
  */
-export function deleteLocationEnemies(locationId: string): void {
+export function deleteAllEnemies(): void {
   // 遍历所有敌人实例，删除属于指定地点的实例
   Object.keys(state.enemyInstances).forEach(instanceId => {
-    if (state.enemyInstances[instanceId].locationId === locationId) {
-      delete state.enemyInstances[instanceId]
-    }
+    delete state.enemyInstances[instanceId]
   })
 }
 
