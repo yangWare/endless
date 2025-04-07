@@ -61,7 +61,7 @@
         <div class="npcs-list" v-if="activeTab === 'npcs' && location.npc && hasNpcs">
           <div class="npcs-list-content">
             <div
-              v-for="(npc, key) in location.npc"
+              v-for="key in npcs"
               :key="key"
               class="npc-item"
               @click="handleNpcClick(key)"
@@ -86,10 +86,9 @@
 
 <script setup lang="ts">
 import { ref, computed, defineEmits, onMounted, watch, nextTick } from 'vue'
-import { state, loadMap } from '../store/state'
-import { generateEnemies, generateEnemyCombatStats } from '../store/actions/enemy'
+import { state } from '../store/state'
+import {  generateEnemyCombatStats } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
-import enemyConfig from '../config/enemy_config.json'
 import materialConfig from '../config/material_config.json'
 import i18nConfig from '../config/i18n_config.json'
 import ForgeView from './ForgeView.vue'
@@ -130,7 +129,7 @@ interface CombatResult {
   droppedItems?: DroppedItem[]
 }
 
-const activeTab = ref<'enemies' | 'npcs'>('enemies')
+const activeTab = ref<'enemies' | 'npcs' | null>('enemies')
 const locationEnemies = ref<Enemy[]>([])
 const combatLogs = ref<CombatLog[]>([])
 const isAttacking = ref(false)
@@ -141,23 +140,38 @@ const enemyInfoContent = ref('')
 
 const location = computed(() => state.mapLocations[state.currentLocationId])
 
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
+const closeLocationView = (): void => {
+  emit('close')
+}
+
+const ensureValidTab = (): void => {
+  if (activeTab.value === 'enemies' && !showEnemiesTab.value) {
+    activeTab.value = hasNpcs.value ? 'npcs' : null
+  } else if (activeTab.value === 'npcs' && !hasNpcs.value) {
+    activeTab.value = showEnemiesTab.value ? 'enemies' : null
+  }
+}
+
 const updateLocationEnemies = (): void => {
-  const currentLocationEnemies = state.enemyStatus[state.currentLocationId] || {}
-  const locationConfig = location.value
-  const enemyConfigs = locationConfig.enemy || {}
+  const currentLocationEnemies = state.enemyInstances
   
   const possibleEnemies = Object.entries(currentLocationEnemies)
     .filter(([_, enemy]) => {
       const creatureId = enemy.enemyId
-      const enemyConfigOfLocation = enemyConfigs[creatureId]
+      const enemyConfigOfLocation = location.value.enemies.find((enemy) => enemy.creatureId._id === creatureId)
       if (!enemyConfigOfLocation) return false
       
       return Math.random() < enemyConfigOfLocation.probability
     })
     .map(([instanceId, enemy]) => {
+      const creatureId = enemy.enemyId
+      const enemyConfigOfLocation = location.value.enemies.find((enemy) => enemy.creatureId._id === creatureId)
       return {
         instanceId,
-        name: enemyConfig.creatures[enemy.enemyId].name,
+        name: enemyConfigOfLocation?.creatureId.name || '异常生物',
         enemy,
       }
     })
@@ -168,15 +182,7 @@ const updateLocationEnemies = (): void => {
     .slice(0, maxEnemies)
 }
 
-const emit = defineEmits<{
-  (e: 'close'): void
-}>()
-
 onMounted(async () => {
-  if (!state.currentMap) {
-    await loadMap(state.currentMapId)
-  }
-  
   combatLogs.value.push({
     id: Date.now(),
     message: `${location.value.description || ''}`,
@@ -185,9 +191,14 @@ onMounted(async () => {
   updateLocationEnemies()
 })
 
-const closeLocationView = (): void => {
-  emit('close')
-}
+const npcs = computed(() => {
+  const list: string[] = []
+  Object.keys(location.value.npc).forEach((key) => {
+    if (key === '_id') return
+    list.push(key)
+  })
+  return list
+})
 
 const getNpcName = (npcType: string): string => {
   const npcNames: Record<string, string> = {
@@ -306,14 +317,6 @@ const showEnemiesTab = computed((): boolean => {
 const hasNpcs = computed((): boolean => {
   return location.value.npc && Object.keys(location.value.npc).length > 0
 })
-
-const ensureValidTab = (): void => {
-  if (activeTab.value === 'enemies' && !showEnemiesTab.value) {
-    activeTab.value = hasNpcs.value ? 'npcs' : null
-  } else if (activeTab.value === 'npcs' && !hasNpcs.value) {
-    activeTab.value = showEnemiesTab.value ? 'enemies' : null
-  }
-}
 
 const showEnemyInfo = (enemy: Enemy): void => {
   const creatureId = enemy.enemy.enemyId

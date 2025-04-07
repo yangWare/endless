@@ -76,7 +76,22 @@ export interface Location {
     y: number;
   };
   adjacentLocations: string[];
-  enemies: string[];
+  npc: {
+    forge: {
+      level: number
+    }
+    shop: {
+      items: []
+    }
+    _id: string
+  }
+  enemies: Array<{
+    creatureId: {
+      _id: string
+      name: string
+    },
+    probability: number
+  }>
 }
 
 // 战斗属性类型

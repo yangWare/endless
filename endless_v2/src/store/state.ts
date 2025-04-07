@@ -66,6 +66,38 @@ export async function initState(): Promise<void> {
 }
 
 /**
+ * 加载地图信息
+ * @param {string} mapId 地图ID
+ * @returns {Promise<void>}
+ * @throws {Error} 加载失败时抛出错误
+ */
+export async function loadMap(mapId: string): Promise<void> {
+  try {
+    // 获取地图基本信息
+    const mapResult = await mapApi.getById(mapId)
+    if (!mapResult.success) {
+      throw new Error(mapResult.message || '获取地图信息失败')
+    }
+    
+    // 获取地图的所有地点
+    const locationsResult = await locationApi.list({ mapId })
+    if (!locationsResult.success) {
+      throw new Error(locationsResult.message || '获取地点列表失败')
+    }
+    
+    // 更新状态
+    state.currentMap = mapResult.data
+    state.mapLocations = {}
+    locationsResult.data.locations.forEach(location => {
+      state.mapLocations[location._id] = location
+    })
+  } catch (error) {
+    console.error('加载地图信息失败:', error)
+    throw error
+  }
+} 
+
+/**
  * 加载地点敌人列表
  * @param {string} locationId 地点ID
  * @returns {Promise<void>}
@@ -139,35 +171,3 @@ export function updatePlayer(playerData: Partial<Player>): void {
 
   Object.assign(state.player, playerData)
 }
-
-/**
- * 加载地图信息
- * @param {string} mapId 地图ID
- * @returns {Promise<void>}
- * @throws {Error} 加载失败时抛出错误
- */
-export async function loadMap(mapId: string): Promise<void> {
-  try {
-    // 获取地图基本信息
-    const mapResult = await mapApi.getById(mapId)
-    if (!mapResult.success) {
-      throw new Error(mapResult.message || '获取地图信息失败')
-    }
-    
-    // 获取地图的所有地点
-    const locationsResult = await locationApi.list({ mapId })
-    if (!locationsResult.success) {
-      throw new Error(locationsResult.message || '获取地点列表失败')
-    }
-    
-    // 更新状态
-    state.currentMap = mapResult.data
-    state.mapLocations = {}
-    locationsResult.data.locations.forEach(location => {
-      state.mapLocations[location._id] = location
-    })
-  } catch (error) {
-    console.error('加载地图信息失败:', error)
-    throw error
-  }
-} 
