@@ -295,6 +295,14 @@ app.use(async (ctx: BaseContext, next) => {
     return;
   }
 
+  // 获取地点敌人实例列表 API
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+\/enemies$/) && ctx.method === 'GET') {
+    const locationId = ctx.path.split('/')[3];
+    ctxWithParams.params.locationId = locationId;
+    await LocationAPI.getLocationEnemyInstances(ctxWithParams);
+    return;
+  }
+
   await next();
 });
 

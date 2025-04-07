@@ -12,6 +12,7 @@ export interface BaseContext extends Context {
 export interface ParamContext extends BaseContext {
   params: {
     id?: string;
+    locationId?: string;
   };
 }
 

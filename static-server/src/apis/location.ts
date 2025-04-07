@@ -145,4 +145,29 @@ export class LocationAPI {
       };
     }
   }
+
+  /**
+   * 获取指定地点的敌人实例列表
+   */
+  static async getLocationEnemyInstances(ctx: BaseContext) {
+    try {
+      const { locationId } = ctx.params;
+
+      if (!locationId) {
+        throw new Error('缺少地点ID');
+      }
+
+      const enemyInstances = await LocationService.getLocationEnemyInstances(locationId);
+      ctx.body = {
+        success: true,
+        data: enemyInstances
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 
