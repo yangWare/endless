@@ -1,4 +1,5 @@
 import { LocationService, LocationData, LocationQueryParams } from '../services/LocationService';
+import { ForgeService } from '../services/ForgeService';
 import { Types } from 'mongoose';
 import { LocationContext, BaseContext } from '../types/context';
 
@@ -164,6 +165,54 @@ export class LocationAPI {
         data: enemyInstances
       };
     } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 锻造装备
+   */
+  static async forge(ctx: BaseContext) {
+    try {
+      const { playerId, materialIds, equipmentType } = ctx.request.body;
+      const locationId = ctx.params.id;
+
+      // 参数验证
+      if (!playerId) {
+        throw new Error('缺少玩家ID');
+      }
+      if (!locationId) {
+        throw new Error('缺少位置ID');
+      }
+      if (!materialIds || !Array.isArray(materialIds) || materialIds.length === 0) {
+        throw new Error('缺少或无效的材料ID列表');
+      }
+      if (!equipmentType || !['weapon', 'armor', 'accessory', 'helmet', 'boots'].includes(equipmentType)) {
+        throw new Error('无效的装备类型');
+      }
+
+      // 创建锻造服务实例
+      const forgeService = new ForgeService();
+
+      // 执行锻造
+      const result = await forgeService.forge({
+        playerId,
+        locationId,
+        materialIds,
+        equipmentType
+      });
+
+      ctx.body = {
+        success: result.success,
+        message: result.message,
+        data: result.equipment
+      };
+    } catch (error: any) {
+      console.error('锻造失败:', error);
       ctx.status = 400;
       ctx.body = {
         success: false,

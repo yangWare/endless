@@ -137,6 +137,50 @@ export interface AttackEnemyResult {
   droppedMaterials?: DroppedMaterial[];
 }
 
+// 材料类型
+export interface Material {
+  _id: string;
+  name: string;
+  description: string;
+  typeId: {
+    _id: string;
+    name: string;
+  };
+  combat_multipliers: {
+    max_hp: number;
+    attack: number;
+    defense: number;
+    crit_rate: number;
+    crit_resist: number;
+    crit_damage: number;
+    crit_damage_resist: number;
+    hit_rate: number;
+    dodge_rate: number;
+  };
+  level: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 材料数据接口
+export interface MaterialData {
+  name: string;
+  description: string;
+  typeId: string;
+  combat_multipliers: {
+    max_hp: number;
+    attack: number;
+    defense: number;
+    crit_rate: number;
+    crit_resist: number;
+    crit_damage: number;
+    crit_damage_resist: number;
+    hit_rate: number;
+    dodge_rate: number;
+  };
+  level: number;
+}
+
 const baseURL = '/endless/api';
 
 const api: AxiosInstance = axios.create({
@@ -240,7 +284,20 @@ export const locationApi = {
    * @returns 敌人实例列表
    */
   getLocationEnemies: (locationId: string): Promise<BaseResponse<EnemyInstance[]>> =>
-    api.get(`/locations/${locationId}/enemies`)
+    api.get(`/locations/${locationId}/enemies`),
+
+  /**
+   * 锻造装备
+   * @param data 锻造参数
+   * @returns 锻造结果
+   */
+  forge: (data: {
+    locationId: string;
+    playerId: string;
+    materialIds: string[];
+    equipmentType: string;
+  }): Promise<BaseResponse<Equipment | null>> =>
+    api.post(`/locations/${data.locationId}/forge`, data)
 };
 
 export const enemyInstanceApi = {
@@ -269,6 +326,15 @@ export const enemyApi = {
   attack: async (data: { playerId: string; enemyInstanceId: string }): Promise<BaseResponse<AttackEnemyResult>> => {
     return api.post('/enemies/attack', data);
   }
+};
+
+export const materialApi = {
+  /**
+   * 根据ID列表批量获取材料
+   * @param ids 材料ID列表
+   */
+  getByIds: (ids: string[]): Promise<BaseResponse<Material[]>> => 
+    api.post('/materials/ids', { ids })
 };
 
 export default api; 

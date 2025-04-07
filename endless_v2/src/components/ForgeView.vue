@@ -35,7 +35,7 @@
             }"
             @click="toggleMaterial(material, index)"
           >
-            {{ getMaterialName(material) }}
+            {{ material.name }}
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@
             :key="idx"
             class="selected-item"
           >
-            {{ getMaterialName(item.material) }}
+            {{ item.material.name }}
             <button @click="removeMaterial(item.index)">移除</button>
           </div>
         </div>
@@ -72,8 +72,8 @@
       >
         <div class="section-title">锻造结果</div>
         <p>{{ forgeResult.message }}</p>
-        <div v-if="forgeResult.equipment" class="equipment-stats">
-          <p>获得装备：{{ forgeResult.equipment.name }}</p>
+        <div v-if="forgeResult.data" class="equipment-stats">
+          <p>获得装备：{{ forgeResult.data.name }}</p>
         </div>
       </div>
     </div>
@@ -82,35 +82,22 @@
 
 <script lang="ts">
 import { ref, computed, watch, defineComponent } from 'vue'
-import { state } from '../store/state'
-import materialConfig from '../config/material_config.json'
+import { state, updatePlayer } from '../store/state'
+import type { BaseResponse, Equipment, Material } from '../api'
+import { materialApi } from '../api'
 import i18n from '../config/i18n_config.json'
 import { forgeEquipment } from '../store/actions/forge'
-
-interface Material {
-  id: string
-  name: string
-  type: string
-}
 
 interface SelectedMaterial {
   material: Material
   index: number
 }
 
-interface ForgeResult {
-  success: boolean
-  message: string
-  equipment?: {
-    name: string
-    [key: string]: any
-  }
-}
-
 interface EquipmentType {
   name: string
-  [key: string]: any
 }
+
+type ForgeResult = BaseResponse<Equipment | null>
 
 export default defineComponent({
   name: 'ForgeView',
@@ -124,24 +111,27 @@ export default defineComponent({
     const equipmentTypes = i18n.equipment_position as Record<string, EquipmentType>
 
     // 获取玩家当前拥有的材料
-    const availableMaterials = computed<Material[]>(() => state.player.materials)
+    const availableMaterialIds = computed(() => state.player?.inventory?.materials || [])
+    const availableMaterials = ref<Material[]>([])
+    const materialModels = ref<Material[]>([])
+    if (availableMaterialIds.value.length > 0) {
+    materialApi.getByIds(availableMaterialIds.value).then((res) => {
+      materialModels.value = res.data
+      availableMaterialIds.value.forEach((id) => {
+        const material = materialModels.value.find((item) => item._id === id)
+        if (material) {
+            availableMaterials.value.push(material)
+          }
+        })
+      })
+    }
+
 
     // 监听材料列表变化
-    watch(availableMaterials, () => {
+    watch(availableMaterialIds, () => {
       selectedMaterials.value = []
       selectedType.value = ''
     })
-
-    // 获取材料显示名称
-    const getMaterialName = (material: Material): string => {
-      for (const type in materialConfig.material_types) {
-        const materials = materialConfig.material_types[type].materials
-        if (materials[material.id]) {
-          return materials[material.id].name
-        }
-      }
-      return material.id
-    }
 
     // 切换材料选择状态
     const toggleMaterial = (material: Material, index: number): void => {
@@ -180,18 +170,29 @@ export default defineComponent({
 
       isForging.value = true
       try {
-        // 获取锻造师等级和工具等级
-        const forgerLevel = state.player.forgerLevel || 1
-        const toolLevel = state.player.toolLevel || 1
-
         // 调用forge.js中的锻造方法
         const result = await forgeEquipment({
-          materials: selectedMaterials.value.map((item) => item.material),
-          forgerLevel,
-          toolLevel,
+          materials: selectedMaterials.value.map((item) => item.material._id),
           equipmentType: selectedType.value,
         })
+        // 清理Player背包中已用掉的材料
+        if (state.player?.inventory?.materials) {
+          updatePlayer({
+            inventory: {
+              ...state.player.inventory,
+              materials: state.player.inventory.materials.filter((_, index) => !selectedMaterials.value.find((item) => item.index === index)),
+              equipments: result.data ? [...(state.player.inventory?.equipments || []), result.data] : state.player.inventory.equipments
+            }
+          })
+          availableMaterials.value = []
+          availableMaterialIds.value.forEach((id) => {
+            const material = materialModels.value.find((item) => item._id === id)
+            if (material) {
+              availableMaterials.value.push(material)
+            }
+          })
 
+        }
         forgeResult.value = result
         selectedMaterials.value = []
         selectedType.value = ''
@@ -214,7 +215,6 @@ export default defineComponent({
       selectedType,
       equipmentTypes,
       forgeResult,
-      getMaterialName,
       toggleMaterial,
       removeMaterial,
       selectEquipmentType,

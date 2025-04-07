@@ -1,5 +1,28 @@
 import mongoose from 'mongoose';
 
+export interface IMaterial {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  description: string;
+  typeId: mongoose.Types.ObjectId;
+  combat_multipliers: {
+    max_hp: number;
+    attack: number;
+    defense: number;
+    crit_rate: number;
+    crit_resist: number;
+    crit_damage: number;
+    crit_damage_resist: number;
+    hit_rate: number;
+    dodge_rate: number;
+  };
+  level: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type MaterialDocument = mongoose.Document & IMaterial;
+
 const materialSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -84,4 +107,4 @@ materialSchema.pre('save', function(next) {
   next();
 });
 
-export const Material = mongoose.model('Material', materialSchema); 
+export const Material = mongoose.model<MaterialDocument>('Material', materialSchema); 

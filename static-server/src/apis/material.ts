@@ -118,4 +118,27 @@ export class MaterialAPI {
       };
     }
   }
+
+  /**
+   * 根据ID列表获取材料
+   */
+  static async getByIds(ctx: BaseContext) {
+    try {
+      const { ids } = ctx.request.body;
+      if (!ids || !Array.isArray(ids)) {
+        throw new Error('缺少材料ID列表或格式错误');
+      }
+      const materials = await MaterialService.getMaterialsByIds(ids);
+      ctx.body = {
+        success: true,
+        data: materials
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 

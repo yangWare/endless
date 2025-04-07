@@ -44,36 +44,19 @@
   },
   "equipment_position": {
     "weapon": {
-      "name": "武器",
-      "stats": ["attack"],
-      "stat_multipliers": {
-        "attack": 2,
-        "defense": 0.5
-      }
+      "name": "武器"
     },
-    "body": {
-      "name": "护甲",
-      "stats": ["defense"],
-      "stat_multipliers": {
-        "attack": 0.5,
-        "defense": 1
-      }
+    "armor": {
+      "name": "护甲"
     },
-    "feet": {
-      "name": "靴子",
-      "stats": ["defense"],
-      "stat_multipliers": {
-        "attack": 1,
-        "defense": 1
-      }
+    "accessory": {
+      "name": "饰品"
     },
-    "head": {
-      "name": "头盔",
-      "stats": ["defense"],
-      "stat_multipliers": {
-        "attack": 0.5,
-        "defense": 1
-      }
+    "boots": {
+      "name": "靴子"
+    },
+    "helmet": {
+      "name": "头盔"
     }
   }
 }

@@ -128,6 +128,11 @@ app.use(async (ctx: BaseContext, next) => {
     return;
   }
 
+  if (ctx.path === '/api/materials/ids' && ctx.method === 'POST') {
+    await MaterialAPI.getByIds(ctxWithParams);
+    return;
+  }
+
   if (ctx.path.match(/^\/api\/materials\/[a-zA-Z0-9]+$/) && ctx.method === 'GET') {
     await MaterialAPI.getById(ctxWithParams);
     return;
@@ -310,6 +315,12 @@ app.use(async (ctx: BaseContext, next) => {
     const locationId = ctx.path.split('/')[3];
     ctxWithParams.params.locationId = locationId;
     await LocationAPI.getLocationEnemyInstances(ctxWithParams);
+    return;
+  }
+
+  // 锻造装备 API
+  if (ctx.path.match(/^\/api\/locations\/[a-zA-Z0-9]+\/forge$/) && ctx.method === 'POST') {
+    await LocationAPI.forge(ctxWithParams);
     return;
   }
 
