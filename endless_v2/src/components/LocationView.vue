@@ -87,10 +87,9 @@
 <script setup lang="ts">
 import { ref, computed, defineEmits, onMounted, watch, nextTick } from 'vue'
 import type { EnemyInstance } from '../api'
-import { state } from '../store/state'
+import { state, updatePlayer } from '../store/state'
 import {  generateEnemyCombatStats, generateEnemies } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
-import materialConfig from '../config/material_config.json'
 import i18nConfig from '../config/i18n_config.json'
 import ForgeView from './ForgeView.vue'
 import ShopView from './ShopView.vue'
@@ -272,40 +271,38 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
       await addMessageWithDelay(message)
       if (result.result === 'enemy_dead') {
         await addMessageWithDelay(`${enemy.name}被击败了！`)
-        // TODO: 展示掉落物品
-        // if (result.droppedItems && result.droppedItems.length > 0) {
-        //   const dropsMessage = result.droppedItems
-        //     .map((drop) => {
-        //       for (const typeKey in materialConfig.material_types) {
-        //         const type = materialConfig.material_types[typeKey]
-        //         if (type.materials[drop.id]) {
-        //           return type.materials[drop.id].name
-        //         }
-        //       }
-        //       return drop.id
-        //     })
-        //     .join('、')
-        //   await addMessageWithDelay(`获得了：${dropsMessage}`)
-        // }
+        if (result.droppedMaterials && result.droppedMaterials.length > 0) {
+          const dropsMessage = result.droppedMaterials
+            .map((drop) => {
+              return drop.materialId.name
+            })
+            .join('、')
+          await addMessageWithDelay(`获得了：${dropsMessage}`)
+        }
         updateLocationEnemies()
         return
       }
     }
 
     if (!result.counterDamage) {
-        await addMessageWithDelay(`${enemy.name}的反击未命中你`)
-      } else {
-        let counterMessage = `${enemy.name}反击对你造成了${result.counterDamage}点伤害`
-        if (result.isCounterCritical) {
-          counterMessage += '（暴击！）'
-        }
-        await addMessageWithDelay(counterMessage)
-
-        if (result.isPlayerDead) {
-          await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
-          return
-        }
+      await addMessageWithDelay(`${enemy.name}的反击未命中你`)
+    } else {
+      let counterMessage = `${enemy.name}反击对你造成了${result.counterDamage}点伤害`
+      if (result.isCounterCritical) {
+        counterMessage += '（暴击！）'
       }
+      await addMessageWithDelay(counterMessage)
+
+      if (result.isPlayerDead) {
+        await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
+        return
+      } else {
+        updatePlayer({
+          ...state.player,
+          hp: state.player ? state.player.hp - result.counterDamage : 0,
+        })
+      }
+    }
   } catch (error) {
     console.error('Attack failed:', error)
     await addMessageWithDelay('你脚下一滑，攻击没有发起')
@@ -322,21 +319,16 @@ const showEnemiesTab = computed((): boolean => {
   return location.value.enemies && location.value.enemies.length > 0
 })
 
-const showEnemyInfo = (enemy: Enemy): void => {
-  const creatureId = enemy.enemy.enemyId
-  const stats = generateEnemyCombatStats(creatureId)
+const showEnemyInfo = async (enemy: Enemy): Promise<void> => {
+  showEnemyInfoModal.value = true
+  enemyInfoContent.value = '加载中...'
+  const stats = await generateEnemyCombatStats(enemy.instanceId)
   
   let content = `${enemy.name}<br>`
   for (const [key, value] of Object.entries(stats)) {
-    content += `${i18nConfig.combat_stats[key]}: ${value}<br>`
+    content += `${i18nConfig.combat_stats[key as keyof typeof i18nConfig.combat_stats]}: ${value}<br>`
   }
   enemyInfoContent.value = content.trim()
-  showEnemyInfoModal.value = true
-}
-
-const closeEnemyInfo = (): void => {
-  showEnemyInfoModal.value = false
-  enemyInfoContent.value = ''
 }
 </script>
 

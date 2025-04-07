@@ -60,7 +60,7 @@ app.use(async (ctx: BaseContext, next) => {
   ctxWithParams.params = {};
 
   // 从路径中提取 ID
-  const match = ctx.path.match(/^\/api\/(races|material-types|materials|creatures|potions|locations|maps)\/([a-zA-Z0-9]+)$/);
+  const match = ctx.path.match(/^\/api\/(races|material-types|materials|creatures|potions|locations|maps|enemies)\/([a-zA-Z0-9]+)(?:\/(.*))?$/);
   if (match) {
     ctxWithParams.params.id = match[2];
   }
@@ -284,7 +284,7 @@ app.use(async (ctx: BaseContext, next) => {
   }
 
   // 敌人 API
-  if (ctx.path === '/api/enemies/combat-stats/:enemyInstanceId' && ctx.method === 'GET') {
+  if (ctx.path.match(/^\/api\/enemies\/[a-zA-Z0-9]+\/combat-stats$/) && ctx.method === 'GET') {
     await EnemyAPI.calculateCombatStats(ctxWithParams);
     return;
   }

@@ -91,7 +91,7 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackResult
       // 如果有掉落物品，更新玩家物品
       if (result.droppedMaterials && result.droppedMaterials.length > 0) {
         const newPlayer = { ...player }
-        newPlayer.inventory.materials = [...newPlayer.inventory.materials, ...result.droppedMaterials.map(m => m.materialId)]
+        newPlayer.inventory.materials = [...newPlayer.inventory.materials, ...result.droppedMaterials.map(m => m.materialId._id)]
         updatePlayer(newPlayer)
       }
     } else if (result.result === 'continue' && result.remainingHp !== undefined) {

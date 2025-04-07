@@ -118,7 +118,10 @@ export interface Equipment {
 
 // 掉落物品类型
 export interface DroppedMaterial {
-  materialId: string;
+  materialId: {
+    _id: string;
+    name: string;
+  };
   quantity: number;
 }
 
@@ -252,7 +255,7 @@ export const enemyApi = {
    * @param creatureId 生物ID
    */
   calculateCombatStats: async (creatureId: string): Promise<BaseResponse<CombatStats>> => {
-    return api.get(`/enemies/combat-stats/${creatureId}`);
+    return api.get(`/enemies/${creatureId}/combat-stats`);
   },
   
   /**

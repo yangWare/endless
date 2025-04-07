@@ -7,7 +7,7 @@ export class EnemyAPI {
    */
   static async calculateCombatStats(ctx: BaseContext) {
     try {
-      const { enemyInstanceId } = ctx.params;
+      const enemyInstanceId = ctx.params.id;
 
       // 参数验证
       if (!enemyInstanceId) {

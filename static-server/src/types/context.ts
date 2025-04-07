@@ -13,6 +13,7 @@ export interface ParamContext extends BaseContext {
   params: {
     id?: string;
     locationId?: string;
+    action?: string;
   };
 }
 

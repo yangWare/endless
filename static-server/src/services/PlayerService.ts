@@ -327,24 +327,8 @@ export class PlayerService {
         };
       }
 
-      // 更新玩家材料列表
-      const materials = player.inventory?.materials || [];
-      const existingMaterialIndex = materials.findIndex(
-        (m: Types.ObjectId) => m.toString() === materialId
-      );
-
-      if (existingMaterialIndex >= 0) {
-        // 如果材料已存在，更新数量
-        materials[existingMaterialIndex] = new Types.ObjectId(materialId);
-      } else {
-        // 如果材料不存在，添加到列表
-        materials.push(new Types.ObjectId(materialId));
-      }
-
-      if (player.inventory) {
-        player.inventory.materials = materials;
-        await player.save();
-      }
+      player.inventory.materials = [...player.inventory.materials, new Types.ObjectId(materialId)];
+      await player.save();
     } catch (error: any) {
       throw new Error(`添加材料到背包失败: ${error.message}`);
     }
@@ -358,9 +342,10 @@ export class PlayerService {
   static async addMaterialsToInventory(playerId: string, materials: { materialId: Types.ObjectId; quantity: number }[]) {
     try {
       for (const material of materials) {
-        await this.addMaterialToInventory(playerId, material.materialId.toString(), material.quantity);
+        await this.addMaterialToInventory(playerId, material.materialId._id.toString(), material.quantity);
       }
     } catch (error: any) {
+      console.log(error)
       throw new Error(`批量添加材料到背包失败: ${error.message}`);
     }
   }
