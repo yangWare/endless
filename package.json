@@ -1,5 +1,8 @@
 {
   "scripts": {
+    "dev:server": "cd static-server && npm run dev",
+    "dev:endless": "cd endless_v2 && npm run dev",
+    "dev:admin": "cd endless-admin && npm run dev",
     "start": "cd static-server && npm run start:prod"
   },
   "devDependencies": {
