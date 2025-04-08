@@ -1,10 +1,255 @@
 ---
 description: 
-globs: 
+globs: static-server/src/**
 alwaysApply: false
 ---
- ---
-description: 
-globs: 
-alwaysApply: false
----
+# Static Server 后端分层架构规则
+
+## 项目信息
+
+@project: static-server
+@path: /static-server/\*\*
+@framework: Koa2
+@database: MongoDB
+
+## 文件结构规范
+
+- static-server/src/models/ - Mongoose 数据模型定义
+- static-server/src/services/ - 业务逻辑层
+- static-server/src/apis/ - Koa 路由处理器
+- static-server/src/routes/ - 路由定义
+- static-server/src/middlewares/ - Koa 中间件
+- static-server/src/types/ - TypeScript 类型定义
+
+## 依赖关系
+
+@static-server/src/models/\*.ts
+
+- 使用 mongoose.Schema 和 mongoose.Model
+- 被引用：src/services/\*Service.ts
+- 被引用：src/apis/\*.ts
+
+@static-server/src/services/\*Service.ts
+
+- 引用：src/models/\*.ts
+- 被引用：src/apis/\*.ts
+- 处理业务逻辑和数据库操作
+
+@static-server/src/apis/\*.ts
+
+- 引用：src/models/\*.ts
+- 引用：src/services/\*Service.ts
+- 实现 Koa 路由处理器
+- 处理 HTTP 请求和响应
+
+@static-server/src/routes/\*.routes.ts
+
+- 使用 koa-router
+- 引用：src/apis/\*.ts
+- 定义 API 路由
+
+## 命名规范
+
+- Model 文件：`${业务名}.ts`，首字母大写，比如种族 Model，即为 Race.ts
+- Service 文件：`${业务名}Service.ts`，首字母大写，比如种族 Service，即为 RaceService.ts
+- API 文件：`${业务名}.ts`，首字母小写，比如种族 API，即为 race.ts
+- Route 文件：`${业务名}.routes.ts`，首字母小写
+- Middleware 文件：`common.ts`，逻辑较少，只写在单个文件即可
+
+## 代码模板
+
+### Model 模板
+
+```typescript
+import mongoose, { Document, Schema } from 'mongoose';
+
+// 定义接口，首字母大写
+export interface I{{Name}} extends Document {
+    id: string;
+    // 业务字段
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+// Schema 名称首字母小写
+const {{name}}Schema = new Schema({
+    // 字段定义
+}, {
+    timestamps: true,
+    versionKey: false
+});
+
+// Model 名称首字母大写
+export const {{Name}} = mongoose.model<I{{Name}}>('{{Name}}', {{name}}Schema);
+```
+
+### Service 模板
+
+```typescript
+import { {{Name}} } from '../models/{{Name}}';
+import { I{{Name}} } from '../models/{{Name}}';
+
+export class {{Name}}Service {
+    async findAll() {
+        return {{Name}}.find();
+    }
+
+    async findById(id: string) {
+        return {{Name}}.findById(id);
+    }
+
+    async create(data: Partial<I{{Name}}>) {
+        return {{Name}}.create(data);
+    }
+
+    async update(id: string, data: Partial<I{{Name}}>) {
+        return {{Name}}.findByIdAndUpdate(id, data, { new: true });
+    }
+
+    async delete(id: string) {
+        const result = await {{Name}}.findByIdAndDelete(id);
+        return !!result;
+    }
+}
+```
+
+### API 模板
+
+```typescript
+import { {{Name}}Service } from '../services/{{Name}}Service';
+import { {{Name}}Context } from '../types/context';
+
+export class {{Name}}API {
+  /**
+   * 创建新{{name}}
+   */
+  static async create(ctx: {{Name}}Context) {
+    try {
+      const data = ctx.request.body;
+      const result = await {{Name}}Service.create(data);
+      ctx.body = {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 更新{{name}}信息
+   */
+  static async update(ctx: {{Name}}Context) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少ID');
+      }
+      const updateData = ctx.request.body;
+      const result = await {{Name}}Service.update(id, updateData);
+      ctx.body = {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 删除{{name}}
+   */
+  static async delete(ctx: {{Name}}Context) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少ID');
+      }
+      const result = await {{Name}}Service.delete(id);
+      ctx.body = {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 获取指定{{name}}详情
+   */
+  static async getById(ctx: {{Name}}Context) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少ID');
+      }
+      const result = await {{Name}}Service.findById(id);
+      ctx.body = {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 获取{{name}}列表
+   */
+  static async list(ctx: {{Name}}Context) {
+    try {
+      const queryParams = {
+        page: parseInt(ctx.query.page as string) || 1,
+        limit: parseInt(ctx.query.limit as string) || 50,
+        // 其他查询参数
+      };
+
+      const result = await {{Name}}Service.findAll(queryParams);
+      ctx.body = {
+        success: true,
+        data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+}
+```
+
+### Route 模板
+
+```typescript
+import Router from "koa-router"
+import * as api from "../apis/{{name}}"
+
+const router = new Router({ prefix: "/api/{{name}}s" })
+
+router.get("/", api.getAll)
+router.get("/:id", api.getById)
+router.post("/", api.create)
+router.put("/:id", api.update)
+router.delete("/:id", api.remove)
+
+export default router
+```
