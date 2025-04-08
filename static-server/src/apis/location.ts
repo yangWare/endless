@@ -246,34 +246,4 @@ export class LocationAPI {
       };
     }
   }
-
-  /**
-   * 更新商店药水列表
-   */
-  static async updateShopPotions(ctx: BaseContext) {
-    try {
-      const { locationId } = ctx.params;
-      const { potionItems } = ctx.request.body;
-
-      if (!locationId) {
-        throw new Error('缺少地点ID');
-      }
-
-      if (!potionItems || !Array.isArray(potionItems)) {
-        throw new Error('无效的药水列表数据');
-      }
-
-      const updatedPotions = await ShopService.updateShopPotions(locationId, potionItems);
-      ctx.body = {
-        success: true,
-        data: updatedPotions
-      };
-    } catch (error: any) {
-      ctx.status = 400;
-      ctx.body = {
-        success: false,
-        error: error.message
-      };
-    }
-  }
 } 

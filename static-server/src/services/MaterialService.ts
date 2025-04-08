@@ -1,5 +1,6 @@
 import { Material } from '../models/Material';
 import { Types } from 'mongoose';
+import { IMaterial } from '../models/Material';
 
 export interface MaterialData {
   id?: number;  // 创建时可选，更新时必需
@@ -149,6 +150,36 @@ export class MaterialService {
       return materials;
     } catch (error: any) {
       throw new Error(`批量获取材料信息失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 计算材料的战斗属性
+   * @param materialId 材料ID
+   * @returns 计算后的战斗属性
+   */
+  static async calculateMaterialCombatStats(materialId: string) {
+    try {
+      const material = await Material.findById(materialId).populate('typeId');
+      if (!material) {
+        throw new Error('材料不存在');
+      }
+
+      type CombatStat = keyof typeof material.combat_multipliers;
+      const combatStats: Partial<typeof material.combat_multipliers> = {};
+      const combatBonus = (material.typeId as any).combat_bonus;
+      const multipliers = material.combat_multipliers;
+
+      // 遍历所有战斗属性
+      (Object.keys(combatBonus) as CombatStat[]).forEach(stat => {
+        if (combatBonus[stat] !== null && multipliers[stat] !== undefined) {
+          combatStats[stat] = combatBonus[stat] * multipliers[stat];
+        }
+      });
+
+      return combatStats;
+    } catch (error: any) {
+      throw new Error(`计算材料战斗属性失败: ${error.message}`);
     }
   }
 } 

@@ -12,6 +12,7 @@ import { MapAPI } from './apis/map';
 import { PlayerAPI } from './apis/player';
 import { BaseContext, ParamContext } from './types/context';
 import { EnemyAPI } from './apis/enemy';
+import { ShopAPI } from './apis/shop';
 
 const app = new Koa();
 const PORT = process.env.PORT || 3000;
@@ -301,6 +302,32 @@ app.use(async (ctx: BaseContext, next) => {
 
   if (ctx.path === '/api/enemies/attack' && ctx.method === 'POST') {
     await EnemyAPI.attack(ctxWithParams);
+    return;
+  }
+
+  // 商店 API
+  if (ctx.path === '/api/shop/potions' && ctx.method === 'POST') {
+    await ShopAPI.getPotions(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/shop/sell' && ctx.method === 'POST') {
+    await ShopAPI.sellItem(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/shop/buy/potion' && ctx.method === 'POST') {
+    await ShopAPI.buyPotion(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/shop/calculate/material' && ctx.method === 'POST') {
+    await ShopAPI.calculateMaterialPrice(ctxWithParams);
+    return;
+  }
+
+  if (ctx.path === '/api/shop/calculate/equipment' && ctx.method === 'POST') {
+    await ShopAPI.calculateEquipmentPrice(ctxWithParams);
     return;
   }
 
