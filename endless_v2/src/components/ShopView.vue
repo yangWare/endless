@@ -53,8 +53,6 @@
 <script setup>
 import { computed, ref, defineEmits, nextTick } from 'vue'
 import { state, updatePlayer } from '../store/state'
-import { usePotion } from '../store/actions/potion'
-import mapConfig from '../config/map_config.json'
 import potionConfig from '../config/potion_config.json'
 import materialConfig from '../config/material_config.json'
 import Message from './Message.vue'
@@ -63,7 +61,7 @@ const emit = defineEmits(['close'])
 
 // 获取当前地图和位置信息
 const currentMap = computed(() => {
-  return mapConfig[state.currentMapId]
+  return state.currentMap
 })
 
 const currentLocation = computed(() => {
