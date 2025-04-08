@@ -39,4 +39,10 @@ router.delete('/:id', async (ctx: ParamContext) => {
   await MaterialAPI.delete(ctx);
 });
 
+// 计算材料战斗属性
+router.get('/:id/combat-stats', async (ctx: ParamContext) => {
+  ctx.params = { id: ctx.params.id };
+  await MaterialAPI.calculateCombatStats(ctx);
+});
+
 export default router; 

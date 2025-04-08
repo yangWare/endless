@@ -141,4 +141,27 @@ export class MaterialAPI {
       };
     }
   }
+
+  /**
+   * 计算材料的战斗属性
+   */
+  static async calculateCombatStats(ctx: BaseContext) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少材料ID');
+      }
+      const combatStats = await MaterialService.calculateMaterialCombatStats(id);
+      ctx.body = {
+        success: true,
+        data: combatStats
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 
