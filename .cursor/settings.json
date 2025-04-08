@@ -6,10 +6,7 @@
   "projectRules": {
     "static-server": {
       "path": "/static-server/**",
-      "rules": [
-        "static-server.architecture.mdc",
-        "static-server.validation.mdc"
-      ],
+      "rules": ["static-server.architecture", "static-server.validation"],
       "framework": "Koa2",
       "type": "backend",
       "database": "MongoDB",
