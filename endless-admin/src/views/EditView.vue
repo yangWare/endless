@@ -187,15 +187,14 @@
                   <el-switch v-model="formData.npc.shop.enabled" />
                 </el-form-item>
                 <template v-if="formData.npc.shop.enabled">
-                  <el-button @click="addShopItem">添加商品</el-button>
-                  <div v-for="(item, index) in formData.npc.shop.items" :key="index">
-                    <el-form-item :label="'商品' + (index + 1)">
-                      <el-select v-model="item.id" placeholder="请选择商品" style="width: 200px">
-                        <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material._id" />
+                  <el-button @click="addShopPotion">添加药水</el-button>
+                  <div v-for="(item, index) in formData.npc.shop.potionItems" :key="index">
+                    <el-form-item :label="'药水' + (index + 1)">
+                      <el-select v-model="item.potionId" placeholder="请选择药水" style="width: 200px">
                         <el-option v-for="potion in potions" :key="potion._id" :label="potion.name" :value="potion._id" />
                       </el-select>
                       <el-input-number v-model="item.price" :min="0" placeholder="价格" />
-                      <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
+                      <el-button type="danger" @click="removeShopPotion(index)">删除</el-button>
                     </el-form-item>
                   </div>
                 </template>
@@ -306,7 +305,7 @@ interface Location {
     } | null
     shop: {
       enabled: boolean
-      items: ShopItem[]
+      potionItems: ShopItem[]
     } | null
   }
   enemies: LocationEnemy[]
@@ -361,7 +360,7 @@ interface FormData {
     }
     shop: {
       enabled: boolean
-      items: ShopItem[]
+      potionItems: ShopItem[]
     }
   };
   enemies: LocationEnemy[];
@@ -452,7 +451,7 @@ const formData = reactive<FormData>({
     },
     shop: {
       enabled: false,
-      items: [] as ShopItem[],
+      potionItems: []
     },
   },
   enemies: [] as LocationEnemy[],
@@ -619,7 +618,7 @@ const fetchDetail = async () => {
       if (data.npc) {
         data.npc = {
           forge: data.npc.forge ? { ...data.npc.forge, enabled: true } : { enabled: false, level: 1 },
-          shop: data.npc.shop ? { ...data.npc.shop, enabled: true } : { enabled: false, items: [] }
+          shop: data.npc.shop ? { ...data.npc.shop, enabled: true } : { enabled: false, potionItems: [] }
         };
       }
       Object.assign(formData, data);
@@ -735,18 +734,20 @@ const goBack = () => {
   router.push('/');
 }
 
-const addShopItem = () => {
-  if (!formData.npc.shop.items) {
-    formData.npc.shop.items = [];
+// 添加商店药水
+const addShopPotion = () => {
+  if (!formData.npc.shop.potionItems) {
+    formData.npc.shop.potionItems = []
   }
-  formData.npc.shop.items.push({
-    id: '',
+  formData.npc.shop.potionItems.push({
+    potionId: '',
     price: 0
-  });
+  })
 }
 
-const removeShopItem = (index: number) => {
-  formData.npc.shop.items.splice(index, 1);
+// 删除商店药水
+const removeShopPotion = (index: number) => {
+  formData.npc.shop.potionItems.splice(index, 1)
 }
 
 const addEnemy = () => {

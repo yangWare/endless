@@ -1,5 +1,6 @@
 import { LocationService, LocationData, LocationQueryParams } from '../services/LocationService';
 import { ForgeService } from '../services/ForgeService';
+import { ShopService } from '../services/ShopService';
 import { Types } from 'mongoose';
 import { LocationContext, BaseContext } from '../types/context';
 
@@ -213,6 +214,61 @@ export class LocationAPI {
       };
     } catch (error: any) {
       console.error('锻造失败:', error);
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 获取商店药水列表
+   */
+  static async getShopPotions(ctx: BaseContext) {
+    try {
+      const { locationId } = ctx.params;
+
+      if (!locationId) {
+        throw new Error('缺少地点ID');
+      }
+
+      const potions = await ShopService.getShopPotions(locationId);
+      ctx.body = {
+        success: true,
+        data: potions
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 更新商店药水列表
+   */
+  static async updateShopPotions(ctx: BaseContext) {
+    try {
+      const { locationId } = ctx.params;
+      const { potionItems } = ctx.request.body;
+
+      if (!locationId) {
+        throw new Error('缺少地点ID');
+      }
+
+      if (!potionItems || !Array.isArray(potionItems)) {
+        throw new Error('无效的药水列表数据');
+      }
+
+      const updatedPotions = await ShopService.updateShopPotions(locationId, potionItems);
+      ctx.body = {
+        success: true,
+        data: updatedPotions
+      };
+    } catch (error: any) {
       ctx.status = 400;
       ctx.body = {
         success: false,

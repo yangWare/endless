@@ -2,16 +2,14 @@ import { Location } from '../models/Location';
 import { Types } from 'mongoose';
 import { EnemyInstanceService } from './EnemyInstanceService';
 import { EnemyInstance } from '../models/EnemyInstance';
+import { ShopPotionItem } from './ShopService';
 
 export interface LocationNPC {
   forge?: {
     level: number;
   };
   shop?: {
-    items: Array<{
-      id: string;
-      price: number;
-    }>;
+    potionItems: ShopPotionItem[];
   };
 }
 

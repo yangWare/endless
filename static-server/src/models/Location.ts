@@ -39,9 +39,10 @@ const locationSchema = new mongoose.Schema({
       },
       shop: {
         type: {
-          items: [{
-            id: {
-              type: String,
+          potionItems: [{
+            potionId: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'Potion',
               required: true
             },
             price: {

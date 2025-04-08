@@ -234,7 +234,10 @@
                   <el-switch v-model="formData.npc.forge.enabled" />
                 </el-form-item>
                 <el-form-item label="等级" v-if="formData.npc.forge.enabled">
-                  <el-input-number v-model="formData.npc.forge.level" :min="1" />
+                  <el-input-number
+                    v-model="formData.npc.forge.level"
+                    :min="1"
+                  />
                 </el-form-item>
               </el-collapse-item>
               <el-collapse-item title="商店">
@@ -242,12 +245,32 @@
                   <el-switch v-model="formData.npc.shop.enabled" />
                 </el-form-item>
                 <template v-if="formData.npc.shop.enabled">
-                  <el-button @click="addShopItem">添加商品</el-button>
-                  <div v-for="(item, index) in formData.npc.shop.items" :key="index">
-                    <el-form-item :label="'商品' + (index + 1)">
-                      <el-input v-model="item.id" placeholder="商品ID" style="width: 200px" />
-                      <el-input-number v-model="item.price" :min="0" placeholder="价格" />
-                      <el-button type="danger" @click="removeShopItem(index)">删除</el-button>
+                  <el-button @click="addShopPotion">添加药水</el-button>
+                  <div
+                    v-for="(item, index) in formData.npc.shop.potionItems"
+                    :key="index"
+                  >
+                    <el-form-item :label="'药水' + (index + 1)">
+                      <el-select
+                        v-model="item.potionId"
+                        placeholder="请选择药水"
+                        style="width: 200px"
+                      >
+                        <el-option
+                          v-for="potion in potions"
+                          :key="potion._id"
+                          :label="potion.name"
+                          :value="potion._id"
+                        />
+                      </el-select>
+                      <el-input-number
+                        v-model="item.price"
+                        :min="0"
+                        placeholder="价格"
+                      />
+                      <el-button type="danger" @click="removeShopPotion(index)"
+                        >删除</el-button
+                      >
                     </el-form-item>
                   </div>
                 </template>
@@ -439,7 +462,7 @@ interface Location {
     }
     shop: {
       enabled: boolean
-      items: ShopItem[]
+      potionItems: ShopItem[]
     }
   }
   enemies: LocationEnemy[]
@@ -490,7 +513,7 @@ interface FormData {
     }
     shop: {
       enabled: boolean
-      items: ShopItem[]
+      potionItems: ShopItem[]
     }
   }
   enemies: LocationEnemy[]
@@ -577,7 +600,7 @@ const formData = reactive<FormData>({
     },
     shop: {
       enabled: false,
-      items: [] as ShopItem[],
+      potionItems: [] as ShopItem[],
     },
   },
   enemies: [] as LocationEnemy[],
@@ -764,7 +787,7 @@ const handleTypeChange = () => {
         },
         shop: {
           enabled: false,
-          items: [],
+          potionItems: [],
         },
       }
       formData.enemies = []
@@ -887,7 +910,7 @@ const submitForm = async () => {
               adjacentLocations: formData.adjacentLocations,
               npc: {
                 forge: formData.npc.forge.enabled ? formData.npc.forge : null,
-                shop: formData.npc.shop.enabled ? formData.npc.shop : null
+                shop: formData.npc.shop.enabled ? formData.npc.shop : null,
               },
               enemies: formData.enemies,
               enemyUpdateDuration: formData.enemyUpdateDuration,
@@ -931,20 +954,20 @@ const resetForm = () => {
   formRef.value.resetFields()
 }
 
-// 添加商店商品
-const addShopItem = () => {
-  if (!formData.npc.shop.items) {
-    formData.npc.shop.items = []
+// 添加商店药水
+const addShopPotion = () => {
+  if (!formData.npc.shop.potionItems) {
+    formData.npc.shop.potionItems = []
   }
-  formData.npc.shop.items.push({
-    id: "",
+  formData.npc.shop.potionItems.push({
+    potionId: "",
     price: 0,
   })
 }
 
-// 移除商店商品
-const removeShopItem = (index: number) => {
-  formData.npc.shop.items.splice(index, 1)
+// 删除商店药水
+const removeShopPotion = (index: number) => {
+  formData.npc.shop.potionItems.splice(index, 1)
 }
 
 // 添加敌人
