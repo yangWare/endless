@@ -244,14 +244,14 @@ const showInventoryItemInfo = async (item: InventoryItem) => {
   }
   const totalPrice = price * item.count
   
-  let message = `${item.name}<br>类型: ${item.isMaterial ? item.typeId?.name : item.slot}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
+  let message = `${item.name}<br>类型: ${item.isMaterial ? item.typeId?.name : i18nConfig.equipment_position[item.slot as keyof typeof i18nConfig.equipment_position].name}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
   
   if (!item.isMaterial && item.combatStats) {
     // 显示装备的战斗属性
     message += '<br><br>战斗属性:<br>'
     Object.entries(item.combatStats).forEach(([stat, value]) => {
       if (value > 0) {
-        message += `${stat}: +${value}<br>`
+        message += `${i18nConfig.combat_stats[stat as keyof typeof i18nConfig.combat_stats] || stat}: ${value}<br>`
       }
     })
   }

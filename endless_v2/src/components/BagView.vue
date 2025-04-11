@@ -221,7 +221,7 @@ const usePotion = async (potion: Potion) => {
 const showEquipmentInfo = (item: Equipment) => {
   let info = `${item.name}<br>`
   for (const [key, value] of Object.entries(item.combatStats || {})) {
-    if (statNameMap[key as keyof typeof statNameMap]) {
+    if (statNameMap[key as keyof typeof statNameMap] && value > 0) {
       info += `${statNameMap[key as keyof typeof statNameMap]}: ${value}<br>`
     }
   }
@@ -230,7 +230,7 @@ const showEquipmentInfo = (item: Equipment) => {
   showMessage.value = true
   showButton.value = true
   buttonText.value = '穿戴'
-  const handleEquip = () => equipItem(item.name)
+  const handleEquip = () => equipItem(item.id)
   onAction.value = handleEquip
 }
 

@@ -119,7 +119,9 @@ const showEquipmentInfo = (item: Equipment | null): void => {
   if (!item) return
   let info = `${item.name}<br>`
   for (const [key, value] of Object.entries(item.combatStats || {})) {
-    info += `${statNameMap[key as keyof typeof statNameMap] || key}: ${value}<br>`
+    if (value > 0) {
+      info += `${statNameMap[key as keyof typeof statNameMap] || key}: ${value}<br>`
+    }
   }
   messageContent.value = info.trim()
   messageType.value = 'info'
