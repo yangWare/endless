@@ -11,6 +11,11 @@ router.get('/', async (ctx: ParamContext) => {
   await PotionAPI.list(ctx);
 });
 
+// 批量获取药水详情
+router.get('/batch', async (ctx: ParamContext) => {
+  await PotionAPI.getBatchByIds(ctx);
+});
+
 // 创建药水
 router.post('/', async (ctx: ParamContext) => {
   await PotionAPI.create(ctx);

@@ -117,4 +117,31 @@ export class PotionAPI {
       };
     }
   }
+
+  /**
+   * 批量获取药品详情
+   */
+  static async getBatchByIds(ctx: BaseContext) {
+    try {
+      const ids = ctx.query.ids as string;
+      if (!ids) {
+        throw new Error('缺少药品ID列表');
+      }
+      const idList = ids.split(',').filter(id => id.trim());
+      if (idList.length === 0) {
+        throw new Error('药品ID列表不能为空');
+      }
+      const potions = await PotionService.getPotionsByIds(idList);
+      ctx.body = {
+        success: true,
+        data: potions
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 

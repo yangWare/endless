@@ -65,11 +65,12 @@ const currentMap = computed(() => {
 })
 
 const currentLocation = computed(() => {
-  return currentMap.value?.locations[state.currentLocationId]
+  return state.mapLocations[state.currentLocationId]
 })
 
 // 商店商品列表
 const shopItems = computed(() => {
+  console.log(currentLocation.value)
   const shopItems = currentLocation.value?.npc?.shop?.items || []
   return shopItems.map(item => {
     const potion = potionConfig.potions[item.id]

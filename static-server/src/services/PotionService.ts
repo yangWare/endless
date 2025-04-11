@@ -118,4 +118,18 @@ export class PotionService {
       throw new Error(`获取药品列表失败: ${error.message}`);
     }
   }
+
+  /**
+   * 批量获取药品详情
+   */
+  static async getPotionsByIds(ids: string[]) {
+    try {
+      const potions = await Potion.find({
+        _id: { $in: ids.map(id => new Types.ObjectId(id)) }
+      });
+      return potions;
+    } catch (error: any) {
+      throw new Error(`批量获取药品详情失败: ${error.message}`);
+    }
+  }
 } 
