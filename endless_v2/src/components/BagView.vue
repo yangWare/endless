@@ -49,16 +49,30 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { state, updatePlayer, loadMaterials, loadPotions } from '../store/state'
-import { equipItem, calculateMaxHp } from '../store/actions/player'
-import { materialApi, playerApi, potionApi } from '../api'
+import { equipItem } from '../store/actions/player'
+import { materialApi, playerApi } from '../api'
+import type { Material, Potion, Equipment } from '../api'
 import Message from './Message.vue'
 import i18nConfig from '../config/i18n_config.json'
 
-const materials = ref([])
-const potions = ref([])
+interface MaterialDetails {
+  name: string
+  level: number
+  type: string
+  stats: string
+}
+
+interface PotionDetails {
+  name: string
+  description: string
+  stats: string
+}
+
+const materials = ref<Material[]>([])
+const potions = ref<Potion[]>([])
 
 const materialsLoading = ref(false)
 const potionsLoading = ref(false)
@@ -112,7 +126,7 @@ const messageType = ref('info')
 
 const statNameMap = i18nConfig.combat_stats
 
-const getMaterialDetails = async (material) => {
+const getMaterialDetails = async (material: Material): Promise<MaterialDetails | null> => {
   if (!material) return null
   
   // 如果 state 中没有该材料的战斗属性，则从后端获取
@@ -135,7 +149,7 @@ const getMaterialDetails = async (material) => {
   let statsInfo = ''
   const combatStats = state.materialCombatStats[material._id]
   for (const [stat, value] of Object.entries(combatStats)) {
-    statsInfo += `${statNameMap[stat] || stat}: ${value}<br>`
+    statsInfo += `${statNameMap[stat as keyof typeof statNameMap] || stat}: ${value}<br>`
   }
 
   return {
@@ -146,7 +160,7 @@ const getMaterialDetails = async (material) => {
   }
 }
 
-const showMaterialInfo = async (material) => {
+const showMaterialInfo = async (material: Material) => {
   const details = await getMaterialDetails(material)
   if (details) {
     messageContent.value = `${details.name}<br>类型: ${details.type}<br>等级: ${details.level}<br>属性加成:<br>${details.stats}`
@@ -156,21 +170,19 @@ const showMaterialInfo = async (material) => {
   }
 }
 
-const getOptionDetails = (option) => {
-  if (!option) return null
-
-  const effect = option.effect
-  let statsInfo = `${statNameMap[effect.type] || effect.type} ${effect.value >= 0 ? '+' : ''}${effect.value}<br>`
+const getOptionDetails = (potion: Potion): PotionDetails => {
+  const effect = potion.effect
+  let statsInfo = `${statNameMap[effect.type as keyof typeof statNameMap] || effect.type} ${effect.value >= 0 ? '+' : ''}${effect.value}<br>`
 
   return {
-    name: option.name,
-    description: option.description,
+    name: potion.name,
+    description: potion.description,
     stats: statsInfo.trim(),
   }
 }
 
-const showPotionInfo = (potion) => {
-  const details =  getOptionDetails(potion)
+const showPotionInfo = (potion: Potion) => {
+  const details = getOptionDetails(potion)
   messageContent.value = `${details.name}<br>${details.description}<br>效果: ${details.stats}`
   messageType.value = 'info'
   showMessage.value = true
@@ -180,7 +192,7 @@ const showPotionInfo = (potion) => {
   onAction.value = handleUse
 }
 
-const usePotion = async (potion) => {
+const usePotion = async (potion: Potion) => {
   try {
     const response = await playerApi.usePotion({
       playerId: state.player._id,
@@ -206,11 +218,11 @@ const usePotion = async (potion) => {
   }
 }
 
-const showEquipmentInfo = (item) => {
+const showEquipmentInfo = (item: Equipment) => {
   let info = `${item.name}<br>`
   for (const [key, value] of Object.entries(item.combatStats || {})) {
-    if (statNameMap[key]) {
-      info += `${statNameMap[key]}: ${value}<br>`
+    if (statNameMap[key as keyof typeof statNameMap]) {
+      info += `${statNameMap[key as keyof typeof statNameMap]}: ${value}<br>`
     }
   }
   messageContent.value = info.trim()
@@ -224,7 +236,7 @@ const showEquipmentInfo = (item) => {
 
 const showButton = ref(false)
 const buttonText = ref('确定')
-const onAction = ref(() => {})
+const onAction = ref<() => void>(() => {})
 
 const handleAction = () => {
   onAction.value()

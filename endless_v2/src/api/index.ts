@@ -264,7 +264,7 @@ export const playerApi = {
     api.post('/players/revive', data),
 
     // 使用药水
-  usePotion: (data: { playerId: string; potionId: string }): Promise<BaseResponse<Player>> =>
+  usePotion: (data: { playerId: string; potionId: string }): Promise<BaseResponse<number>> =>
     api.post('/players/use-potion', data)
 };
 
