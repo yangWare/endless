@@ -56,12 +56,12 @@ export class LocationAPI {
     try {
       const id = ctx.params.id;
       if (!id) {
-        throw new Error('缺少地点ID');
+        throw new Error('缺少ID');
       }
-      const location = await LocationService.deleteLocation(id);
+      await LocationService.delete(id);
       ctx.body = {
         success: true,
-        data: location
+        message: '地点及其相关数据已成功删除'
       };
     } catch (error: any) {
       ctx.status = 400;
