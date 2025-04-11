@@ -92,7 +92,7 @@ export class ShopService {
       });
 
       // 考虑材料等级的抑制作用 - 等级越高,锻造难度越大,价格越低
-      const levelPenalty = Math.max(0.5, 1 - (material.level - 1) * 0.05); // 最低降低到原价的50%
+      const levelPenalty = Math.max(0.5, 0.8 - (material.level - 1) * 0.05); // 最低降低到原价的50%
       totalPrice *= levelPenalty;
 
       return Math.floor(totalPrice);

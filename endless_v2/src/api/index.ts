@@ -364,4 +364,19 @@ export const potionApi = {
     api.get('/potions/batch', { params: { ids: ids.join(',') } })
 };
 
+// 商店相关API
+export const shopAPI = {
+  // 获取材料价格
+  getMaterialPrice: async (materialId: string) => {
+    const response = await api.post('/shop/calculate/material', { materialId })
+    return response.data.price
+  },
+
+  // 获取装备价格
+  getEquipmentPrice: async (equipment: Equipment) => {
+    const response = await api.post('/shop/calculate/equipment', { equipment })
+    return response.data.price
+  }
+}
+
 export default api; 

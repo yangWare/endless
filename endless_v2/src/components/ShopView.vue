@@ -39,7 +39,6 @@
             @click="showInventoryItemInfo(item)"
           >
             <div class="item-name">{{ item.name }}</div>
-            <div class="item-price">{{ calculateMaterialPrice(item) }} 金币</div>
             <div class="item-count" v-if="item.count > 1">x{{ item.count }}</div>
           </div>
         </div>
@@ -59,10 +58,11 @@
 </template>
 
 <script setup>
-import { computed, ref, defineEmits, nextTick, watch } from 'vue'
+import { computed, ref, defineEmits, nextTick, watch, onUnmounted } from 'vue'
 import { state, updatePlayer, loadShopPotions, loadMaterials } from '../store/state'
 import i18nConfig from '../config/i18n_config.json'
 import Message from './Message.vue'
+import { shopAPI } from '../api'
 
 const emit = defineEmits(['close'])
 
@@ -145,16 +145,43 @@ const loadInventoryItems = async () => {
 console.log('loadInventoryItems', inventoryItems.value)
 loadInventoryItems()
 
-// 计算材料价格
-const calculateMaterialPrice = (item) => {
-  if (item.isMaterial) {
-    // 基础价格 * 等级
-    const basePrice = 100
-    return basePrice * item.level
-  } else {
-    // 装备价格 = 基础价格 * 等级 * 2
-    const basePrice = 200
-    return basePrice * item.level * 2
+// 价格缓存
+const priceCache = ref({})
+
+// 组件销毁时清除缓存
+onUnmounted(() => {
+  priceCache.value = {}
+})
+
+// 获取材料价格
+const getMaterialPrice = async (materialId) => {
+  if (priceCache.value[materialId]) {
+    return priceCache.value[materialId]
+  }
+  
+  try {
+    const price = await shopAPI.getMaterialPrice(materialId)
+    priceCache.value[materialId] = price
+    return price
+  } catch (error) {
+    console.error('获取材料价格失败:', error)
+    return 0
+  }
+}
+
+// 获取装备价格
+const getEquipmentPrice = async (equipment) => {
+  if (priceCache.value[equipment.id]) {
+    return priceCache.value[equipment.id]
+  }
+  
+  try {
+    const price = await shopAPI.getEquipmentPrice(equipment)
+    priceCache.value[equipment.id] = price
+    return price
+  } catch (error) {
+    console.error('获取装备价格失败:', error)
+    return 0
   }
 }
 
@@ -179,8 +206,13 @@ const showShopItemInfo = (item) => {
 }
 
 // 显示背包物品信息
-const showInventoryItemInfo = (item) => {
-  const price = calculateMaterialPrice(item)
+const showInventoryItemInfo = async (item) => {
+  let price = 0
+  if (item.isMaterial) {
+    price = await getMaterialPrice(item._id)
+  } else {
+    price = await getEquipmentPrice(item)
+  }
   const totalPrice = price * item.count
   
   let message = `${item.name}<br>类型: ${item.isMaterial ? item.typeId.name : item.slot}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
@@ -231,7 +263,12 @@ const handleBuy = async (item) => {
 
 // 处理出售
 const handleSell = async (item) => {
-  const price = calculateMaterialPrice(item)
+  let price = 0
+  if (item.isMaterial) {
+    price = await getMaterialPrice(item._id)
+  } else {
+    price = await getEquipmentPrice(item.id)
+  }
   const totalPrice = price * item.count
   
   // 更新玩家金币和背包
