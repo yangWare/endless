@@ -422,7 +422,7 @@ interface DropMaterial {
 }
 
 interface ShopItem {
-  id: string
+  potionId: string
   price: number
 }
 
@@ -467,6 +467,11 @@ interface Location {
   }
   enemies: LocationEnemy[]
   enemyUpdateDuration: number
+}
+
+interface Potion {
+  _id: string
+  name: string
 }
 
 interface MaterialType {
@@ -539,6 +544,7 @@ const materials = ref<Material[]>([])
 const maps = ref<Map[]>([])
 const locations = ref<Location[]>([])
 const creatures = ref<Creature[]>([])
+const potions = ref<Potion[]>([])
 const materialTypes = ref<MaterialType[]>([])
 
 // 表单数据
@@ -684,6 +690,16 @@ const fetchCreatures = async () => {
     creatures.value = response.data.data.creatures || []
   } catch (error) {
     ElMessage.error("获取生物列表失败")
+  }
+}
+
+// 获取药水列表
+const fetchPotions = async () => {
+  try {
+    const response = await axios.get('/endless/api/potions')
+    potions.value = response.data.data.potions || []
+  } catch (error) {
+    ElMessage.error('获取药水列表失败')
   }
 }
 
@@ -990,6 +1006,7 @@ onMounted(() => {
   fetchMaps()
   fetchLocations()
   fetchCreatures()
+  fetchPotions()
   fetchMaterialTypes()
   // 从 URL 参数中获取类型
   const type = route.query.type as string

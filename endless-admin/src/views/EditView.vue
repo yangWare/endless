@@ -265,7 +265,7 @@ interface DropMaterial {
 }
 
 interface ShopItem {
-  id: string
+  potionId: string
   price: number
 }
 
