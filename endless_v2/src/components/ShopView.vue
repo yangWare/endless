@@ -9,15 +9,23 @@
       <!-- 商店商品列表 -->
       <div class="shop-section">
         <div class="shop-grid">
-          <div
-            v-for="item in shopItems"
-            :key="item.id"
-            class="shop-item"
-            @click="showShopItemInfo(item)"
-          >
-            <div class="item-name">{{ item.name }}</div>
-            <div class="item-price">{{ item.price }} 金币</div>
-          </div>
+          <template v-if="loading">
+            <div v-for="n in 4" :key="n" class="shop-item loading">
+              <div class="item-name">加载中...</div>
+              <div class="item-price">...</div>
+            </div>
+          </template>
+          <template v-else>
+            <div
+              v-for="item in shopItems"
+              :key="item.id"
+              class="shop-item"
+              @click="showShopItemInfo(item)"
+            >
+              <div class="item-name">{{ item.name }}</div>
+              <div class="item-price">{{ item.price }} 金币</div>
+            </div>
+          </template>
         </div>
       </div>
 
@@ -51,37 +59,50 @@
 </template>
 
 <script setup>
-import { computed, ref, defineEmits, nextTick } from 'vue'
+import { computed, ref, defineEmits, nextTick, watch } from 'vue'
 import { state, updatePlayer } from '../store/state'
-import potionConfig from '../config/potion_config.json'
 import materialConfig from '../config/material_config.json'
+import i18nConfig from '../config/i18n_config.json'
 import Message from './Message.vue'
+import { potionApi } from '../api'
 
 const emit = defineEmits(['close'])
-
-// 获取当前地图和位置信息
-const currentMap = computed(() => {
-  return state.currentMap
-})
 
 const currentLocation = computed(() => {
   return state.mapLocations[state.currentLocationId]
 })
 
 // 商店商品列表
-const shopItems = computed(() => {
-  console.log(currentLocation.value)
-  const shopItems = currentLocation.value?.npc?.shop?.items || []
-  return shopItems.map(item => {
-    const potion = potionConfig.potions[item.id]
-    return {
-      ...item,
-      name: potion.name,
-      description: potion.description,
-      effect: potion.effect
+const shopItems = ref([])
+const loading = ref(false)
+
+// 加载商店商品
+const loadShopItems = async () => {
+  const items = currentLocation.value?.npc?.shop?.potionItems || []
+  if (items.length === 0) {
+    shopItems.value = []
+    return
+  }
+
+  loading.value = true
+  try {
+    const response = await potionApi.getBatchByIds(items.map(item => item.potionId))
+    if (response.success) {
+      shopItems.value = response.data.map((potion, index) => ({
+        id: potion._id,
+        name: potion.name,
+        description: potion.description,
+        effect: potion.effect,
+        price: items[index].price
+      }))
     }
-  })
-})
+  } catch (error) {
+    console.error('加载商店商品失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+loadShopItems()
 
 // 玩家背包物品
 const inventoryItems = computed(() => {
@@ -128,7 +149,9 @@ const onAction = ref(() => {})
 
 // 显示商店商品信息
 const showShopItemInfo = (item) => {
-  messageContent.value = `${item.name}<br>${item.description}<br>价格: ${item.price} 金币`
+  const effectType = i18nConfig.combat_stats[item.effect.type] || item.effect.type
+  const effectValue = item.effect.value > 0 ? `+${item.effect.value}` : item.effect.value
+  messageContent.value = `${item.name}<br>${item.description}<br>效果: ${effectType} ${effectValue}<br>价格: ${item.price} 金币`
   messageType.value = 'info'
   showMessage.value = true
   showButton.value = true
@@ -350,5 +373,16 @@ const handleClose = () => {
 
 .shop-content::-webkit-scrollbar-thumb:hover {
   background: #5a5a5a;
+}
+
+.shop-item.loading {
+  opacity: 0.7;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0.7; }
 }
 </style> 

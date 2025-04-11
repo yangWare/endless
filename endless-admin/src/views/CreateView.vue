@@ -180,7 +180,7 @@
               v-model="formData.effect.type"
               placeholder="请选择效果类型"
             >
-              <el-option label="生命值" value="hp" />
+              <el-option label="生命值" value="max_hp" />
               <el-option label="攻击力" value="attack" />
               <el-option label="防御力" value="defense" />
               <el-option label="暴击率" value="crit_rate" />

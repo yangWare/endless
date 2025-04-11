@@ -1,0 +1,64 @@
+---
+description: 
+globs: endless_v2/**
+alwaysApply: false
+---
+# Endless V2 项目架构规则
+
+## 技术栈
+
+- Vue 3 + TypeScript
+- Vite 作为构建工具
+- Axios 用于 HTTP 请求
+- Prettier 用于代码格式化
+
+## 目录结构
+
+```
+- endless/src/api/      # API 接口定义和请求封装
+- endless/src/components/   # 可复用组件
+- endless/src/config/       # 配置文件
+- endless/src/store/        # 状态管理
+- endless/src/App.vue       # 根组件
+- endless/src/main.ts       # 入口文件
+- endless/src/style.css     # 全局样式
+```
+
+## 架构规则
+
+## 组件设计规范
+
+- 所有组件必须使用 TypeScript + Vue 3 的 Composition API
+- 组件设计遵循单一职责原则
+- 注重合理拆解子组件，保证组件的简洁可读
+- 合理拆分目录，服务于同一功能的子组件放置在同一目录中
+
+## API规范
+
+- API信息见：
+  - [player.routes.ts](mdc:static-server/src/routes/player.routes.ts) - 玩家相关api
+  - [map.routes.ts](mdc:static-server/src/routes/map.routes.ts) - 地图相关
+  - [location.routes.ts](mdc:static-server/src/routes/location.routes.ts) - 地点
+  - [race.routes.ts](mdc:static-server/src/routes/race.routes.ts) - 种族
+  - [creature.routes.ts](mdc:static-server/src/routes/creature.routes.ts) - 生物
+  - [enemy.routes.ts](mdc:static-server/src/routes/enemy.routes.ts) - 敌人/战斗
+  - [material-type.routes.ts](mdc:static-server/src/routes/material-type.routes.ts) - 材料类型
+  - [material.routes.ts](mdc:static-server/src/routes/material.routes.ts) - 材料
+  - [potion.routes.ts](mdc:static-server/src/routes/potion.routes.ts) - 药水
+  - [shop.routes.ts](mdc:static-server/src/routes/shop.routes.ts) - 商店
+- 当后端服务没有提供需要的API时，可以在后端项目中添加，但需要先跟我确认
+- api请求要封装成方法放到`endless/src/api/index`文件中
+
+## 类型定义规范
+
+- 优先从`endless/src/api/index`文件中读取需要的类型，而不是直接声明新类型
+
+## 中英文映射
+
+- 映射配置写在 [i18n_config.json](mdc:endless_v2/src/config/i18n_config.json) 文件中
+
+
+
+
+
+

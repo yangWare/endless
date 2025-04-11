@@ -81,7 +81,10 @@ export interface Location {
       level: number
     } | null
     shop: {
-      items: []
+      potionItems: Array<{
+        potionId: string
+        price: number
+      }>
     } | null
     _id: string
   }
@@ -179,6 +182,20 @@ export interface MaterialData {
     dodge_rate: number;
   };
   level: number;
+}
+
+// 药水相关类型
+export interface Potion {
+  _id: string;
+  name: string;
+  description: string;
+  effect: {
+    // 战斗属性类型，比如attack, defense, crit_rate, crit_damage, crit_damage_resist, hit_rate, dodge_rate
+    type: string;
+    value: number;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const baseURL = '/endless/api';
@@ -335,6 +352,16 @@ export const materialApi = {
    */
   getByIds: (ids: string[]): Promise<BaseResponse<Material[]>> => 
     api.post('/materials/ids', { ids })
+};
+
+export const potionApi = {
+  // 获取药水详情
+  getById: (id: string): Promise<BaseResponse<Potion>> => 
+    api.get(`/potions/${id}`),
+  
+  // 批量获取药水详情
+  getBatchByIds: (ids: string[]): Promise<BaseResponse<Potion[]>> => 
+    api.get('/potions/batch', { params: { ids: ids.join(',') } })
 };
 
 export default api; 
