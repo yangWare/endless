@@ -5,7 +5,7 @@
   "main": "dist/app.js",
   "scripts": {
     "start": "npm run build:server && npm run build:endless && npm run build:admin && npm run copy:dist && node dist/app.js",
-    "start:prod": "npm run build:server && npm run build:endless && npm run build:admin && npm run copy:dist && pm2 start dist/app.js --name static-server",
+    "start:prod": "npm run build:server && npm run build:endless && npm run build:admin && npm run copy:dist && pm2 restart dist/app.js --name static-server",
     "dev": "ts-node-dev --respawn src/app.ts",
     "build": "tsc",
     "build:server": "tsc",
