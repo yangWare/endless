@@ -53,7 +53,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { state, updatePlayer, loadMaterials, loadPotions } from '../store/state'
 import { equipItem, calculateMaxHp } from '../store/actions/player'
-import { materialApi, potionApi } from '../api'
+import { materialApi, playerApi, potionApi } from '../api'
 import Message from './Message.vue'
 import i18nConfig from '../config/i18n_config.json'
 
@@ -182,7 +182,7 @@ const showPotionInfo = (potion) => {
 
 const usePotion = async (potion) => {
   try {
-    const response = await potionApi.use({
+    const response = await playerApi.usePotion({
       playerId: state.player._id,
       potionId: potion._id
     })
