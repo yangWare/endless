@@ -48,6 +48,7 @@ alwaysApply: false
   - [shop.routes.ts](mdc:static-server/src/routes/shop.routes.ts) - 商店
 - 当后端服务没有提供需要的API时，可以在后端项目中添加，但需要先跟我确认
 - api请求要封装成方法放到`endless/src/api/index`文件中
+- 从api中获取的数据统一放在 [state.ts](mdc:endless_v2/src/store/state.ts) 中做缓存，再次加载时优先判断是否已在本地缓存
 
 ## 类型定义规范
 

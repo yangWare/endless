@@ -60,11 +60,9 @@
 
 <script setup>
 import { computed, ref, defineEmits, nextTick, watch } from 'vue'
-import { state, updatePlayer } from '../store/state'
-import materialConfig from '../config/material_config.json'
+import { state, updatePlayer, loadShopPotions, loadMaterials } from '../store/state'
 import i18nConfig from '../config/i18n_config.json'
 import Message from './Message.vue'
-import { potionApi } from '../api'
 
 const emit = defineEmits(['close'])
 
@@ -73,29 +71,29 @@ const currentLocation = computed(() => {
 })
 
 // 商店商品列表
-const shopItems = ref([])
+const shopItems = computed(() => {
+  const items = currentLocation.value?.npc?.shop?.potionItems || []
+  return items.map(item => {
+    const potion = state.shopPotions[item.potionId]
+    if (!potion) return null
+    return {
+      id: potion._id,
+      name: potion.name,
+      description: potion.description,
+      effect: potion.effect,
+      price: item.price
+    }
+  }).filter(Boolean)
+})
 const loading = ref(false)
-
 // 加载商店商品
 const loadShopItems = async () => {
   const items = currentLocation.value?.npc?.shop?.potionItems || []
-  if (items.length === 0) {
-    shopItems.value = []
-    return
-  }
+  if (items.length === 0) return
 
   loading.value = true
   try {
-    const response = await potionApi.getBatchByIds(items.map(item => item.potionId))
-    if (response.success) {
-      shopItems.value = response.data.map((potion, index) => ({
-        id: potion._id,
-        name: potion.name,
-        description: potion.description,
-        effect: potion.effect,
-        price: items[index].price
-      }))
-    }
+    await loadShopPotions(items.map(item => item.potionId))
   } catch (error) {
     console.error('加载商店商品失败:', error)
   } finally {
@@ -104,39 +102,60 @@ const loadShopItems = async () => {
 }
 loadShopItems()
 
-// 玩家背包物品
-const inventoryItems = computed(() => {
-  const materials = state.player.materials || []
-  // 统计每个材料的数量
-  const materialCounts = materials.reduce((acc, id) => {
-    acc[id] = (acc[id] || 0) + 1
-    return acc
-  }, {})
+const inventoryItems = ref([])
+// 加载背包物品
+const loadInventoryItems = async () => {
+  const materials = state.player?.inventory?.materials || []
+  if (materials.length === 0) return
+  try {
+    console.log('loadInventoryItems', materials)
+    await loadMaterials(materials)
+    
+    // 统计每个材料的数量
+    const materialCounts = materials.reduce((acc, id) => {
+      acc[id] = (acc[id] || 0) + 1
+      return acc
+    }, {})
 
-  // 转换为物品数组
-  return Object.entries(materialCounts).map(([materialId, count]) => {
-    // 遍历所有材料类型查找对应的材料
-    for (const type of Object.values(materialConfig.material_types)) {
-      const material = type.materials[materialId]
-      if (material) {
-        return {
-          id: materialId,
-          name: material.name,
-          level: material.level,
-          type: type.name,
-          count
-        }
+    // 转换材料为物品数组
+    const materialItems = Object.entries(materialCounts).map(([materialId, count]) => {
+      const material = state.materials[materialId]
+      if (!material) return null
+      
+      return {
+        ...material,
+        count,
+        isMaterial: true
       }
-    }
-    return null
-  }).filter(Boolean)
-})
+    }).filter(Boolean)
+
+    // 转换装备为物品数组
+    const equipmentItems = (state.player?.inventory?.equipments || []).map(equipment => ({
+      ...equipment,
+      count: 1,
+      isMaterial: false
+    }))
+
+    // 合并材料和装备
+    inventoryItems.value = [...materialItems, ...equipmentItems]
+  } catch (error) {
+    console.error('加载背包物品失败:', error)
+  }
+}
+console.log('loadInventoryItems', inventoryItems.value)
+loadInventoryItems()
 
 // 计算材料价格
-const calculateMaterialPrice = (material) => {
-  // 基础价格 * 等级
-  const basePrice = 100
-  return basePrice * material.level
+const calculateMaterialPrice = (item) => {
+  if (item.isMaterial) {
+    // 基础价格 * 等级
+    const basePrice = 100
+    return basePrice * item.level
+  } else {
+    // 装备价格 = 基础价格 * 等级 * 2
+    const basePrice = 200
+    return basePrice * item.level * 2
+  }
 }
 
 // 消息弹窗相关
@@ -163,7 +182,20 @@ const showShopItemInfo = (item) => {
 const showInventoryItemInfo = (item) => {
   const price = calculateMaterialPrice(item)
   const totalPrice = price * item.count
-  messageContent.value = `${item.name}<br>类型: ${item.type}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
+  
+  let message = `${item.name}<br>类型: ${item.isMaterial ? item.typeId.name : item.slot}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
+  
+  if (!item.isMaterial) {
+    // 显示装备的战斗属性
+    message += '<br><br>战斗属性:<br>'
+    Object.entries(item.combatStats).forEach(([stat, value]) => {
+      if (value > 0) {
+        message += `${stat}: +${value}<br>`
+      }
+    })
+  }
+  
+  messageContent.value = message
   messageType.value = 'info'
   showMessage.value = true
   showButton.value = true
@@ -206,8 +238,14 @@ const handleSell = async (item) => {
   const newPlayer = { ...state.player }
   newPlayer.gold += totalPrice
   
-  // 移除所有匹配的材料ID
-  newPlayer.materials = newPlayer.materials.filter(id => id !== item.id)
+  if (item.isMaterial) {
+    // 移除所有匹配的材料ID
+    newPlayer.materials = newPlayer.materials.filter(id => id !== item._id)
+  } else {
+    // 移除装备
+    newPlayer.inventory.equipments = newPlayer.inventory.equipments.filter(eq => eq.id !== item.id)
+  }
+  
   await updatePlayer(newPlayer)
 
   nextTick(() => {
@@ -229,35 +267,35 @@ const handleClose = () => {
 
 <style scoped>
 .shop-view-container {
-  height: 100%;
-  background-color: #3a3a3a;
+  background-color: #1a1a1a;
   color: white;
   display: flex;
   flex-direction: column;
   position: relative;
+  padding: 0 12px;
 }
 
 .shop-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px;
-  background-color: #3a3a3a;
+  padding: 12px 16px;
 }
 
 .title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
 
 .close-button {
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
   text-align: center;
   font-size: 24px;
-  color: #666;
+  color: #999;
   cursor: pointer;
   border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.1);
@@ -267,21 +305,24 @@ const handleClose = () => {
 .close-button:hover {
   background-color: #ff6b6b;
   color: white;
+  transform: scale(1.1);
 }
 
 .shop-content {
   flex: 1;
-  overflow-y: auto;
-  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  background-color: #3a3a3a;
+  gap: 12px;
+  height: calc(100% - 60px);
 }
 
 .shop-section {
+  max-height: 30vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   position: relative;
-  padding-bottom: 24px;
+  padding-bottom: 12px;
 }
 
 .shop-section::after {
@@ -300,81 +341,128 @@ const handleClose = () => {
   );
 }
 
-.shop-grid,
-.inventory-grid {
+.shop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 4px;
 }
 
-.shop-item,
-.inventory-item {
-  background-color: #3a3a3a;
-  border: 1px solid #4a4a4a;
-  border-radius: 8px;
-  padding: 16px;
+.shop-item {
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  padding: 12px;
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.shop-item:hover,
-.inventory-item:hover {
+.shop-item:hover {
   transform: translateY(-2px);
   border-color: #ffd700;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
-.shop-item:active,
-.inventory-item:active {
+.shop-item:active {
   transform: translateY(0);
 }
 
 .item-name {
   font-size: 16px;
+  font-weight: 500;
   margin-bottom: 8px;
   color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .item-price {
   color: #ffd700;
   font-size: 14px;
   font-weight: 500;
-  margin-top: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px 8px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.inventory-section {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 4px;
+}
+
+.inventory-item {
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.inventory-item:hover {
+  transform: translateY(-2px);
+  border-color: #ffd700;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.inventory-item:active {
+  transform: translateY(0);
 }
 
 .item-count {
   position: absolute;
   top: 8px;
   right: 8px;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   color: #ffd700;
   font-size: 12px;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 /* 滚动条样式 */
-.shop-content::-webkit-scrollbar {
-  width: 8px;
+.shop-section::-webkit-scrollbar,
+.inventory-section::-webkit-scrollbar {
+  width: 6px;
 }
 
-.shop-content::-webkit-scrollbar-track {
-  background: #3a3a3a;
-  border-radius: 4px;
+.shop-section::-webkit-scrollbar-track,
+.inventory-section::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
 }
 
-.shop-content::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
-  border-radius: 4px;
+.shop-section::-webkit-scrollbar-thumb,
+.inventory-section::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 3px;
 }
 
-.shop-content::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
+.shop-section::-webkit-scrollbar-thumb:hover,
+.inventory-section::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.5);
 }
 
+/* 加载动画 */
 .shop-item.loading {
   opacity: 0.7;
   animation: pulse 1.5s infinite;

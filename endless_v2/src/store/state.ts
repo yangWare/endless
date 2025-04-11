@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
-import { playerApi, mapApi, locationApi } from '../api'
-import type { Player, EnemyInstance, Map, Location } from '../api'
+import { playerApi, mapApi, locationApi, potionApi, materialApi } from '../api'
+import type { Player, EnemyInstance, Map, Location, Potion, Material } from '../api'
 
 // 定义状态类型
 interface State {
@@ -11,6 +11,8 @@ interface State {
   locationOfEnemy: string
   currentMap: Map | null
   mapLocations: Record<string, Location>
+  shopPotions: Record<string, Potion>  // 商店药水缓存
+  materials: Record<string, Material>   // 材料缓存
 }
 
 export const state = reactive<State>({
@@ -20,7 +22,9 @@ export const state = reactive<State>({
   enemyInstances: {},
   currentMap: null,
   mapLocations: {},
-  locationOfEnemy: ''
+  locationOfEnemy: '',
+  shopPotions: {},
+  materials: {}
 })
 
 ;(window as any).createUser = playerApi.create
@@ -158,4 +162,52 @@ export function updatePlayer(playerData: Partial<Player>): void {
   }
 
   Object.assign(state.player, playerData)
+}
+
+/**
+ * 加载商店药水数据
+ * @param {string[]} potionIds 药水ID列表
+ * @returns {Promise<void>}
+ */
+export async function loadShopPotions(potionIds: string[]): Promise<void> {
+  if (potionIds.length === 0) return
+
+  // 过滤出本地不存在的药水ID
+  const missingPotionIds = potionIds.filter(id => !state.shopPotions[id])
+  if (missingPotionIds.length === 0) return
+
+  try {
+    const response = await potionApi.getBatchByIds(missingPotionIds)
+    if (response.success) {
+      response.data.forEach(potion => {
+        state.shopPotions[potion._id] = potion
+      })
+    }
+  } catch (error) {
+    console.error('加载商店药水失败:', error)
+  }
+}
+
+/**
+ * 加载材料数据
+ * @param {string[]} materialIds 材料ID列表
+ * @returns {Promise<void>}
+ */
+export async function loadMaterials(materialIds: string[]): Promise<void> {
+  if (materialIds.length === 0) return
+
+  // 过滤出本地不存在的材料ID
+  const missingMaterialIds = materialIds.filter(id => !state.materials[id])
+  if (missingMaterialIds.length === 0) return
+
+  try {
+    const response = await materialApi.getByIds(missingMaterialIds)
+    if (response.success) {
+      response.data.forEach(material => {
+        state.materials[material._id] = material
+      })
+    }
+  } catch (error) {
+    console.error('加载材料数据失败:', error)
+  }
 }
