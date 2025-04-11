@@ -46,10 +46,12 @@ alwaysApply: false
   - [material.routes.ts](mdc:static-server/src/routes/material.routes.ts) - 材料
   - [potion.routes.ts](mdc:static-server/src/routes/potion.routes.ts) - 药水
   - [shop.routes.ts](mdc:static-server/src/routes/shop.routes.ts) - 商店
-- 当后端服务没有提供需要的API时，可以在后端项目中添加，但需要先跟我确认
-- api请求要封装成方法放到`endless/src/api/index`文件中
+- API调用流程如下：
+  1. 确认后端是否已经提供了可使用的API，如果没有，则后端项目先新增该API
+  2. 确认 `endless/src/api/index` 中是否已有该API的请求方法，如果没有则新增
+  3. 确认 [state.ts](mdc:endless_v2/src/store/state.ts) 中是否已有现成的API缓存方法，如果有则直接调用
+  4. 如果没有API缓存方法，则当前API请求判断是否需要缓存，是则在 [state.ts](mdc:endless_v2/src/store/state.ts) 中新增，不是则直接在需要处调用`endless/src/api/index`中的方法
 - 新增api请求方法时，类型声明要和后端API的类型定义一致
-- 从api中获取的数据统一放在 [state.ts](mdc:endless_v2/src/store/state.ts) 中做缓存，再次加载时优先判断是否已在本地缓存
 - api请求错误展示报错信息时，优先展示error.response.data.error信息
 
 ## 类型定义规范

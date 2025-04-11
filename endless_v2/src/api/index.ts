@@ -347,12 +347,33 @@ export const enemyApi = {
 };
 
 export const materialApi = {
-  /**
-   * 根据ID列表批量获取材料
-   * @param ids 材料ID列表
-   */
+  // 获取材料列表
+  list: (): Promise<BaseResponse<Material[]>> => 
+    api.get('/materials'),
+  
+  // 获取单个材料
+  getById: (id: string): Promise<BaseResponse<Material>> => 
+    api.get(`/materials/${id}`),
+  
+  // 批量获取材料
   getByIds: (ids: string[]): Promise<BaseResponse<Material[]>> => 
-    api.post('/materials/ids', { ids })
+    api.post('/materials/ids', { ids }),
+  
+  // 获取材料战斗属性
+  getCombatStats: (id: string): Promise<BaseResponse<Record<string, number>>> => 
+    api.get(`/materials/${id}/combat-stats`),
+  
+  // 创建材料
+  create: (data: MaterialData): Promise<BaseResponse<Material>> => 
+    api.post('/materials', data),
+  
+  // 更新材料
+  update: (id: string, data: Partial<MaterialData>): Promise<BaseResponse<Material>> => 
+    api.put(`/materials/${id}`, data),
+  
+  // 删除材料
+  delete: (id: string): Promise<BaseResponse<void>> => 
+    api.delete(`/materials/${id}`)
 };
 
 export const potionApi = {

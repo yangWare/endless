@@ -13,6 +13,8 @@ interface State {
   mapLocations: Record<string, Location>
   shopPotions: Record<string, Potion>  // 商店药水缓存
   materials: Record<string, Material>   // 材料缓存
+  potions: Record<string, Potion>       // 药水缓存
+  materialCombatStats: Record<string, Record<string, number>> // 材料战斗属性缓存
 }
 
 export const state = reactive<State>({
@@ -24,7 +26,9 @@ export const state = reactive<State>({
   mapLocations: {},
   locationOfEnemy: '',
   shopPotions: {},
-  materials: {}
+  materials: {},
+  potions: {},
+  materialCombatStats: {}
 })
 
 ;(window as any).createUser = playerApi.create
@@ -165,7 +169,7 @@ export function updatePlayer(playerData: Partial<Player>): void {
 }
 
 /**
- * 加载商店药水数据
+ * 加载商店药水价格
  * @param {string[]} potionIds 药水ID列表
  * @returns {Promise<void>}
  */
@@ -209,5 +213,29 @@ export async function loadMaterials(materialIds: string[]): Promise<void> {
     }
   } catch (error) {
     console.error('加载材料数据失败:', error)
+  }
+}
+
+/**
+ * 加载药水数据
+ * @param {string[]} potionIds 药水ID列表
+ * @returns {Promise<void>}
+ */
+export async function loadPotions(potionIds: string[]): Promise<void> {
+  if (potionIds.length === 0) return
+
+  // 过滤出本地不存在的药水ID
+  const missingPotionIds = potionIds.filter(id => !state.potions[id])
+  if (missingPotionIds.length === 0) return
+
+  try {
+    const response = await potionApi.getBatchByIds(missingPotionIds)
+    if (response.success) {
+      response.data.forEach(potion => {
+        state.potions[potion._id] = potion
+      })
+    }
+  } catch (error) {
+    console.error('加载药水数据失败:', error)
   }
 }

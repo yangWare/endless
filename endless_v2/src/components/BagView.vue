@@ -1,10 +1,11 @@
 <template>
   <div class="bag-container">
     <div class="section-title">材料</div>
-    <div class="materials-grid">
+    <div v-if="materialsLoading" class="loading">加载中...</div>
+    <div v-else class="materials-grid">
       <div
         v-for="material in materials"
-        :key="material.id"
+        :key="material._id"
         class="material-item"
         @click="showMaterialInfo(material)"
       >
@@ -13,10 +14,11 @@
     </div>
 
     <div class="section-title">药品</div>
-    <div class="potions-grid">
+    <div v-if="potionsLoading" class="loading">加载中...</div>
+    <div v-else class="potions-grid">
       <div
         v-for="potion in potions"
-        :key="potion.id"
+        :key="potion._id"
         class="potion-item"
         @click="showPotionInfo(potion)"
       >
@@ -48,82 +50,104 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { state, updatePlayer } from '../store/state'
+import { computed, ref, onMounted } from 'vue'
+import { state, updatePlayer, loadMaterials, loadPotions } from '../store/state'
 import { equipItem, calculateMaxHp } from '../store/actions/player'
-import materialConfig from '../config/material_config.json'
-import potionConfig from '../config/potion_config.json'
+import { materialApi } from '../api'
 import Message from './Message.vue'
+import i18nConfig from '../config/i18n_config.json'
 
-const getMaterialName = (materialKey) => {
-  for (const typeKey in materialConfig.material_types) {
-    const type = materialConfig.material_types[typeKey]
-    if (type.materials[materialKey]) {
-      return type.materials[materialKey].name
-    }
+const materials = ref([])
+const potions = ref([])
+
+const materialsLoading = ref(false)
+const potionsLoading = ref(false)
+
+const loadPlayerMaterials = async () => {
+  if (!state.player?.inventory?.materials?.length) {
+    return
   }
-  return materialKey
+  
+  materialsLoading.value = true
+  try {
+    await loadMaterials(state.player.inventory.materials)
+    const materialsList = state.player?.inventory?.materials || []
+    materials.value = materialsList.map(id => state.materials[id]).filter(Boolean)
+  } catch (error) {
+    console.error('加载材料详情失败:', error)
+  } finally {
+    materialsLoading.value = false
+  }
 }
 
-const materials = computed(() => {
-  const materialsList = state.player.materials || []
-  return materialsList.map((key) => ({
-    id: key,
-    name: getMaterialName(key),
-  }))
-})
+const loadPlayerPotions = async () => {
+  if (!state.player?.inventory?.potions?.length) {
+    return
+  }
+  
+  potionsLoading.value = true
+  try {
+    await loadPotions(state.player.inventory.potions)
+    const potionsList = state.player?.inventory?.potions || []
+    potions.value = potionsList.map(id => state.potions[id]).filter(Boolean)
+  } catch (error) {
+    console.error('加载药水详情失败:', error)
+  } finally {
+    potionsLoading.value = false
+  }
+}
 
-const potions = computed(() => {
-  const potionsList = state.player.potions || []
-  return potionsList.map((potionId) => {
-    const potion = potionConfig.potions[potionId]
-    return {
-      id: potionId,
-      name: potion.name,
-      description: potion.description,
-      effect: potion.effect
-    }
-  })
+onMounted(() => {
+  loadPlayerMaterials()
+  loadPlayerPotions()
 })
 
 const unequippedItems = computed(() => {
-  return state.player.unequipped || []
+  return state.player.inventory.equipments || []
 })
 
 const showMessage = ref(false)
 const messageContent = ref('')
 const messageType = ref('info')
 
-import i18nConfig from '../config/i18n_config.json'
-
 const statNameMap = i18nConfig.combat_stats
 
-const getMaterialDetails = (materialKey) => {
-  for (const typeKey in materialConfig.material_types) {
-    const type = materialConfig.material_types[typeKey]
-    if (type.materials[materialKey]) {
-      const material = type.materials[materialKey]
-      const baseStats = type.base_stats
-      const multiplier = material.multiplier
-
-      let statsInfo = ''
-      for (const [stat, value] of Object.entries(baseStats)) {
-        statsInfo += `${statNameMap[stat] || stat}: ${value * multiplier}<br>`
+const getMaterialDetails = async (material) => {
+  if (!material) return null
+  
+  // 如果 state 中没有该材料的战斗属性，则从后端获取
+  if (!state.materialCombatStats[material._id]) {
+    try {
+      const response = await materialApi.getCombatStats(material._id)
+      if (response.success) {
+        // 更新 state 中的缓存
+        state.materialCombatStats[material._id] = response.data
+      } else {
+        console.error('获取材料战斗属性失败:', response.message)
+        return null
       }
-
-      return {
-        name: material.name,
-        level: material.level,
-        type: type.name,
-        stats: statsInfo.trim(),
-      }
+    } catch (error) {
+      console.error('获取材料战斗属性失败:', error)
+      return null
     }
   }
-  return null
+
+  let statsInfo = ''
+  const combatStats = state.materialCombatStats[material._id]
+  for (const [stat, value] of Object.entries(combatStats)) {
+    statsInfo += `${statNameMap[stat] || stat}: ${value}<br>`
+  }
+
+  return {
+    name: material.name,
+    level: material.level,
+    type: material.typeId.name,
+    stats: statsInfo.trim(),
+  }
 }
 
-const showMaterialInfo = (material) => {
-  const details = getMaterialDetails(material.id)
+const showMaterialInfo = async (material) => {
+  const details = await getMaterialDetails(material)
   if (details) {
     messageContent.value = `${details.name}<br>类型: ${details.type}<br>等级: ${details.level}<br>属性加成:<br>${details.stats}`
     messageType.value = 'info'
@@ -167,8 +191,10 @@ const usePotion = async (potion) => {
 
 const showEquipmentInfo = (item) => {
   let info = `${item.name}<br>`
-  for (const [key, value] of Object.entries(item.combat_info || {})) {
-    info += `${statNameMap[key] || key}: ${value}<br>`
+  for (const [key, value] of Object.entries(item.combatStats || {})) {
+    if (statNameMap[key]) {
+      info += `${statNameMap[key]}: ${value}<br>`
+    }
   }
   messageContent.value = info.trim()
   messageType.value = 'info'
@@ -243,5 +269,11 @@ const handleAction = () => {
 
 .stat {
   margin: 4px 0;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #aaa;
 }
 </style>
