@@ -14,6 +14,7 @@
     "copy:dist": "rm -rf static/* admin/* && mkdir -p static admin && cp -r ../endless_v2/dist/* static/ && cp -r ../endless-admin/dist/* admin/ && mkdir -p static/assets"
   },
   "dependencies": {
+    "@koa/router": "^13.1.0",
     "@types/mongoose": "^5.11.96",
     "koa": "^2.14.2",
     "koa-static": "^5.0.0",
