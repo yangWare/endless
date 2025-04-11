@@ -75,14 +75,15 @@
       <div class="equipment-title">当前装备</div>
       <ul class="equipment-list">
         <li
-          v-for="[position, item] in Object.entries(player.equipment)"
+          v-for="[position, item] in Object.entries(player.equipped)"
+          v-show="!!item"
           :key="position"
           class="equipment-item"
           @click="showEquipmentInfo(item)"
         >
-          <span class="equipment-name">{{ item.name }}</span>
+          <span class="equipment-name">{{ item?.name }}</span>
           <span class="equipment-position">{{
-            positionMap[position].name || position
+            positionMap[position as keyof typeof positionMap].name || position
           }}</span>
         </li>
       </ul>
@@ -90,34 +91,35 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { state } from '../store/state'
 import { generateCombatStats } from '../store/actions/player'
 import Message from './Message.vue'
-
-const player = computed(() => state.player)
-
+import type { Player, Equipment } from '../api'
 import i18nConfig from '../config/i18n_config.json'
+
+const player = computed<Player>(() => state.player)
 
 const positionMap = i18nConfig.equipment_position
 const statNameMap = i18nConfig.combat_stats
 
-const showMessage = ref(false)
-const messageContent = ref('')
-const messageType = ref('info')
-const showButton = ref(false)
-const buttonText = ref('确定')
-const onAction = ref(() => {})
+const showMessage = ref<boolean>(false)
+const messageContent = ref<string>('')
+const messageType = ref<'info' | 'warning' | 'error'>('info')
+const showButton = ref<boolean>(false)
+const buttonText = ref<string>('确定')
+const onAction = ref<() => void>(() => {})
 
-const handleAction = () => {
+const handleAction = (): void => {
   onAction.value()
 }
 
-const showEquipmentInfo = (item) => {
+const showEquipmentInfo = (item: Equipment | null): void => {
+  if (!item) return
   let info = `${item.name}<br>`
-  for (const [key, value] of Object.entries(item.combat_info || {})) {
-    info += `${statNameMap[key] || key}: ${value}<br>`
+  for (const [key, value] of Object.entries(item.combatStats || {})) {
+    info += `${statNameMap[key as keyof typeof statNameMap] || key}: ${value}<br>`
   }
   messageContent.value = info.trim()
   messageType.value = 'info'
@@ -125,7 +127,7 @@ const showEquipmentInfo = (item) => {
   showButton.value = false
 }
 
-onMounted(async () => {
+onMounted(async (): Promise<void> => {
   await generateCombatStats()
 })
 </script>

@@ -35,7 +35,7 @@ export interface Player {
     helmet: Equipment | null;
     boots: Equipment | null;
   };
-  combat_stats?: CombatStats;
+  combat_stats: CombatStats;
   createdAt?: string;
   updatedAt?: string;
 }
