@@ -33,14 +33,14 @@ export class ShopAPI {
    */
   static async sellItem(ctx: BaseContext) {
     try {
-      const { playerId, locationId, item } = ctx.request.body;
+      const { playerId, locationId, item, count } = ctx.request.body;
 
       // 参数验证
       if (!playerId || !locationId || !item) {
         throw new Error('缺少必要参数');
       }
 
-      const price = await ShopService.sellItem(playerId, locationId, item);
+      const price = await ShopService.sellItem(playerId, locationId, item, count || 1);
       ctx.body = {
         success: true,
         data: {

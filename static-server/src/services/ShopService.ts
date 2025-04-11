@@ -4,8 +4,7 @@ import { IEquipment } from '../models/Player';
 import { MaterialService } from './MaterialService';
 import { Material } from '../models/Material';
 import { MaterialType } from '../models/MaterialType';
-import { Player } from '../models/Player';
-import { PlayerDocument } from '../models/Player';
+import { Player, PlayerDocument } from '../models/Player';
 
 export interface ShopPotionItem {
   potionId: Types.ObjectId;
@@ -106,9 +105,10 @@ export class ShopService {
    * @param playerId 玩家ID
    * @param locationId 地点ID
    * @param item 出售的物品（装备或材料ID）
+   * @param count 出售的数量
    * @returns 出售价格
    */
-  static async sellItem(playerId: string, locationId: string, item: IEquipment | string): Promise<number> {
+  static async sellItem(playerId: string, locationId: string, item: IEquipment | string, count: number = 1): Promise<number> {
     try {
       const location = await Location.findById(locationId);
       if (!location) {
@@ -119,9 +119,18 @@ export class ShopService {
         throw new Error('该地点没有商店');
       }
 
-      const player = await Player.findById(playerId);
+      const player = await Player.findById(playerId) as PlayerDocument;
       if (!player) {
         throw new Error('玩家不存在');
+      }
+
+      // 确保inventory存在
+      if (!player.inventory) {
+        player.inventory = {
+          materials: [] as Types.ObjectId[],
+          potions: [] as Types.ObjectId[],
+          equipments: [] as IEquipment[]
+        };
       }
 
       let price: number;
@@ -129,21 +138,26 @@ export class ShopService {
       // 判断物品类型并计算价格
       if (typeof item === 'string') {
         // 材料
-        // 检查玩家是否拥有该材料
-        if (!player.inventory?.materials.some(id => id.toString() === item)) {
-          throw new Error('玩家背包中没有该材料');
+        // 检查玩家是否拥有足够数量的材料
+        const materialCount = player.inventory.materials.filter(id => id.toString() === item).length;
+        if (materialCount < count) {
+          throw new Error(`玩家背包中只有${materialCount}个该材料，不足以出售${count}个`);
         }
-        price = await this.calculateMaterialPrice(item);
+        price = await this.calculateMaterialPrice(item) * count;
         
-        // 从玩家背包中移除材料
-        const materialIndex = player.inventory.materials.findIndex(id => id.toString() === item);
-        if (materialIndex !== -1) {
-          player.inventory.materials.splice(materialIndex, 1);
-        }
+        // 从玩家背包中移除指定数量的材料
+        let remainingCount = count;
+        player.inventory.materials = player.inventory.materials.filter(id => {
+          if (remainingCount > 0 && id.toString() === item) {
+            remainingCount--;
+            return false;
+          }
+          return true;
+        });
       } else {
         // 装备
         // 检查玩家是否拥有该装备
-        if (!player.inventory?.equipments.some(equip => equip.id === item.id)) {
+        if (!player.inventory.equipments.some(equip => equip.id === item.id)) {
           throw new Error('玩家背包中没有该装备');
         }
         price = this.calculateEquipmentPrice(item);

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { state } from '../store/state'
 
 // 基础响应类型
 export interface BaseResponse<T = any> {
@@ -375,6 +376,17 @@ export const shopAPI = {
   // 获取装备价格
   getEquipmentPrice: async (equipment: Equipment) => {
     const response = await api.post('/shop/calculate/equipment', { equipment })
+    return response.data.price
+  },
+
+  // 出售物品
+  sellItem: async (item: string | Equipment, count: number = 1) => {
+    const response = await api.post('/shop/sell', {
+      playerId: state.player?._id,
+      locationId: state.currentLocationId,
+      item,
+      count
+    })
     return response.data.price
   }
 }

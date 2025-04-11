@@ -106,9 +106,7 @@ const inventoryItems = ref([])
 // 加载背包物品
 const loadInventoryItems = async () => {
   const materials = state.player?.inventory?.materials || []
-  if (materials.length === 0) return
   try {
-    console.log('loadInventoryItems', materials)
     await loadMaterials(materials)
     
     // 统计每个材料的数量
@@ -142,7 +140,6 @@ const loadInventoryItems = async () => {
     console.error('加载背包物品失败:', error)
   }
 }
-console.log('loadInventoryItems', inventoryItems.value)
 loadInventoryItems()
 
 // 价格缓存
@@ -263,34 +260,43 @@ const handleBuy = async (item) => {
 
 // 处理出售
 const handleSell = async (item) => {
-  let price = 0
-  if (item.isMaterial) {
-    price = await getMaterialPrice(item._id)
-  } else {
-    price = await getEquipmentPrice(item.id)
-  }
-  const totalPrice = price * item.count
-  
-  // 更新玩家金币和背包
-  const newPlayer = { ...state.player }
-  newPlayer.gold += totalPrice
-  
-  if (item.isMaterial) {
-    // 移除所有匹配的材料ID
-    newPlayer.materials = newPlayer.materials.filter(id => id !== item._id)
-  } else {
-    // 移除装备
-    newPlayer.inventory.equipments = newPlayer.inventory.equipments.filter(eq => eq.id !== item.id)
-  }
-  
-  await updatePlayer(newPlayer)
+  try {
+    // 调用后端API出售物品
+    const price = await shopAPI.sellItem(
+      item.isMaterial ? item._id : item,
+      item.isMaterial ? item.count : 1
+    )
+    
+    // 更新玩家金币和背包
+    const newPlayer = { ...state.player }
+    newPlayer.coins += price
+    
+    if (item.isMaterial) {
+      // 移除所有匹配的材料ID
+      newPlayer.inventory.materials = newPlayer.inventory.materials.filter(id => id !== item._id)
+    } else {
+      // 移除装备
+      newPlayer.inventory.equipments = newPlayer.inventory.equipments.filter(eq => eq.id !== item.id)
+    }
+    
+    updatePlayer(newPlayer)
+    loadInventoryItems()
 
-  nextTick(() => {
-    messageContent.value = `批量出售成功！获得 ${totalPrice} 金币`
-    messageType.value = 'success'
-    showButton.value = false
-    showMessage.value = true
-  })
+    nextTick(() => {
+      messageContent.value = `出售成功！获得 ${price} 金币`
+      messageType.value = 'success'
+      showButton.value = false
+      showMessage.value = true
+    })
+  } catch (error) {
+    console.error('出售失败:', error)
+    nextTick(() => {
+      messageContent.value = `出售失败: ${error.message}`
+      messageType.value = 'error'
+      showButton.value = false
+      showMessage.value = true
+    })
+  }
 }
 
 const handleAction = () => {
