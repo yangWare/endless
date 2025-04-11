@@ -48,15 +48,15 @@ apiRouter.use(shopRoutes.allowedMethods());
 // 注册 endless 前缀处理中间件和 API 路由
 router.use('/endless', endlessPrefix, apiRouter.routes(), apiRouter.allowedMethods());
 
-// 静态文件服务中间件
-router.get('/images/(.*)', async (ctx: Context, next) => {
-  const newPath = ctx.path.replace('/images', '');
-  ctx.path = newPath;
-  await serve(path.join(__dirname, '../../images'))(ctx, next);
-});
-
 // 前端静态文件服务
 router.get('/(.*)', async (ctx: Context, next) => {
+  if (ctx.path.startsWith('/images')) {
+    const newPath = ctx.path.replace('/images', '');
+    ctx.path = newPath;
+    await serve(path.join(__dirname, '../../images'))(ctx, next);
+    return;
+  }
+
   if (ctx.path === '/') {
     ctx.path = '/static/index.html';
   }
