@@ -50,6 +50,7 @@ alwaysApply: false
 - api请求要封装成方法放到`endless/src/api/index`文件中
 - 新增api请求方法时，类型声明要和后端API的类型定义一致
 - 从api中获取的数据统一放在 [state.ts](mdc:endless_v2/src/store/state.ts) 中做缓存，再次加载时优先判断是否已在本地缓存
+- api请求错误展示报错信息时，优先展示error.response.data.error信息
 
 ## 类型定义规范
 

@@ -388,6 +388,17 @@ export const shopAPI = {
       count
     })
     return response.data.price
+  },
+
+  // 购买药水
+  buyPotion: async (potionId: string, price: number) => {
+    const response = await api.post('/shop/buy/potion', {
+      playerId: state.player?._id,
+      locationId: state.currentLocationId,
+      potionId,
+      price
+    })
+    return response.data.price
   }
 }
 

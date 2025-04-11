@@ -57,14 +57,44 @@
   </div>
 </template>
 
-<script setup>
-import { computed, ref, defineEmits, nextTick, watch, onUnmounted } from 'vue'
+<script setup lang="ts">
+import { computed, ref, defineEmits, nextTick, onUnmounted } from 'vue'
 import { state, updatePlayer, loadShopPotions, loadMaterials } from '../store/state'
 import i18nConfig from '../config/i18n_config.json'
 import Message from './Message.vue'
 import { shopAPI } from '../api'
+import type { Equipment, Material } from '../api'
 
-const emit = defineEmits(['close'])
+// 定义类型
+interface ShopItem {
+  id: string
+  name: string
+  description: string
+  effect: {
+    type: string
+    value: number
+  }
+  price: number
+}
+
+type InventoryEquipmentItem = {
+  isMaterial: false
+  count: number
+} & Equipment
+
+type InventoryMaterialItem = {
+  id: string
+  isMaterial: true
+  count: number
+} & Material
+
+type InventoryItem = InventoryEquipmentItem | InventoryMaterialItem
+
+type MessageType = 'info' | 'success' | 'error'
+
+const emit = defineEmits<{
+  (e: 'close'): void
+}>()
 
 const currentLocation = computed(() => {
   return state.mapLocations[state.currentLocationId]
@@ -83,8 +113,9 @@ const shopItems = computed(() => {
       effect: potion.effect,
       price: item.price
     }
-  }).filter(Boolean)
+  }).filter(Boolean) as ShopItem[]
 })
+
 const loading = ref(false)
 // 加载商店商品
 const loadShopItems = async () => {
@@ -102,7 +133,7 @@ const loadShopItems = async () => {
 }
 loadShopItems()
 
-const inventoryItems = ref([])
+const inventoryItems = ref<InventoryItem[]>([])
 // 加载背包物品
 const loadInventoryItems = async () => {
   const materials = state.player?.inventory?.materials || []
@@ -113,7 +144,7 @@ const loadInventoryItems = async () => {
     const materialCounts = materials.reduce((acc, id) => {
       acc[id] = (acc[id] || 0) + 1
       return acc
-    }, {})
+    }, {} as Record<string, number>)
 
     // 转换材料为物品数组
     const materialItems = Object.entries(materialCounts).map(([materialId, count]) => {
@@ -122,16 +153,17 @@ const loadInventoryItems = async () => {
       
       return {
         ...material,
+        id: material._id,
         count,
-        isMaterial: true
+        isMaterial: true as const
       }
-    }).filter(Boolean)
+    }).filter(Boolean) as InventoryMaterialItem[]
 
     // 转换装备为物品数组
     const equipmentItems = (state.player?.inventory?.equipments || []).map(equipment => ({
       ...equipment,
       count: 1,
-      isMaterial: false
+      isMaterial: false as const
     }))
 
     // 合并材料和装备
@@ -143,7 +175,7 @@ const loadInventoryItems = async () => {
 loadInventoryItems()
 
 // 价格缓存
-const priceCache = ref({})
+const priceCache = ref<Record<string, number>>({})
 
 // 组件销毁时清除缓存
 onUnmounted(() => {
@@ -151,7 +183,7 @@ onUnmounted(() => {
 })
 
 // 获取材料价格
-const getMaterialPrice = async (materialId) => {
+const getMaterialPrice = async (materialId: string): Promise<number> => {
   if (priceCache.value[materialId]) {
     return priceCache.value[materialId]
   }
@@ -167,7 +199,7 @@ const getMaterialPrice = async (materialId) => {
 }
 
 // 获取装备价格
-const getEquipmentPrice = async (equipment) => {
+const getEquipmentPrice = async (equipment: Equipment): Promise<number> => {
   if (priceCache.value[equipment.id]) {
     return priceCache.value[equipment.id]
   }
@@ -185,14 +217,14 @@ const getEquipmentPrice = async (equipment) => {
 // 消息弹窗相关
 const showMessage = ref(false)
 const messageContent = ref('')
-const messageType = ref('info')
+const messageType = ref<MessageType>('info')
 const showButton = ref(false)
 const buttonText = ref('确定')
-const onAction = ref(() => {})
+const onAction = ref<() => void>(() => {})
 
 // 显示商店商品信息
-const showShopItemInfo = (item) => {
-  const effectType = i18nConfig.combat_stats[item.effect.type] || item.effect.type
+const showShopItemInfo = (item: ShopItem) => {
+  const effectType = i18nConfig.combat_stats[item.effect.type as keyof typeof i18nConfig.combat_stats] || item.effect.type
   const effectValue = item.effect.value > 0 ? `+${item.effect.value}` : item.effect.value
   messageContent.value = `${item.name}<br>${item.description}<br>效果: ${effectType} ${effectValue}<br>价格: ${item.price} 金币`
   messageType.value = 'info'
@@ -203,18 +235,18 @@ const showShopItemInfo = (item) => {
 }
 
 // 显示背包物品信息
-const showInventoryItemInfo = async (item) => {
+const showInventoryItemInfo = async (item: InventoryItem) => {
   let price = 0
-  if (item.isMaterial) {
+  if (item.isMaterial && item._id) {
     price = await getMaterialPrice(item._id)
-  } else {
-    price = await getEquipmentPrice(item)
+  } else if (!item.isMaterial) {
+    price = await getEquipmentPrice(item as unknown as Equipment)
   }
   const totalPrice = price * item.count
   
-  let message = `${item.name}<br>类型: ${item.isMaterial ? item.typeId.name : item.slot}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
+  let message = `${item.name}<br>类型: ${item.isMaterial ? item.typeId?.name : item.slot}<br>等级: ${item.level}<br>数量: ${item.count}<br>单价: ${price} 金币<br>总价: ${totalPrice} 金币`
   
-  if (!item.isMaterial) {
+  if (!item.isMaterial && item.combatStats) {
     // 显示装备的战斗属性
     message += '<br><br>战斗属性:<br>'
     Object.entries(item.combatStats).forEach(([stat, value]) => {
@@ -233,8 +265,8 @@ const showInventoryItemInfo = async (item) => {
 }
 
 // 处理购买
-const handleBuy = async (item) => {
-  if (state.player.gold < item.price) {
+const handleBuy = async (item: ShopItem) => {
+  if (state.player.coins < item.price) {
     nextTick(() => {
       messageContent.value = '金币不足！'
       messageType.value = 'error'
@@ -244,26 +276,38 @@ const handleBuy = async (item) => {
     return
   }
 
-  // 更新玩家金币和背包
-  const newPlayer = { ...state.player }
-  newPlayer.gold -= item.price
-  newPlayer.potions.push(item.id)
-  await updatePlayer(newPlayer)
+  try {
+    // 调用后端API购买药水
+    const price = await shopAPI.buyPotion(item.id, item.price)
+    
+    // 更新玩家金币和背包
+    const newPlayer = { ...state.player }
+    newPlayer.coins -= price
+    newPlayer.inventory.potions.push(item.id)
+    updatePlayer(newPlayer)
 
-  nextTick(() => {
-    messageContent.value = '购买成功！'
-    messageType.value = 'success'
-    showButton.value = false
-    showMessage.value = true
-  })
+    nextTick(() => {
+      messageContent.value = '购买成功！'
+      messageType.value = 'success'
+      showButton.value = false
+      showMessage.value = true
+    })
+  } catch (error: any) {
+    nextTick(() => {
+      messageContent.value = error.response.data.error
+      messageType.value = 'error'
+      showButton.value = false
+      showMessage.value = true
+    })
+  }
 }
 
 // 处理出售
-const handleSell = async (item) => {
+const handleSell = async (item: InventoryItem) => {
   try {
     // 调用后端API出售物品
     const price = await shopAPI.sellItem(
-      item.isMaterial ? item._id : item,
+      item.isMaterial ? item._id : (item as unknown as Equipment),
       item.isMaterial ? item.count : 1
     )
     
@@ -271,7 +315,7 @@ const handleSell = async (item) => {
     const newPlayer = { ...state.player }
     newPlayer.coins += price
     
-    if (item.isMaterial) {
+    if (item.isMaterial && item._id) {
       // 移除所有匹配的材料ID
       newPlayer.inventory.materials = newPlayer.inventory.materials.filter(id => id !== item._id)
     } else {
@@ -288,7 +332,7 @@ const handleSell = async (item) => {
       showButton.value = false
       showMessage.value = true
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('出售失败:', error)
     nextTick(() => {
       messageContent.value = `出售失败: ${error.message}`

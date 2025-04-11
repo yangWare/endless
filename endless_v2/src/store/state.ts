@@ -6,7 +6,7 @@ import type { Player, EnemyInstance, Map, Location, Potion, Material } from '../
 interface State {
   currentMapId: string
   currentLocationId: string
-  player: Player | null
+  player: Player
   enemyInstances: Record<string, EnemyInstance>
   locationOfEnemy: string
   currentMap: Map | null
@@ -18,7 +18,7 @@ interface State {
 export const state = reactive<State>({
   currentMapId: '1',
   currentLocationId: '1',
-  player: null,
+  player: null as any,
   enemyInstances: {},
   currentMap: null,
   mapLocations: {},

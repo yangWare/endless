@@ -42,9 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineAsyncComponent, watch, computed } from 'vue'
-import { state, updatePlayer, initState } from '../store/state'
-import type { Player } from '../api'
+import { ref, defineAsyncComponent, computed } from 'vue'
+import { state, initState } from '../store/state'
 
 type ViewType = 'map' | 'bag' | 'character'
 
@@ -74,16 +73,6 @@ const openBag = (): void => {
 const openCharacter = (): void => {
   currentView.value = 'character'
 }
-
-watch(
-  player,
-  (newValue: Player | null) => {
-    if (newValue) {
-      updatePlayer(newValue)
-    }
-  },
-  { deep: true },
-)
 </script>
 
 <style scoped>
