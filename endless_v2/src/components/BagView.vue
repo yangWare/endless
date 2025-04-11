@@ -53,7 +53,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { state, updatePlayer, loadMaterials, loadPotions } from '../store/state'
 import { equipItem, calculateMaxHp } from '../store/actions/player'
-import { materialApi } from '../api'
+import { materialApi, potionApi } from '../api'
 import Message from './Message.vue'
 import i18nConfig from '../config/i18n_config.json'
 
@@ -156,8 +156,22 @@ const showMaterialInfo = async (material) => {
   }
 }
 
+const getOptionDetails = (option) => {
+  if (!option) return null
+
+  const effect = option.effect
+  let statsInfo = `${statNameMap[effect.type] || effect.type} ${effect.value >= 0 ? '+' : ''}${effect.value}<br>`
+
+  return {
+    name: option.name,
+    description: option.description,
+    stats: statsInfo.trim(),
+  }
+}
+
 const showPotionInfo = (potion) => {
-  messageContent.value = `${potion.name}<br>${potion.description}<br>效果: ${potion.effect.type === 'hp' ? '恢复生命值' : potion.effect.type} ${potion.effect.value}`
+  const details =  getOptionDetails(potion)
+  messageContent.value = `${details.name}<br>${details.description}<br>效果: ${details.stats}`
   messageType.value = 'info'
   showMessage.value = true
   showButton.value = true
@@ -167,26 +181,29 @@ const showPotionInfo = (potion) => {
 }
 
 const usePotion = async (potion) => {
-  // 从玩家背包中移除药水
-  const potionsList = [...state.player.potions]
-  const index = potionsList.indexOf(potion.id)
-  if (index > -1) {
-    potionsList.splice(index, 1)
+  try {
+    const response = await potionApi.use({
+      playerId: state.player._id,
+      potionId: potion._id
+    })
+
+    if (response.success) {
+      // 从背包中移除药水
+      const potionsList = state.player.inventory.potions.filter(id => id !== potion._id)
+      updatePlayer({
+        ...state.player,
+        hp: response.data,
+        inventory: {
+          ...state.player.inventory,
+          potions: potionsList
+        }
+      })
+    } else {
+      console.error('使用药水失败:', response.message)
+    }
+  } catch (error) {
+    console.error('使用药水失败:', error)
   }
-  
-  // 应用药水效果
-  let newHp = state.player.hp
-  if (potion.effect.type === 'hp') {
-    const maxHp = calculateMaxHp()
-    newHp = Math.min(state.player.hp + potion.effect.value, maxHp)
-  }
-  
-  // 更新状态
-  await updatePlayer({
-    ...state.player,
-    hp: newHp,
-    potions: potionsList
-  })
 }
 
 const showEquipmentInfo = (item) => {

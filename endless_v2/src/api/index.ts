@@ -383,7 +383,11 @@ export const potionApi = {
   
   // 批量获取药水详情
   getBatchByIds: (ids: string[]): Promise<BaseResponse<Potion[]>> => 
-    api.get('/potions/batch', { params: { ids: ids.join(',') } })
+    api.get('/potions/batch', { params: { ids: ids.join(',') } }),
+
+  // 使用药水
+  use: (data: { playerId: string; potionId: string }): Promise<BaseResponse<Player>> =>
+    api.post('/players/use-potion', data)
 };
 
 // 商店相关API

@@ -239,4 +239,29 @@ export class PlayerAPI {
       };
     }
   }
+
+    /**
+ * 使用药水
+ */
+  static async usePotion(ctx: BaseContext) {
+    try {
+      const { playerId, potionId } = ctx.request.body;
+      if (!playerId || !potionId) {
+        throw new Error('缺少玩家ID或药水ID');
+      }
+
+      const newHp = await PlayerService.usePotion(playerId, potionId);
+
+      ctx.body = {
+        success: true,
+        data: newHp
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+  }
+  }
 } 

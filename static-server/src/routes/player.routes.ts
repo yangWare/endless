@@ -46,4 +46,9 @@ router.post('/revive', async (ctx: ParamContext) => {
   await PlayerAPI.revive(ctx);
 });
 
+// 使用药水
+router.post('/use-potion', async (ctx: ParamContext) => {
+  await PlayerAPI.usePotion(ctx);
+});
+
 export default router; 

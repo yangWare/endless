@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { Material } from '../models/Material';
 import { MapService } from './MapService';
 import { LocationService } from './LocationService';
+import { PotionService } from './PotionService';
 
 // 玩家初始战斗属性
 const INITIAL_COMBAT_STATS = {
@@ -594,6 +595,55 @@ export class PlayerService {
       return player;
     } catch (error: any) {
       throw new Error(`复活玩家失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 使用药水
+   * @param playerId 玩家ID
+   * @param potionId 药水ID
+   * @returns 使用药水后的玩家信息
+   */
+  static async usePotion(playerId: string, potionId: string) {
+    try {
+      // 获取药水信息
+      const potion = await PotionService.getPotionById(potionId);
+      if (!potion) {
+        throw new Error('药水不存在');
+      }
+
+      // 获取玩家信息
+      const player = await Player.findById(playerId)
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      // 检查玩家是否拥有该药水
+      const potionIndex = player.inventory?.potions.findIndex(
+        (id: Types.ObjectId) => id.toString() === potionId
+      );
+      if (potionIndex === undefined || potionIndex === -1) {
+        throw new Error('玩家没有该药水');
+      }
+
+      let newHp = 0
+      // 应用药水效果
+      if (potion.effect?.type === 'hp') {
+        // 恢复生命值
+        const maxHp = await PlayerService.calculateCombatStats(playerId);
+        newHp = Math.min(player.hp + potion.effect.value, maxHp.max_hp);
+        player.hp = newHp;
+      } else {
+        // 其他效果暂时不支持
+        throw new Error('不支持该类型的药水效果');
+      }
+
+      // 从背包中移除药水
+      player.inventory!.potions.splice(potionIndex, 1);
+      await player.save();
+      return newHp;
+    } catch (error: any) {
+      throw new Error(`使用药水失败: ${error.message}`);
     }
   }
 } 

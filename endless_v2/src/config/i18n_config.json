@@ -1,6 +1,7 @@
 {
   "combat_stats": {
     "max_hp": "生命值上限",
+    "hp": "生命值",
     "attack": "攻击力",
     "defense": "防御力",
     "crit_rate": "暴击率",
