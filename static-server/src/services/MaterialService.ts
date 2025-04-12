@@ -91,6 +91,21 @@ export class MaterialService {
     }
   }
 
+  /** 
+   * 获取指定材料详情 -- 面向管理后台提供，typeId不进行关联
+   */
+  static async getMaterialByIdForAdmin(id: string) {
+    try {
+      const material = await Material.findById(id);
+      if (!material) {
+        throw new Error('材料不存在');
+      }
+      return material;
+    } catch (error: any) {
+      throw new Error(`获取材料详情失败: ${error.message}`);
+    }
+  }
+
   /**
    * 获取材料列表（支持分页和查询）
    */

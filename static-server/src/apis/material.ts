@@ -93,6 +93,29 @@ export class MaterialAPI {
   }
 
   /**
+   * 获取指定材料详情 -- 面向管理后台提供，typeId不进行关联
+   */
+  static async getByIdForAdmin(ctx: BaseContext) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少材料ID');
+      }
+      const material = await MaterialService.getMaterialByIdForAdmin(id);
+      ctx.body = {
+        success: true,
+        data: material
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * 获取材料列表
    */
   static async list(ctx: BaseContext) {

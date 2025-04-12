@@ -33,6 +33,12 @@ router.put('/:id', async (ctx: ParamContext) => {
   await MaterialAPI.update(ctx);
 });
 
+// 获取单个材料 -- 面向管理后台提供，typeId不进行关联
+router.get('/:id/admin', async (ctx: ParamContext) => {
+  ctx.params = { id: ctx.params.id };
+  await MaterialAPI.getByIdForAdmin(ctx);
+});
+
 // 删除材料
 router.delete('/:id', async (ctx: ParamContext) => {
   ctx.params = { id: ctx.params.id };
