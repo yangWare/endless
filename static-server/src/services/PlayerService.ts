@@ -296,12 +296,13 @@ export class PlayerService {
       }
 
       // 计算玩家当前HP
-      const playerStats = await this.calculateCombatStats(playerId);
-      const currentHp = playerStats.max_hp - damage;
+      const currentHp = player.hp - damage;
+      player.hp = currentHp;
+
+      await player.save();
 
       // 如果玩家死亡
       if (currentHp <= 0) {
-        // TODO: 处理玩家死亡逻辑
         return true;
       }
 
