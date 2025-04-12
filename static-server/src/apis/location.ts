@@ -210,7 +210,10 @@ export class LocationAPI {
       ctx.body = {
         success: result.success,
         message: result.message,
-        data: result.equipment
+        data: {
+          equipment: result.equipment,
+          forgeCost: result.forgeCost
+        }
       };
     } catch (error: any) {
       console.error('锻造失败:', error);

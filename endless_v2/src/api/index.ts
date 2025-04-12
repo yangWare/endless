@@ -318,7 +318,10 @@ export const locationApi = {
     playerId: string;
     materialIds: string[];
     equipmentType: string;
-  }): Promise<BaseResponse<Equipment | null>> =>
+  }): Promise<BaseResponse<{
+    equipment: Equipment | null;
+    forgeCost: number;
+  } | null>> =>
     api.post(`/locations/${data.locationId}/forge`, data)
 };
 

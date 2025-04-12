@@ -72,8 +72,8 @@
       >
         <div class="section-title">锻造结果</div>
         <p>{{ forgeResult.message }}</p>
-        <div v-if="forgeResult.data" class="equipment-stats">
-          <p>获得装备：{{ forgeResult.data.name }}</p>
+        <div v-if="forgeResult.data?.equipment" class="equipment-stats">
+          <p>获得装备：{{ forgeResult.data?.equipment?.name }}</p>
         </div>
       </div>
     </div>
@@ -97,7 +97,10 @@ interface EquipmentType {
   name: string
 }
 
-type ForgeResult = BaseResponse<Equipment | null>
+type ForgeResult = BaseResponse<{
+  equipment: Equipment | null;
+  forgeCost: number;
+} | null>
 
 export default defineComponent({
   name: 'ForgeView',
@@ -175,13 +178,16 @@ export default defineComponent({
           materials: selectedMaterials.value.map((item) => item.material._id),
           equipmentType: selectedType.value,
         })
+        const resultEquipment = result.data?.equipment || null
+        const forgeCost = result.data?.forgeCost || 0
         // 清理Player背包中已用掉的材料
         if (state.player?.inventory?.materials) {
           updatePlayer({
+            coins: state.player.coins - forgeCost,
             inventory: {
               ...state.player.inventory,
               materials: state.player.inventory.materials.filter((_, index) => !selectedMaterials.value.find((item) => item.index === index)),
-              equipments: result.data ? [...(state.player.inventory?.equipments || []), result.data] : state.player.inventory.equipments
+              equipments: resultEquipment ? [...(state.player.inventory?.equipments || []), resultEquipment] : state.player.inventory.equipments
             }
           })
           availableMaterials.value = []

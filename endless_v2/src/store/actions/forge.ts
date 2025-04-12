@@ -9,7 +9,10 @@ export const forgeEquipment = async ({
 }: {
   materials: string[];
   equipmentType: string;
-}): Promise<BaseResponse<Equipment | null>> => {
+}): Promise<BaseResponse<{
+  equipment: Equipment | null;
+  forgeCost: number;
+} | null>> => {
   if (!materials || materials.length === 0 || materials.length > 5) {
     return {
       success: false,

@@ -137,12 +137,16 @@ const setDefaultValue = () => {
         enabled: false,
         level: 1,
       }
+    } else {
+      formData.npc.forge.enabled = true
     }
     if (!formData.npc?.shop) {
       formData.npc.shop = {
         enabled: false,
         potionItems: [],
       }
+    } else {
+      formData.npc.shop.enabled = true
     }
   }
 }

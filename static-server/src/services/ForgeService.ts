@@ -8,6 +8,7 @@ interface ForgeResult {
   success: boolean;
   message: string;
   equipment?: IEquipment;
+  forgeCost: number;
 }
 
 interface ForgeParams {
@@ -315,7 +316,8 @@ export class ForgeService {
       if (materialIds.length === 0 || materialIds.length > 5) {
         return {
           success: false,
-          message: '材料数量必须在1-5之间'
+          message: '材料数量必须在1-5之间',
+          forgeCost: 0
         };
       }
 
@@ -324,7 +326,8 @@ export class ForgeService {
       if (!player) {
         return {
           success: false,
-          message: '玩家不存在'
+          message: '玩家不存在',
+          forgeCost: 0
         };
       }
 
@@ -333,7 +336,8 @@ export class ForgeService {
       if (!location || !location.npc.forge) {
         return {
           success: false,
-          message: '当前位置没有锻造师'
+          message: '当前位置没有锻造师',
+          forgeCost: 0
         };
       }
 
@@ -348,7 +352,8 @@ export class ForgeService {
       if (materials.length !== materialIds.length) {
         return {
           success: false,
-          message: '部分材料不存在'
+          message: '部分材料不存在',
+          forgeCost: 0
         };
       }
 
@@ -358,9 +363,24 @@ export class ForgeService {
       if (!hasAllMaterials) {
         return {
           success: false,
-          message: '玩家不拥有所有指定的材料'
+          message: '玩家不拥有所有指定的材料',
+          forgeCost: 0
         };
       }
+
+      // 扣除锻造费用：锻造费用 = 2 ^ (forgerLevel - 1) * 10
+      const forgeCost = Math.pow(2, forgerLevel - 1) * 10;
+      if (player.coins < forgeCost) {
+        return {
+          success: false,
+          message: '金币不足',
+          forgeCost: 0
+        };
+      }
+
+      // 扣除金币
+      player.coins -= forgeCost;
+      await player.save();
 
       // 计算每个材料的锻造成功率和结果
       const materialResults = materials.map(material => {
@@ -368,7 +388,8 @@ export class ForgeService {
         return {
           material,
           success: Math.random() < successRate,
-          successRate
+          successRate,
+          forgeCost
         };
       });
 
@@ -392,7 +413,8 @@ export class ForgeService {
 
         return {
           success: false,
-          message: '锻造失败，所有材料都未能成功融合'
+          message: '锻造失败，所有材料都未能成功融合',
+          forgeCost
         };
       }
 
@@ -466,14 +488,16 @@ export class ForgeService {
       return {
         success: true,
         message: `锻造成功！${successfulMaterials.length}个材料成功融合`,
-        equipment
+        equipment,
+        forgeCost
       };
 
     } catch (error) {
       console.error('锻造失败:', error);
       return {
         success: false,
-        message: '锻造过程中发生错误'
+        message: '锻造过程中发生错误',
+        forgeCost: 0
       };
     }
   }
