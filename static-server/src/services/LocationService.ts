@@ -284,7 +284,8 @@ export class LocationService {
         }
       }
 
-      return [...enemyInstances.filter(i => instancesToKeep.includes(i._id.toString())), ...newInstances];
+      // 过滤掉需要刷新的敌人实例和hp为0的敌人实例
+      return [...enemyInstances.filter(i => instancesToKeep.includes(i._id.toString()) && i.hp > 0), ...newInstances];
     } catch (error: any) {
       throw new Error(`生成敌人失败: ${error.message}`);
     }

@@ -72,7 +72,7 @@ export async function attackEnemy(enemyInstanceId: string): Promise<AttackEnemyR
     
     // 根据新的返回类型更新状态
     // 更新敌人状态
-    const enemyInstances = { ...state.enemyInstances }
+    const enemyInstances = state.enemyInstances
     
     if (result.result === 'enemy_dead') {
       // 敌人死亡，从状态中移除

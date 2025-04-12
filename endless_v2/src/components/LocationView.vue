@@ -119,21 +119,6 @@ interface DroppedItem {
   quantity: number
 }
 
-interface CombatResult {
-  player: {
-    hit: boolean
-    damage: number
-    isCrit: boolean
-  }
-  enemy?: {
-    hit: boolean
-    damage: number
-    isCrit: boolean
-    isPlayerAlive: boolean
-  }
-  droppedItems?: DroppedItem[]
-}
-
 const activeTab = ref<'enemies' | 'npcs' | null>('enemies')
 const locationEnemies = ref<Enemy[]>([])
 const combatLogs = ref<CombatLog[]>([])

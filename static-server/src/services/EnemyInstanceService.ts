@@ -333,8 +333,8 @@ export class EnemyInstanceService {
       // 使用CreatureService计算掉落物品
       const droppedMaterials = await CreatureService.calculateDrops(enemyInstance.creatureId._id);
 
-      // 删除敌人实例
-      await EnemyInstance.findByIdAndDelete(enemyInstanceId);
+      // 删除敌人实例，敌人刷新后会重新生成
+      // await EnemyInstance.findByIdAndDelete(enemyInstanceId);
 
       return {
         droppedMaterials
