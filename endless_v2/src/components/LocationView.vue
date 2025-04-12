@@ -56,7 +56,7 @@
             </div>
           </div>
           <div v-else class="empty-enemies">
-            <span class="explore-button" @click="handleExplore">
+            <span class="explore-button" @click="handleExplore(false)">
               继续探索
             </span>
           </div>
@@ -114,11 +114,6 @@ interface Enemy {
   enemy: EnemyInstance
 }
 
-interface DroppedItem {
-  id: string
-  quantity: number
-}
-
 const activeTab = ref<'enemies' | 'npcs' | null>('enemies')
 const locationEnemies = ref<Enemy[]>([])
 const combatLogs = ref<CombatLog[]>([])
@@ -170,6 +165,11 @@ const updateLocationEnemies = (): void => {
     .sort(() => Math.random() - 0.5)
     .slice(0, maxEnemies)
 }
+const updateLocationEnemiesDelay = async () => {
+   // 添加等待效果，等待效果为2~4秒
+  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
+  updateLocationEnemies()
+}
 
 onMounted(async () => {
   combatLogs.value.push({
@@ -182,7 +182,7 @@ onMounted(async () => {
       updateLocationEnemies()
     })
   } else {
-    updateLocationEnemies()
+    handleExplore(true)
   }
 })
 
@@ -356,14 +356,13 @@ const handleRevive = async (): Promise<void> => {
 }
 
 const isExploring = ref(false)
-const handleExplore = async (): Promise<void> => {
+const handleExplore = async (isStart?: boolean): Promise<void> => {
   // 添加拦截，避免反复触发
   if (isExploring.value) return
   isExploring.value = true
-  await addMessageWithDelay('你继续向前探索，发现前方似乎有动静，你谨慎的摸了过去...')
+  await addMessageWithDelay(`你${isStart ? '开始' : '继续'}向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
   // 添加等待效果，等待效果为2~4秒
-  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
-  updateLocationEnemies()
+  await updateLocationEnemiesDelay()
   if (locationEnemies.value.length === 0) {
     await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
   } else {
