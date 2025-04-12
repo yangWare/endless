@@ -130,6 +130,23 @@ const rules = {
   description: [{ required: true, message: '请输入描述', trigger: 'blur' }],
 }
 
+const setDefaultValue = () => {
+  if (formData.type === 'location') {
+    if (!formData.npc?.forge) {
+      formData.npc.forge = {
+        enabled: false,
+        level: 1,
+      }
+    }
+    if (!formData.npc?.shop) {
+      formData.npc.shop = {
+        enabled: false,
+        potionItems: [],
+      }
+    }
+  }
+}
+
 // 获取数据
 const fetchData = async () => {
   const id = route.params.id as string
@@ -170,6 +187,7 @@ const fetchData = async () => {
     if (response.data.success) {
       Object.assign(formData, response.data.data)
       formData.type = type
+      setDefaultValue()
     } else {
       ElMessage.error(response.data.error || '获取数据失败')
     }
