@@ -72,12 +72,13 @@ const locationSchema = new mongoose.Schema({
       type: Number,
       required: true,
       min: 1
+    },
+    updateDuration: {
+      type: Number,
+      required: true,
+      default: 3600000 // 默认1小时
     }
   }],
-  enemyUpdateDuration: {
-    type: Number,
-    default: 3600000 // 默认1小时
-  },
   enemyUpdateTime: {
     type: Number,
     default: 0

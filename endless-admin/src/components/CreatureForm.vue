@@ -14,19 +14,22 @@
     </el-form-item>
     <el-divider>掉落材料</el-divider>
     <el-form-item v-for="(item, index) in formData.drop_materials" :key="index">
-      <el-row :gutter="20">
-        <el-col :span="12">
+      <el-row :gutter="24" style="width: 100%">
+        <el-col :span="10">
           <el-form-item :prop="'drop_materials.' + index + '.materialId'" :rules="{ required: true, message: '请选择材料' }">
             <el-select v-model="item.materialId" placeholder="请选择材料" style="width: 100%">
               <el-option v-for="material in materials" :key="material._id" :label="material.name" :value="material._id" />
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="10">
           <el-form-item :prop="'drop_materials.' + index + '.probability'" :rules="{ required: true, message: '请输入掉落概率' }">
-            <el-input-number v-model="item.probability" :min="0" :max="1" :step="0.1" placeholder="掉落概率" />
+            <el-input-number v-model="item.probability" :min="0" :max="1" :step="0.1" placeholder="掉落概率" style="width: 100%" />
           </el-form-item>
         </el-col>
+        <el-col :span="4">
+            <el-button type="danger" @click="removeDropMaterial(index)">删除</el-button>
+          </el-col>
       </el-row>
     </el-form-item>
     <el-button type="primary" @click="addDropMaterial">添加掉落材料</el-button>
@@ -89,6 +92,10 @@ const addDropMaterial = () => {
     materialId: '',
     probability: 0
   })
+}
+
+const removeDropMaterial = (index: number) => {
+  props.formData.drop_materials.splice(index, 1)
 }
 
 // 获取种族列表

@@ -109,7 +109,6 @@ const formData = reactive({
     },
   },
   enemies: [] as any[],
-  enemyUpdateDuration: 3600000,
   combat_bonus: {
     max_hp: null,
     attack: null,
@@ -272,7 +271,6 @@ const submitForm = async () => {
                 shop: formData.npc.shop.enabled ? formData.npc.shop : null,
               },
               enemies: formData.enemies,
-              enemyUpdateDuration: formData.enemyUpdateDuration,
             }
             break
           case 'map':
@@ -319,7 +317,6 @@ onMounted(() => {
 }
 
 .edit-card {
-  max-width: 800px;
   margin: 0 auto;
 }
 

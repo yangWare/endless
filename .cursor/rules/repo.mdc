@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# 仓库结构
+
+- /endless_v2/xrc 游戏客户端源码
+- /endless-admin/src 后台管理前端
+- /static-servcer/src 服务端

@@ -61,33 +61,35 @@
     </el-form-item>
     <el-form-item label="敌人配置" prop="enemies">
       <el-button @click="addEnemy">添加敌人</el-button>
-      <div v-for="(enemy, index) in formData.enemies" :key="index">
+      <div v-for="(enemy, index) in formData.enemies" :key="index" class="enemy-item">
         <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item :label="'敌人' + (index + 1)" :prop="'enemies.' + index + '.creatureId'" :rules="{ required: true, message: '请选择敌人' }">
+          <el-col :span="6">
+            <el-form-item :label="'敌人' + (index + 1)" label-width="60px" :prop="'enemies.' + index + '.creatureId'" :rules="{ required: true, message: '请选择敌人' }">
               <el-select v-model="enemy.creatureId" placeholder="请选择敌人" style="width: 100%">
                 <el-option v-for="creature in creatures" :key="creature._id" :label="creature.name" :value="creature._id" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="4">
             <el-form-item :prop="'enemies.' + index + '.probability'" :rules="{ required: true, message: '请输入概率' }">
               <el-input-number v-model="enemy.probability" :min="0" :max="1" :step="0.1" placeholder="概率" style="width: 100%" />
             </el-form-item>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="4">
             <el-form-item :prop="'enemies.' + index + '.maxCount'" :rules="{ required: true, message: '请输入最大数量' }">
               <el-input-number v-model="enemy.maxCount" :min="1" placeholder="最大数量" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="4">
+            <el-form-item :prop="'enemies.' + index + '.updateDuration'" :rules="{ required: true, message: '请输入刷新时间' }">
+              <el-input-number v-model="enemy.updateDuration" :min="0" :step="1000" placeholder="刷新时间(ms)" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="2">
             <el-button type="danger" @click="removeEnemy(index)">删除</el-button>
           </el-col>
         </el-row>
       </div>
-    </el-form-item>
-    <el-form-item label="敌人刷新时间" prop="enemyUpdateDuration">
-      <el-input-number v-model="formData.enemyUpdateDuration" :min="0" :step="1000" />
     </el-form-item>
   </div>
 </template>
@@ -126,6 +128,7 @@ interface LocationEnemy {
   creatureId: string
   probability: number
   maxCount: number
+  updateDuration: number
 }
 
 interface FormData {
@@ -146,7 +149,6 @@ interface FormData {
     }
   }
   enemies: LocationEnemy[]
-  enemyUpdateDuration: number
 }
 
 const props = defineProps<{
@@ -179,7 +181,8 @@ const addEnemy = () => {
   props.formData.enemies.push({
     creatureId: '',
     probability: 0.5,
-    maxCount: 1
+    maxCount: 1,
+    updateDuration: 3600000 // 默认1小时
   })
 }
 
@@ -235,3 +238,10 @@ onMounted(() => {
   fetchPotions()
 })
 </script> 
+
+<style scoped>
+.enemy-item {
+  width: 100%;
+  margin-top: 10px;
+}
+</style>

@@ -223,7 +223,7 @@ export class EnemyInstanceService {
       }
 
       // 检查当前地图是否需要刷新敌人
-      const isNeedRefresh = await LocationService.checkEnemyRefreshNeeded(enemyInstance.locationId.toString());
+      const isNeedRefresh = await LocationService.checkEnemyRefreshNeeded(enemyInstance.locationId.toString(), enemyInstanceId);
       if (isNeedRefresh) {
         return {
           result: 'enemy_refresh',

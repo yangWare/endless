@@ -18,6 +18,7 @@ export interface LocationEnemy {
   creatureId: Types.ObjectId;
   probability: number;
   maxCount: number;
+  updateDuration: number;
 }
 
 export interface LocationData {
@@ -179,21 +180,31 @@ export class LocationService {
   /**
    * 检查是否需要刷新敌人
    * @param locationId 地点ID
+   * @param enemyInstanceId 敌人实例ID
    * @returns 如果需要刷新返回 true，否则返回 false
    */
-  static async checkEnemyRefreshNeeded(locationId: string): Promise<boolean> {
+  static async checkEnemyRefreshNeeded(locationId: string, enemyInstanceId: string): Promise<boolean> {
     try {
       const location = await Location.findById(locationId);
-      
       if (!location) {
         throw new Error('地点不存在');
       }
 
-      const currentTime = Date.now();
-      const lastUpdateTime = location.enemyUpdateTime || 0;
-      const updateDuration = location.enemyUpdateDuration || 3600000; // 默认1小时
+      const enemyInstance = await EnemyInstance.findById(enemyInstanceId);
+      if (!enemyInstance) {
+        throw new Error('敌人实例不存在');
+      }
 
-      return currentTime - lastUpdateTime >= updateDuration;
+      const enemy = location.enemies.find(e => e.creatureId.toString() === enemyInstance.creatureId.toString());
+      if (!enemy) {
+        throw new Error('该地点不存在此生物');
+      }
+
+      const currentTime = Date.now();
+      const createTime = enemyInstance.createdAt.getTime();
+      const updateDuration = enemy.updateDuration;
+
+      return currentTime - createTime >= updateDuration;
     } catch (error: any) {
       throw new Error(`检查敌人刷新状态失败: ${error.message}`);
     }
@@ -211,28 +222,53 @@ export class LocationService {
         throw new Error('地点不存在');
       }
 
-      const currentTime = Date.now();
-      const lastUpdateTime = location.enemyUpdateTime || 0;
-      const updateDuration = location.enemyUpdateDuration || 3600000; // 默认1小时
+      // 获取当前地点的所有敌人实例
+      const enemyInstances = await EnemyInstance.find({ locationId: locationId });
+      
+      // 检查每个敌人实例是否需要刷新
+      const instancesToDelete: string[] = [];
+      const instancesToKeep: string[] = [];
 
-      // 如果未超过刷新时间，返回当前实例列表
-      if (currentTime - lastUpdateTime < updateDuration) {
-        // 获取当前地点所有敌人实例
-        const enemyInstances = await EnemyInstance.find({ locationId: locationId });
-        return enemyInstances;
+      for (const instance of enemyInstances) {
+        const enemy = location.enemies.find(e => e.creatureId.toString() === instance.creatureId.toString());
+        if (!enemy) {
+          // 如果地点配置中已经移除了这个敌人，则删除实例
+          instancesToDelete.push(instance._id.toString());
+          continue;
+        }
+
+        const currentTime = Date.now();
+        const createTime = instance.createdAt.getTime();
+        const updateDuration = enemy.updateDuration;
+
+        if (currentTime - createTime >= updateDuration) {
+          // 如果超过刷新时间，则删除实例
+          instancesToDelete.push(instance._id.toString());
+        } else {
+          // 否则保留实例
+          instancesToKeep.push(instance._id.toString());
+        }
       }
 
-      // 清理当前地点的敌人实例
-      await EnemyInstance.deleteMany({ locationId: locationId });
+      // 删除需要刷新的敌人实例
+      if (instancesToDelete.length > 0) {
+        await EnemyInstance.deleteMany({ _id: { $in: instancesToDelete } });
+      }
 
-      const enemyInstances = [];
       // 生成新的敌人实例
-      for (const enemyConfig of location.enemies || []) {
-        const creature = enemyConfig.creatureId as any;
-        const maxCount = enemyConfig.maxCount;
+      const newInstances = [];
+      for (const enemy of location.enemies || []) {
+        const creature = enemy.creatureId as any;
+        const maxCount = enemy.maxCount;
 
-        for (let i = 0; i < maxCount; i++) {
-          // 创建敌人实例
+        // 计算当前已有的该类型敌人数量
+        const existingCount = instancesToKeep.filter(id => {
+          const instance = enemyInstances.find(i => i._id.toString() === id);
+          return instance && instance.creatureId.toString() === creature._id.toString();
+        }).length;
+
+        // 生成新的敌人实例
+        for (let i = existingCount; i < maxCount; i++) {
           const enemyInstance = new EnemyInstance({
             creatureId: creature._id,
             locationId: locationId,
@@ -244,16 +280,11 @@ export class LocationService {
           // 更新敌人实例的 HP
           enemyInstance.hp = combatStats.max_hp;
           await enemyInstance.save();
-          enemyInstances.push(enemyInstance);
+          newInstances.push(enemyInstance);
         }
       }
 
-      // 更新地点的敌人更新时间
-      await Location.findByIdAndUpdate(locationId, {
-        enemyUpdateTime: currentTime
-      });
-
-      return enemyInstances;
+      return [...enemyInstances.filter(i => instancesToKeep.includes(i._id.toString())), ...newInstances];
     } catch (error: any) {
       throw new Error(`生成敌人失败: ${error.message}`);
     }
