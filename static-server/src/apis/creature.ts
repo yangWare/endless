@@ -93,6 +93,29 @@ export class CreatureAPI {
     }
   }
 
+  /** 
+   * 获取指定生物详情 -- 面向管理后台提供，raceId不进行关联
+   */
+  static async getByIdForAdmin(ctx: BaseContext) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少生物ID');
+      }
+      const creature = await CreatureService.getCreatureByIdForAdmin(id);
+      ctx.body = {
+        success: true,
+        data: creature
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
   /**
    * 获取生物列表
    */

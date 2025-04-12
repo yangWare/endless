@@ -100,6 +100,21 @@ export class CreatureService {
     }
   }
 
+    /**
+   * 获取指定生物详情 -- 面向管理后台提供，raceId不进行关联
+   */
+    static async getCreatureByIdForAdmin(id: string) {
+      try {
+        const creature = await Creature.findById(id);
+        if (!creature) {
+          throw new Error('生物不存在');
+        }
+        return creature;
+      } catch (error: any) {
+      throw new Error(`获取生物详情失败: ${error.message}`);
+    }
+  }
+
   /**
    * 获取生物列表（支持分页和查询）
    */

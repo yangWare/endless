@@ -164,7 +164,7 @@ const fetchData = async () => {
         endpoint = `/endless/api/races/${id}`
         break
       case 'creature':
-        endpoint = `/endless/api/creatures/${id}`
+        endpoint = `/endless/api/creatures/${id}/admin`
         break
       case 'material-types':
         endpoint = `/endless/api/material-types/${id}`
