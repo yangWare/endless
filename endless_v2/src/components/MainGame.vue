@@ -11,7 +11,8 @@
       <!-- 顶部状态栏 -->
       <div class="status-bar">
         <span class="player-hp">HP {{ player.hp || 0 }}</span>
-        <span class="player-name">{{ player.nickname }} Lv.{{ player.levelInfo.level }}</span>
+        <!-- <span class="player-name">{{ player.nickname }} Lv.{{ player.levelInfo.level }}</span> -->
+        <span class="player-name">{{ player.nickname }}</span>
         <span class="player-gold">{{ player.coins }} G</span>
       </div>
 
