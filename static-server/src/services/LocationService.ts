@@ -124,6 +124,21 @@ export class LocationService {
   }
 
   /**
+   * 获取指定地点详情 - 面向管理后台
+   */
+  static async getLocationByIdForAdmin(id: string) {
+    try {
+      const location = await Location.findById(id)
+      if (!location) {
+        throw new Error('地点不存在');
+      }
+      return location;
+    } catch (error: any) {
+      throw new Error(`获取地点详情失败: ${error.message}`);
+    }
+  }
+
+  /**
    * 获取地点列表（支持分页和查询）
    */
   static async getLocations(params: LocationQueryParams) {

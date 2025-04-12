@@ -22,6 +22,12 @@ router.get('/:id', async (ctx: ParamContext) => {
   await LocationAPI.getById(ctx);
 });
 
+// 获取单个地点 - 面向管理后台
+router.get('/:id/admin', async (ctx: ParamContext) => {
+  ctx.params = { id: ctx.params.id };
+  await LocationAPI.getByIdForAdmin(ctx);
+});
+
 // 更新地点
 router.put('/:id', async (ctx: ParamContext) => {
   ctx.params = { id: ctx.params.id };

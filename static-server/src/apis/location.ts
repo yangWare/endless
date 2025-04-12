@@ -95,6 +95,29 @@ export class LocationAPI {
     }
   }
 
+  /** 
+   * 获取指定地点详情 - 面向管理后台
+   */
+  static async getByIdForAdmin(ctx: LocationContext) {
+    try {
+      const id = ctx.params.id;
+      if (!id) {
+        throw new Error('缺少地点ID');
+      }
+      const location = await LocationService.getLocationByIdForAdmin(id);
+      ctx.body = {
+        success: true,
+        data: location
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+  
   /**
    * 获取地点列表
    */

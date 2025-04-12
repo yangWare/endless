@@ -180,7 +180,7 @@ const fetchData = async () => {
         endpoint = `/endless/api/potions/${id}`
         break
       case 'location':
-        endpoint = `/endless/api/locations/${id}`
+        endpoint = `/endless/api/locations/${id}/admin`
         break
       case 'map':
         endpoint = `/endless/api/maps/${id}`
