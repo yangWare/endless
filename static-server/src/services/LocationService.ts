@@ -78,33 +78,18 @@ export class LocationService {
    * 删除地点及其相关数据
    */
   static async delete(id: string) {
-    // 开始事务
-    const session = await Location.startSession();
-    session.startTransaction();
-
     try {
-      // 删除地点
-      const locationResult = await Location.findByIdAndDelete(id).session(session);
-      
-      if (!locationResult) {
-        throw new Error('地点不存在');
-      }
-
       // 删除相关的 LocationState
-      await LocationState.deleteMany({ locationId: id }).session(session);
+      await LocationState.deleteMany({ locationId: id });
 
       // 删除相关的 EnemyInstance
-      await EnemyInstance.deleteMany({ locationId: id }).session(session);
+      await EnemyInstance.deleteMany({ locationId: id });
 
-      // 提交事务
-      await session.commitTransaction();
+      await Location.findByIdAndDelete(id);
+
       return true;
     } catch (error) {
-      // 回滚事务
-      await session.abortTransaction();
       throw error;
-    } finally {
-      session.endSession();
     }
   }
 
