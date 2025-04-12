@@ -17,7 +17,7 @@ interface FormData {
   description: string
 }
 
-const props = defineProps<{
+defineProps<{
   formData: FormData
 }>()
 </script> 

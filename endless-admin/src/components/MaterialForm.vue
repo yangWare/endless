@@ -36,7 +36,7 @@ interface FormData {
   combat_multipliers: Record<string, number>
 }
 
-const props = defineProps<{
+defineProps<{
   formData: FormData
 }>()
 

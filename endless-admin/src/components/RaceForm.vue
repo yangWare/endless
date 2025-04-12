@@ -27,7 +27,7 @@ interface FormData {
   combatStats: Record<string, number>
 }
 
-const props = defineProps<{
+defineProps<{
   formData: FormData
 }>()
 

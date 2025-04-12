@@ -31,7 +31,7 @@ interface FormData {
   }
 }
 
-const props = defineProps<{
+defineProps<{
   formData: FormData
 }>()
 

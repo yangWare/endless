@@ -39,7 +39,7 @@ interface FormData {
   startLocationId: string | null
 }
 
-const props = defineProps<{
+defineProps<{
   formData: FormData
 }>()
 
