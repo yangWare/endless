@@ -274,9 +274,7 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
     const result = await attackEnemy(enemy.instanceId)
 
     if (result.result === 'enemy_refresh') {
-      generateEnemies().then(() => {
-        updateLocationEnemies()
-      })
+      generateEnemies()
       locationEnemies.value = []
       await addMessageWithDelay(`${enemy.name}逃跑了，请继续探索`)
       return
