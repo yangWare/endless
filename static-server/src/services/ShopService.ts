@@ -19,12 +19,12 @@ const combatStatPriceMap: Record<keyof CombatStats, number> = {
   max_hp: 0.1,
   attack: 2,
   defense: 1,
-  crit_rate: 300,  
-  crit_resist: 150,
-  crit_damage: 300,
-  crit_damage_resist: 150,
-  hit_rate: 200,
-  dodge_rate: 200
+  crit_rate: 2,  
+  crit_resist: 1,
+  crit_damage: 2,
+  crit_damage_resist: 1,
+  hit_rate: 2,
+  dodge_rate: 1
 };
 
 export class ShopService {
