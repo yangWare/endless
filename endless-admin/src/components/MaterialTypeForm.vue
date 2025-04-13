@@ -40,12 +40,12 @@ const getCombatStatLabel = (key: string) => {
     max_hp: '最大生命值',
     attack: '攻击力',
     defense: '防御力',
-    crit_rate: '暴击率',
+    crit_rate: '暴击值',
     crit_resist: '暴击抗性',
     crit_damage: '暴击伤害',
     crit_damage_resist: '暴击伤害抗性',
-    hit_rate: '命中率',
-    dodge_rate: '闪避率'
+    hit_rate: '命中值',
+    dodge_rate: '闪避值'
   }
   return labels[key] || key
 }
