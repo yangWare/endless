@@ -296,16 +296,18 @@ export class EnemyInstanceService {
 
     // 计算暴击
     const critRoll = Math.random();
-    if (critRoll < attackerStats.crit_rate - defenderStats.crit_resist) {
+    // 爆率率 = 攻击方暴击值 除以 防御方暴击抵抗
+    if (critRoll < (attackerStats.crit_rate / defenderStats.crit_resist)) {
       // 计算暴击伤害，考虑防御者的暴击伤害抵抗
-      const critDamageMultiplier = Math.max(1, attackerStats.crit_damage - defenderStats.crit_damage_resist);
+      const critDamageMultiplier = Math.max(1, attackerStats.crit_damage / defenderStats.crit_damage_resist);
       damage *= critDamageMultiplier;
       isCritical = true;
     }
 
     // 计算闪避
     const dodgeRoll = Math.random();
-    if (dodgeRoll < defenderStats.dodge_rate - attackerStats.hit_rate) {
+    // 闪避率 = 防御方闪避值 除以 攻击方命中率
+    if (dodgeRoll < (defenderStats.dodge_rate / attackerStats.hit_rate)) {
       return { damage: 0, isCritical: false };
     }
 

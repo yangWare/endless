@@ -10,12 +10,12 @@ const INITIAL_COMBAT_STATS = {
   max_hp: 10,
   attack: 2,
   defense: 1,
-  crit_rate: 0.05,
-  crit_resist: 0.05,
-  crit_damage: 1.5,
-  crit_damage_resist: 0.1,
-  hit_rate: 0.9,
-  dodge_rate: 0.1
+  crit_rate: 1,
+  crit_resist: 2,
+  crit_damage: 2,
+  crit_damage_resist: 1,
+  hit_rate: 1,
+  dodge_rate: 1
 };
 
 export interface CombatStats {
@@ -99,7 +99,7 @@ export class PlayerService {
             crit_resist: 0,
             crit_damage: 0,
             crit_damage_resist: 0,
-            hit_rate: 0.01,
+            hit_rate: 1,
             dodge_rate: 0
           }
         },
@@ -133,8 +133,8 @@ export class PlayerService {
             crit_resist: 0,
             crit_damage: 0,
             crit_damage_resist: 0,
-            hit_rate: 0.01,
-            dodge_rate: 0.01
+            hit_rate: 1,
+            dodge_rate: 1
           }
         }
       }

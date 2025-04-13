@@ -7,7 +7,7 @@
     </el-form-item>
     <el-divider>战斗属性</el-divider>
     <el-form-item v-for="(_, key) in formData.combatStats" :key="key" :label="getCombatStatLabel(key)">
-      <el-input-number v-model="formData.combatStats[key]" :min="0" :step="0.1" />
+      <el-input-number v-model="formData.combatStats[key]" :min="0" :step="1" />
     </el-form-item>
   </div>
 </template>

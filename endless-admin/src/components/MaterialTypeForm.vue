@@ -4,9 +4,8 @@
     <el-form-item v-for="(_, key) in formData.combat_bonus" :key="key" :label="getCombatStatLabel(key)">
       <el-input-number 
         v-model="formData.combat_bonus[key]" 
-        :min="-100" 
-        :max="100" 
-        :step="0.1"
+        :min="0" 
+        :step="1"
         :controls-position="'right'"
         placeholder="留空表示无加成"
       />

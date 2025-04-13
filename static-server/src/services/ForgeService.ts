@@ -1,7 +1,6 @@
 import { Player, IEquipment } from '../models/Player';
 import { Material, MaterialDocument } from '../models/Material';
 import { Location } from '../models/Location';
-import { MaterialType } from '../models/MaterialType';
 import mongoose from 'mongoose';
 
 interface ForgeResult {
@@ -291,10 +290,15 @@ export class ForgeService {
         const levelMultiplier = levelConfig.multiplier;
         
         bonus[stat] = Math.floor(
+          // 材料类型基础属性
           baseValue * 
+          // 材料加成
           multiplier * 
+          // 成功率加成
           successRate * 
+          // 装备位置加成
           positionMultiplier * 
+          // 装备等级加成
           levelMultiplier
         );
       }
