@@ -165,6 +165,9 @@ const updateLocationEnemies = (): void => {
     .sort(() => Math.random() - 0.5)
     .slice(0, maxEnemies)
 }
+const deleteLocationEnemies = (enemyInstanceId: string) => {
+  locationEnemies.value = locationEnemies.value.filter((enemy) => enemy.instanceId !== enemyInstanceId)
+}
 const updateLocationEnemiesDelay = async () => {
    // 添加等待效果，等待效果为2~4秒
   await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
@@ -283,7 +286,7 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
             .join('、')
           await addMessageWithDelay(`获得了：${dropsMessage}`)
         }
-        updateLocationEnemies()
+        deleteLocationEnemies(enemy.instanceId)
         return
       }
     }
