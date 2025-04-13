@@ -26,7 +26,7 @@
       <div class="stat-item">
         <span class="stat-label">{{ i18nConfig.combat_stats.crit_rate }}:</span>
         <span class="stat-value"
-          >{{ (player.combat_stats?.crit_rate * 100 || 0).toFixed(1) }}%</span
+          >{{ player.combat_stats?.crit_rate || 0 }}</span
         >
       </div>
       <div class="stat-item">
@@ -34,7 +34,7 @@
           >{{ i18nConfig.combat_stats.crit_resist }}:</span
         >
         <span class="stat-value"
-          >{{ (player.combat_stats?.crit_resist * 100 || 0).toFixed(1) }}%</span
+          >{{ player.combat_stats?.crit_resist || 0 }}</span
         >
       </div>
       <div class="stat-item">
@@ -42,7 +42,7 @@
           >{{ i18nConfig.combat_stats.crit_damage }}:</span
         >
         <span class="stat-value"
-          >{{ (player.combat_stats?.crit_damage * 100 || 0).toFixed(1) }}%</span
+          >{{ player.combat_stats?.crit_damage || 0 }}</span
         >
       </div>
       <div class="stat-item">
@@ -50,15 +50,13 @@
           >{{ i18nConfig.combat_stats.crit_damage_resist }}:</span
         >
         <span class="stat-value"
-          >{{
-            (player.combat_stats?.crit_damage_resist * 100 || 0).toFixed(1)
-          }}%</span
+          >{{ player.combat_stats?.crit_damage_resist || 0 }}</span
         >
       </div>
       <div class="stat-item">
         <span class="stat-label">{{ i18nConfig.combat_stats.hit_rate }}:</span>
         <span class="stat-value"
-          >{{ (player.combat_stats?.hit_rate * 100 || 0).toFixed(1) }}%</span
+          >{{ player.combat_stats?.hit_rate || 0 }}</span
         >
       </div>
       <div class="stat-item">
@@ -66,7 +64,7 @@
           >{{ i18nConfig.combat_stats.dodge_rate }}:</span
         >
         <span class="stat-value"
-          >{{ (player.combat_stats?.dodge_rate * 100 || 0).toFixed(1) }}%</span
+          >{{ player.combat_stats?.dodge_rate || 0 }}</span
         >
       </div>
     </div>
