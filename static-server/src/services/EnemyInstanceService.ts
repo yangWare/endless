@@ -306,8 +306,8 @@ export class EnemyInstanceService {
 
     // 计算闪避
     const dodgeRoll = Math.random();
-    // 闪避率 = 防御方闪避值 除以 攻击方命中率
-    if (dodgeRoll < (defenderStats.dodge_rate / attackerStats.hit_rate)) {
+    // 闪避率 = 攻击方命中值 除以 防御方闪避值
+    if (dodgeRoll < (attackerStats.hit_rate / defenderStats.dodge_rate)) {
       return { damage: 0, isCritical: false };
     }
 
