@@ -7,15 +7,15 @@ import { PotionService } from './PotionService';
 
 // 玩家初始战斗属性
 const INITIAL_COMBAT_STATS = {
-  max_hp: 10,
-  attack: 2,
-  defense: 1,
-  crit_rate: 1,
-  crit_resist: 2,
-  crit_damage: 2,
-  crit_damage_resist: 1,
-  hit_rate: 1,
-  dodge_rate: 1
+  max_hp: 50,
+  attack: 10,
+  defense: 5,
+  crit_rate: 5,
+  crit_resist: 10,
+  crit_damage: 5,
+  crit_damage_resist: 10,
+  hit_rate: 5,
+  dodge_rate: 10
 };
 
 export interface CombatStats {
