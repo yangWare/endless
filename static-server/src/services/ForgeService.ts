@@ -289,18 +289,7 @@ export class ForgeService {
         const positionMultiplier = statMultipliers[stat as keyof typeof statMultipliers];
         const levelMultiplier = levelConfig.multiplier;
         
-        bonus[stat] = Math.floor(
-          // 材料类型基础属性
-          baseValue * 
-          // 材料加成
-          multiplier * 
-          // 成功率加成
-          successRate * 
-          // 装备位置加成
-          positionMultiplier * 
-          // 装备等级加成
-          levelMultiplier
-        );
+        bonus[stat] = baseValue * multiplier * successRate * positionMultiplier * levelMultiplier
       }
     }
 
@@ -461,6 +450,11 @@ export class ForgeService {
           equipment.combatStats[stat as keyof typeof equipment.combatStats] += bonus[stat];
         }
       });
+
+      // 针对装备属性取整
+      for (const stat in equipment.combatStats) {
+        equipment.combatStats[stat as keyof typeof equipment.combatStats] = Math.floor(equipment.combatStats[stat as keyof typeof equipment.combatStats]);
+      }
 
       // 生成装备名称
       equipment.name = this.generateEquipmentName(
