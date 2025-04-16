@@ -54,71 +54,71 @@ const EQUIPMENT_POSITION_CONFIG = {
   "weapon": {
     "name": "武器",
     "stat_multipliers": {
-      "max_hp": 0.5,
-      "attack": 2,
-      "defense": 0.5,
-      "crit_rate": 2,
-      "crit_resist": 0.5,
-      "crit_damage": 2,
-      "crit_damage_resist": 0.5,
-      "hit_rate": 1.5,
-      "dodge_rate": 1
+      "max_hp": 0,
+      "attack": 4,
+      "defense": 0,
+      "crit_rate": 4,
+      "crit_resist": 0,
+      "crit_damage": 4,
+      "crit_damage_resist": 0,
+      "hit_rate": 1,
+      "dodge_rate": 0
     }
   },
   "armor": {
     "name": "护甲",
     "stat_multipliers": {
-      "max_hp": 2,
-      "attack": 0.5,
-      "defense": 2,
-      "crit_rate": 0.5,
-      "crit_resist": 2,
-      "crit_damage": 0.5,
-      "crit_damage_resist": 2,
-      "hit_rate": 0.5,
-      "dodge_rate": 0.5
+      "max_hp": 3,
+      "attack": 0,
+      "defense": 3,
+      "crit_rate": 0,
+      "crit_resist": 1,
+      "crit_damage": 0,
+      "crit_damage_resist": 1,
+      "hit_rate": 0,
+      "dodge_rate": 0
     }
   },
   "accessory": {
     "name": "饰品",
     "stat_multipliers": {
-      "max_hp": 1.5,
+      "max_hp": 1,
       "attack": 1,
       "defense": 1,
-      "crit_rate": 1.5,
-      "crit_resist": 1.5,
-      "crit_damage": 1.5,
-      "crit_damage_resist": 1.5,
-      "hit_rate": 1.5,
-      "dodge_rate": 1.5
+      "crit_rate": 1,
+      "crit_resist": 1,
+      "crit_damage": 1,
+      "crit_damage_resist": 1,
+      "hit_rate": 1,
+      "dodge_rate": 1
     }
   },
   "boots": {
     "name": "靴子",
     "stat_multipliers": {
-      "max_hp": 1,
-      "attack": 1,
-      "defense": 1,
-      "crit_rate": 0.5,
-      "crit_resist": 0.5,
-      "crit_damage": 0.5,
-      "crit_damage_resist": 0.5,
-      "hit_rate": 2,
-      "dodge_rate": 2
+      "max_hp": 0,
+      "attack": 0,
+      "defense": 0,
+      "crit_rate": 0,
+      "crit_resist": 0,
+      "crit_damage": 0,
+      "crit_damage_resist": 0,
+      "hit_rate": 3,
+      "dodge_rate": 4
     }
   },
   "helmet": {
     "name": "头盔",
     "stat_multipliers": {
-      "max_hp": 1.5,
-      "attack": 0.5,
-      "defense": 1.5,
-      "crit_rate": 0.5,
-      "crit_resist": 2,
-      "crit_damage": 0.5,
-      "crit_damage_resist": 2,
-      "hit_rate": 0.5,
-      "dodge_rate": 0.5
+      "max_hp": 1,
+      "attack": 0,
+      "defense": 1,
+      "crit_rate": 0,
+      "crit_resist": 3,
+      "crit_damage": 0,
+      "crit_damage_resist": 3,
+      "hit_rate": 0,
+      "dodge_rate": 0
     }
   }
 }
