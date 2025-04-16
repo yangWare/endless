@@ -290,27 +290,57 @@ export class EnemyInstanceService {
    * @returns 伤害计算结果，包含伤害值和是否暴击
    */
   private static calculateDamage(attackerStats: CombatStats, defenderStats: CombatStats): DamageResult {
+    // 计算闪避
+    const hitRoll = Math.random();
+    // 命中率 = 攻击方命中值 除以 防御方闪避值
+    const hitRate = attackerStats.hit_rate / defenderStats.dodge_rate;
+    // 实际命中率 = 命中率基础上设置最小40%
+    const realHitRate = Math.max(0.4, hitRate);
+    if (hitRoll > realHitRate) {
+      return { damage: 0, isCritical: false };
+    }
+
     // 基础伤害 = 攻击力 - 防御力
     let damage = Math.max(1, attackerStats.attack - defenderStats.defense);
     let isCritical = false;
 
     // 计算暴击
     const critRoll = Math.random();
-    // 爆率率 = 攻击方暴击值 除以 防御方暴击抵抗
-    if (critRoll < (attackerStats.crit_rate / defenderStats.crit_resist)) {
-      // 计算暴击伤害，考虑防御者的暴击伤害抵抗
-      const critDamageMultiplier = Math.max(1, attackerStats.crit_damage / defenderStats.crit_damage_resist);
+    // 暴击率 = 攻击方暴击值 除以 防御方暴击抵抗
+    const critRate = attackerStats.crit_rate / defenderStats.crit_resist;
+    // 真实暴击率，暴击率基础上设置最大60%
+    const realCritRate = Math.min(0.6, critRate);
+    if (critRoll < realCritRate) {
+      // 溢出的暴击率，每多2%暴击率，暴击伤害增加1%，最大100%
+      const overflowCritRate = Math.min(1, (critRate - realCritRate) / 2);
+      // 计算暴击伤害，考虑防御者的暴击伤害抵抗，最大5倍
+      const critDamage = Math.min(5, attackerStats.crit_damage / defenderStats.crit_damage_resist);
+      // 真实暴击伤害 = 暴击伤害 + 溢出的暴击率 * 暴击伤害
+      const critDamageMultiplier = Math.max(1, critDamage + overflowCritRate * critDamage);
       damage *= critDamageMultiplier;
       isCritical = true;
     }
 
-    // 计算闪避
-    const dodgeRoll = Math.random();
-    // 命中率 = 攻击方命中值 除以 防御方闪避值
-    if (dodgeRoll > (attackerStats.hit_rate / defenderStats.dodge_rate)) {
-      return { damage: 0, isCritical: false };
+    // 计算命中率&闪避率增伤逻辑
+    let damageMultiplier = 1;
+    if (attackerStats.hit_rate > defenderStats.dodge_rate) {
+      // 当攻击方命中 > 防御方闪避时，每多2%命中，伤害增加1%，最大200%
+      const hitRateDiff = (attackerStats.hit_rate - defenderStats.dodge_rate) / defenderStats.dodge_rate;
+      const maxDamageMultiplier = Math.min(hitRateDiff / 2, 2);
+      // 真实加成在1~max之间随机
+      damageMultiplier = 1 + Math.random() * (maxDamageMultiplier - 1);
+    } else if (attackerStats.hit_rate < defenderStats.dodge_rate) {
+      // 当攻击方命中 < 防御方闪避时，每多2%闪避率，伤害减少1%，最大减少100%
+      const dodgeRateDiff = (defenderStats.dodge_rate - attackerStats.hit_rate) / attackerStats.hit_rate;
+      // 最小伤害加成
+      const minDamageMultiplier = Math.max(1 - dodgeRateDiff / 2, 0); 
+      // 真实加成在min~1之间随机
+      damageMultiplier = minDamageMultiplier + Math.random() * (1 - minDamageMultiplier);
     }
-
+    // 计算命中&闪避伤害增幅(降幅)
+    damage *= damageMultiplier;
+    // 强制扣1点血
+    damage = Math.max(1, damage);
     return { damage: Math.floor(damage), isCritical };
   }
 

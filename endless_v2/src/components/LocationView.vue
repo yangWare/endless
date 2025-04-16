@@ -304,9 +304,9 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
         await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
       }
       updatePlayer({
-          ...state.player,
-          hp: state.player ? Math.max(0, state.player.hp - result.counterDamage) : 0,
-        })
+        ...state.player,
+        hp: state.player ? Math.max(0, state.player.hp - result.counterDamage) : 0,
+      })
     }
   } catch (error) {
     console.error('Attack failed:', error)
