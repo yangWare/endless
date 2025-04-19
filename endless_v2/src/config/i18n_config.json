@@ -27,5 +27,31 @@
     "helmet": {
       "name": "头盔"
     }
+  },
+  "equipment_level": {
+    "1": {
+      "color": "#fff",
+      "name": "普通"
+    },
+    "2": {
+      "color": "#2ecc71",
+      "name": "优秀"
+    },
+    "3": {
+      "color": "#3498db",
+      "name": "精良"
+    },
+    "4": {
+      "color": "#9b59b6",
+      "name": "史诗"
+    },
+    "5": {
+      "color": "#e67e22",
+      "name": "传说"
+    },
+    "6": {
+      "color": "#e74c3c",
+      "name": "神话"
+    }
   }
 }

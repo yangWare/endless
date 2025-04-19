@@ -94,7 +94,7 @@
           class="equipment-item"
           @click="showEquipmentInfo(item)"
         >
-          <span class="equipment-name">{{ item?.name }}</span>
+          <span class="equipment-name" :style="{ color: getEquipmentColor(item?.level || 1) }">{{ item?.name }}</span>
           <span class="equipment-position">{{
             positionMap[position as keyof typeof positionMap].name || position
           }}</span>
@@ -127,6 +127,10 @@ const messageType = ref<'info' | 'warning' | 'error'>('info')
 const showButton = ref<boolean>(false)
 const buttonText = ref<string>('确定')
 const onAction = ref<() => void>(() => {})
+
+const getEquipmentColor = (level: number): string => {
+  return i18nConfig.equipment_level[String(level) as keyof typeof i18nConfig.equipment_level].color
+}
 
 const handleAction = (): void => {
   onAction.value()

@@ -34,7 +34,7 @@
         class="unequipped-item"
         @click="showEquipmentInfo(item)"
       >
-        <div class="item-name">{{ item.name }}</div>
+        <div class="item-name" :style="{ color: getEquipmentColor(item?.level || 1) }">{{ item.name }}</div>
       </div>
     </div>
 
@@ -125,6 +125,10 @@ const messageContent = ref('')
 const messageType = ref('info')
 
 const statNameMap = i18nConfig.combat_stats
+
+const getEquipmentColor = (level: number): string => {
+  return i18nConfig.equipment_level[String(level) as keyof typeof i18nConfig.equipment_level].color
+}
 
 const getMaterialDetails = async (material: Material): Promise<MaterialDetails | null> => {
   if (!material) return null

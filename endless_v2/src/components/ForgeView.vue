@@ -73,7 +73,7 @@
         <div class="section-title">锻造结果</div>
         <p>{{ forgeResult.message }}</p>
         <div v-if="forgeResult.data?.equipment" class="equipment-stats">
-          <p>获得装备：{{ forgeResult.data?.equipment?.name }}</p>
+          <p>获得装备：<span :style="{ color: getEquipmentColor(forgeResult.data.equipment.level) }">{{ forgeResult.data?.equipment?.name }}</span></p>
         </div>
       </div>
     </div>
@@ -101,6 +101,10 @@ type ForgeResult = BaseResponse<{
   equipment: Equipment | null;
   forgeCost: number;
 } | null>
+
+const getEquipmentColor = (level: number): string => {
+  return i18n.equipment_level[String(level) as keyof typeof i18n.equipment_level].color
+}
 
 export default defineComponent({
   name: 'ForgeView',
@@ -221,6 +225,7 @@ export default defineComponent({
     }
 
     return {
+      i18n,
       availableMaterials,
       selectedMaterials,
       selectedType,
@@ -231,6 +236,7 @@ export default defineComponent({
       selectEquipmentType,
       startForge,
       handleCloseClick,
+      getEquipmentColor
     }
   },
 })
