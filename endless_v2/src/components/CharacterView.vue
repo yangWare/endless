@@ -8,6 +8,21 @@
       :button-text="buttonText"
       @action="handleAction"
     />
+    <div class="heart-skills-section">
+      <div class="section-title">心法</div>
+      <ul class="heart-skills-list">
+        <li
+          v-for="(skill, index) in player.heartSkills"
+          :key="index"
+          class="heart-skill-item"
+          @click="showHeartSkillInfo(skill)"
+        >
+          <span class="skill-name">{{ skill.name }}</span>
+          <span class="skill-level">Lv.{{ skill.level }}</span>
+        </li>
+      </ul>
+    </div>
+    <div class="section-title">战斗属性</div>
     <div class="stats">
       <div class="stat-item">
         <span class="stat-label">{{ i18nConfig.combat_stats.max_hp }}:</span>
@@ -70,7 +85,7 @@
     </div>
 
     <div class="equipment-section">
-      <div class="equipment-title">当前装备</div>
+      <div class="section-title">当前装备</div>
       <ul class="equipment-list">
         <li
           v-for="[position, item] in Object.entries(player.equipped)"
@@ -97,7 +112,11 @@ import Message from './Message.vue'
 import type { Player, Equipment } from '../api'
 import i18nConfig from '../config/i18n_config.json'
 
-const player = computed<Player>(() => state.player)
+interface HeartSkill {
+  name: string;
+  level: number;
+  exp: number;
+}
 
 const positionMap = i18nConfig.equipment_position
 const statNameMap = i18nConfig.combat_stats
@@ -127,6 +146,16 @@ const showEquipmentInfo = (item: Equipment | null): void => {
   showButton.value = false
 }
 
+const showHeartSkillInfo = (skill: HeartSkill): void => {
+  const info = `${skill.name}<br>等级: ${skill.level}`
+  messageContent.value = info
+  messageType.value = 'info'
+  showMessage.value = true
+  showButton.value = false
+}
+
+const player = computed<Player>(() => state.player)
+
 onMounted(async (): Promise<void> => {
   await generateCombatStats()
 })
@@ -142,11 +171,47 @@ onMounted(async (): Promise<void> => {
   box-sizing: border-box;
   max-width: 100vw;
   overflow-x: hidden;
-  padding: 20px 0;
+  padding: 8px 0;
+}
+
+.section-title {
+  font-weight: bold;
+}
+
+.heart-skills-section {
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.heart-skills-list {
+  list-style: none;
+  padding: 0;
+}
+
+.heart-skill-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px;
+  background-color: #3a3a3a;
+  border-radius: 4px;
+}
+
+.skill-name {
+  color: #fff;
+  flex: 1;
+  text-align: left;
+}
+
+.skill-level {
+  color: #888;
+  font-weight: bold;
+  margin-left: 16px;
 }
 
 .stats {
-  margin-bottom: 20px;
+  margin: 16px 0;
   color: #fff;
 }
 

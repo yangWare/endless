@@ -5,18 +5,48 @@ import { MapService } from './MapService';
 import { LocationService } from './LocationService';
 import { PotionService } from './PotionService';
 
-// 玩家初始战斗属性
-const INITIAL_COMBAT_STATS = {
-  max_hp: 50,
-  attack: 10,
-  defense: 5,
-  crit_rate: 5,
-  crit_resist: 10,
-  crit_damage: 5,
-  crit_damage_resist: 10,
-  hit_rate: 5,
-  dodge_rate: 10
-};
+// 心法配置
+export const HEART_SKILL_CONFIG = {
+  ['燧石锻造传承']: {
+    base: {
+      max_hp: 100,
+      attack: 4,
+      defense: 1,
+      crit_rate: 0,
+      crit_resist: 0,
+      crit_damage: 0,
+      crit_damage_resist: 0,
+      hit_rate: 0,
+      dodge_rate: 0
+    },
+    multiplier: {
+      max_hp: 1,
+      attack: 1,
+      defense: 1,
+      crit_rate: 0,
+      crit_resist: 0,
+      crit_damage: 0,
+      crit_damage_resist: 0,
+      hit_rate: 0,
+      dodge_rate: 0
+    },
+    // 升级方法
+    upgrade: (exp: number, curLevel: number) => {
+      // 100 * 2的等级次方
+      const needExp = 100 * Math.pow(2, curLevel);
+      if (exp >= needExp) {
+        return {
+          level: curLevel + 1,  
+          exp: exp - needExp
+        }
+      }
+      return {
+        level: curLevel,
+        exp: exp
+      }
+    }
+  }
+}
 
 export interface CombatStats {
   max_hp: number;
@@ -60,10 +90,10 @@ export class PlayerService {
           combatStats: {
             max_hp: 0,
             attack: 2,
-            defense: 1,
-            crit_rate: 0,
+            defense: 0,
+            crit_rate: 1,
             crit_resist: 0,
-            crit_damage: 0,
+            crit_damage: 1,
             crit_damage_resist: 0,
             hit_rate: 0,
             dodge_rate: 0
@@ -75,9 +105,9 @@ export class PlayerService {
           slot: 'armor',
           level: 1,
           combatStats: {
-            max_hp: 20,
+            max_hp: 30,
             attack: 0,
-            defense: 2,
+            defense: 1,
             crit_rate: 0,
             crit_resist: 0,
             crit_damage: 0,
@@ -137,7 +167,12 @@ export class PlayerService {
             dodge_rate: 1
           }
         }
-      }
+      },
+      heartSkills: [{
+        name: '燧石锻造传承',
+        level: 1,
+        exp: 0
+      }]
     };
   }
 
@@ -221,18 +256,35 @@ export class PlayerService {
 
       const playerLevel = player.levelInfo.level;
       
-      // 计算基础属性（初始属性 * 等级）
+      // 基础属性
       const baseStats: CombatStats = {
-        max_hp: INITIAL_COMBAT_STATS.max_hp * playerLevel,
-        attack: INITIAL_COMBAT_STATS.attack * playerLevel,
-        defense: INITIAL_COMBAT_STATS.defense * playerLevel,
-        crit_rate: INITIAL_COMBAT_STATS.crit_rate * playerLevel,
-        crit_resist: INITIAL_COMBAT_STATS.crit_resist * playerLevel,
-        crit_damage: INITIAL_COMBAT_STATS.crit_damage * playerLevel,
-        crit_damage_resist: INITIAL_COMBAT_STATS.crit_damage_resist * playerLevel,
-        hit_rate: INITIAL_COMBAT_STATS.hit_rate * playerLevel,
-        dodge_rate: INITIAL_COMBAT_STATS.dodge_rate * playerLevel
+        max_hp: 0,
+        attack: 0,
+        defense: 0,
+        crit_rate: 0,
+        crit_resist: 0,
+        crit_damage: 0,
+        crit_damage_resist: 0,
+        hit_rate: 0,
+        dodge_rate: 0
       };
+
+      // 遍历心法，计算战斗属性
+      player.heartSkills.forEach(heartSkill => {
+        const heartSkillName = heartSkill.name;
+        const heartSkillCombatStats = HEART_SKILL_CONFIG[heartSkillName as keyof typeof HEART_SKILL_CONFIG];
+        if (heartSkillCombatStats) {
+          baseStats.max_hp += heartSkillCombatStats.base.max_hp * playerLevel * heartSkillCombatStats.multiplier.max_hp;
+          baseStats.attack += heartSkillCombatStats.base.attack * playerLevel * heartSkillCombatStats.multiplier.attack;
+          baseStats.defense += heartSkillCombatStats.base.defense * playerLevel * heartSkillCombatStats.multiplier.defense;
+          baseStats.crit_rate += heartSkillCombatStats.base.crit_rate * playerLevel * heartSkillCombatStats.multiplier.crit_rate;
+          baseStats.crit_resist += heartSkillCombatStats.base.crit_resist * playerLevel * heartSkillCombatStats.multiplier.crit_resist;
+          baseStats.crit_damage += heartSkillCombatStats.base.crit_damage * playerLevel * heartSkillCombatStats.multiplier.crit_damage;
+          baseStats.crit_damage_resist += heartSkillCombatStats.base.crit_damage_resist * playerLevel * heartSkillCombatStats.multiplier.crit_damage_resist;
+          baseStats.hit_rate += heartSkillCombatStats.base.hit_rate * playerLevel * heartSkillCombatStats.multiplier.hit_rate;
+          baseStats.dodge_rate += heartSkillCombatStats.base.dodge_rate * playerLevel * heartSkillCombatStats.multiplier.dodge_rate;
+        }
+      });
 
       // 计算装备加成
       const equipmentStats: CombatStats = {

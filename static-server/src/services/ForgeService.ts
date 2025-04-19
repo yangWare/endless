@@ -2,12 +2,17 @@ import { Player, IEquipment } from '../models/Player';
 import { Material, MaterialDocument } from '../models/Material';
 import { Location } from '../models/Location';
 import mongoose from 'mongoose';
+import { HEART_SKILL_CONFIG } from './PlayerService';
 
 interface ForgeResult {
   success: boolean;
   message: string;
   equipment?: IEquipment;
   forgeCost: number;
+  curForgeHeartSkill?: {
+    level: number;
+    exp: number;
+  };
 }
 
 interface ForgeParams {
@@ -21,7 +26,7 @@ const EQUIPMENT_LEVELS_CONFIG = {
   1: {
     "name": "普通的",
     "multiplier": 0.5,
-    "chance": 0.4399
+    "chance": 0.5299
   },
   2: {
     "name": "优秀的",
@@ -30,13 +35,13 @@ const EQUIPMENT_LEVELS_CONFIG = {
   },
   3: {
     "name": "精良的",
-    "multiplier": 3,
+    "multiplier": 2,
     "chance": 0.159
   },
   4: {
     "name": "史诗的",
     "multiplier": 12,
-    "chance": 0.1
+    "chance": 0.01
   },
   5: {
     "name": "传说的",
@@ -54,33 +59,47 @@ const EQUIPMENT_POSITION_CONFIG = {
   "weapon": {
     "name": "武器",
     "stat_multipliers": {
-      "max_hp": 0,
+      "max_hp": 1,
       "attack": 4,
-      "defense": 0,
+      "defense": 1,
       "crit_rate": 4,
-      "crit_resist": 0,
+      "crit_resist": 1,
       "crit_damage": 4,
-      "crit_damage_resist": 0,
+      "crit_damage_resist": 1,
       "hit_rate": 1,
-      "dodge_rate": 0
+      "dodge_rate": 1
     }
   },
   "armor": {
     "name": "护甲",
     "stat_multipliers": {
-      "max_hp": 3,
-      "attack": 0,
-      "defense": 3,
-      "crit_rate": 0,
-      "crit_resist": 1,
-      "crit_damage": 0,
-      "crit_damage_resist": 1,
-      "hit_rate": 0,
-      "dodge_rate": 0
+      "max_hp": 1,
+      "attack": 1,
+      "defense": 4,
+      "crit_rate": 1,
+      "crit_resist": 2,
+      "crit_damage": 1,
+      "crit_damage_resist": 2,
+      "hit_rate": 1,
+      "dodge_rate": 1
     }
   },
   "accessory": {
     "name": "饰品",
+    "stat_multipliers": {
+      "max_hp": 2,
+      "attack": 2,
+      "defense": 2,
+      "crit_rate": 2,
+      "crit_resist": 2,
+      "crit_damage": 2,
+      "crit_damage_resist": 2,
+      "hit_rate": 2,
+      "dodge_rate": 2
+    }
+  },
+  "boots": {
+    "name": "靴子",
     "stat_multipliers": {
       "max_hp": 1,
       "attack": 1,
@@ -89,36 +108,22 @@ const EQUIPMENT_POSITION_CONFIG = {
       "crit_resist": 1,
       "crit_damage": 1,
       "crit_damage_resist": 1,
-      "hit_rate": 1,
-      "dodge_rate": 1
-    }
-  },
-  "boots": {
-    "name": "靴子",
-    "stat_multipliers": {
-      "max_hp": 0,
-      "attack": 0,
-      "defense": 0,
-      "crit_rate": 0,
-      "crit_resist": 0,
-      "crit_damage": 0,
-      "crit_damage_resist": 0,
-      "hit_rate": 3,
+      "hit_rate": 4,
       "dodge_rate": 4
     }
   },
   "helmet": {
     "name": "头盔",
     "stat_multipliers": {
-      "max_hp": 1,
-      "attack": 0,
+      "max_hp": 4,
+      "attack": 1,
       "defense": 1,
-      "crit_rate": 0,
-      "crit_resist": 3,
-      "crit_damage": 0,
-      "crit_damage_resist": 3,
-      "hit_rate": 0,
-      "dodge_rate": 0
+      "crit_rate": 1,
+      "crit_resist": 2,
+      "crit_damage": 1,
+      "crit_damage_resist": 2,
+      "hit_rate": 1,
+      "dodge_rate": 1
     }
   }
 }
@@ -294,6 +299,21 @@ export class ForgeService {
     }
 
     return bonus;
+  }
+
+  /**
+   * 计算锻造功法等级经验值
+   * @param successMaterialsLevel 成功材料的等级加和
+   * @param equipmentLevel 装备等级
+   * @param forgetHeartSkill 当前玩家锻造心法数据
+   * @returns 锻造功法等级和经验值
+   */
+  private calculateForgeLevel(successMaterialsLevel: number, equipmentLevel: number, forgetHeartSkill: {
+    level: number;
+    exp: number;
+  }) {
+    const exp = successMaterialsLevel * EQUIPMENT_LEVELS_CONFIG[equipmentLevel as keyof typeof EQUIPMENT_LEVELS_CONFIG].multiplier;
+    return HEART_SKILL_CONFIG['燧石锻造传承'].upgrade(exp + forgetHeartSkill.exp, forgetHeartSkill.level);
   }
 
   /**
@@ -477,9 +497,24 @@ export class ForgeService {
         }
       }
 
+      // 计算锻造心法等级和经验值
+      const curForgeHeartSkill = player.heartSkills.find(skill => skill.name === '燧石锻造传承');
+      if (!curForgeHeartSkill) {
+        throw new Error('找不到锻造心法信息');
+      }
+
+      const forgeLevel = this.calculateForgeLevel(
+        successfulMaterials.reduce((sum, material) => sum + material.material.level, 0),
+        equipmentLevel,
+        curForgeHeartSkill
+      );
+      // 更新锻造心法信息
+      curForgeHeartSkill.level = forgeLevel.level;
+      curForgeHeartSkill.exp = forgeLevel.exp;
+
       // 更新玩家库存
       await Player.findByIdAndUpdate(playerId, {
-        $set: { 'inventory.materials': updatedMaterials },
+        $set: { 'inventory.materials': updatedMaterials, 'heartSkills': player.heartSkills },
         $push: { 'inventory.equipments': equipment }
       });
 
@@ -487,9 +522,9 @@ export class ForgeService {
         success: true,
         message: `锻造成功！${successfulMaterials.length}个材料成功融合`,
         equipment,
-        forgeCost
+        forgeCost,
+        curForgeHeartSkill
       };
-
     } catch (error) {
       console.error('锻造失败:', error);
       return {

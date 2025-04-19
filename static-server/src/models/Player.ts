@@ -166,6 +166,23 @@ const playerSchema = new mongoose.Schema({
       default: 0
     }
   },
+  // 心法列表
+  heartSkills: [{
+    name: {
+      type: String,
+      required: true
+    },
+    level: {
+      type: Number,
+      required: true,
+      default: 1
+    },
+    exp: {
+      type: Number,
+      required: true,
+      default: 0
+    }
+  }],
   inventory: {
     materials: [{
       type: mongoose.Schema.Types.ObjectId,

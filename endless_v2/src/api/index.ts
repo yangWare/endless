@@ -38,6 +38,11 @@ export interface Player {
   combat_stats: CombatStats;
   createdAt?: string;
   updatedAt?: string;
+  heartSkills: {
+    name: string;
+    level: number;
+    exp: number;
+  }[];
 }
 
 // 敌人实例类型
