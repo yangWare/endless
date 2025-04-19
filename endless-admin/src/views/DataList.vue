@@ -72,9 +72,10 @@
           <el-table-column prop="raceId" label="种族" />
           <el-table-column prop="level" label="等级" />
           <el-table-column prop="description" label="描述" />
-          <el-table-column label="操作" width="150">
+          <el-table-column label="操作" width="250">
             <template #default="scope">
               <el-button size="small" @click="handleEdit('creature', scope.row)">编辑</el-button>
+              <el-button size="small" type="primary" @click="handleViewCreatureBattleAttributes(scope.row)">战斗属性</el-button>
               <el-button size="small" type="danger" @click="handleDelete('creature', scope.row)">删除</el-button>
             </template>
           </el-table-column>
@@ -282,6 +283,16 @@ const getMaterialTypeName = (typeId: string) => {
 const handleViewBattleAttributes = async (row: any) => {
   try {
     const res = await materialApi.getById(`${row._id}/combat-stats`);
+    battleAttributes.value = res.data.data || {};
+    battleAttributesDialogVisible.value = true;
+  } catch (error) {
+    ElMessage.error('获取战斗属性失败');
+  }
+};
+
+const handleViewCreatureBattleAttributes = async (row: any) => {
+  try {
+    const res = await creatureApi.getCombatStats(row._id);
     battleAttributes.value = res.data.data || {};
     battleAttributesDialogVisible.value = true;
   } catch (error) {

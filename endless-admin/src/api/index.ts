@@ -96,7 +96,8 @@ export const creatureApi = {
   create: (data: any) => api.post('/creatures', data),
   update: (id: string, data: any) => api.put(`/creatures/${id}`, data),
   delete: (id: string) => api.delete(`/creatures/${id}`),
-  getById: (id: string) => api.get(`/creatures/${id}`)
+  getById: (id: string) => api.get(`/creatures/${id}`),
+  getCombatStats: (id: string) => api.get(`/enemies/creatures/${id}/combat-stats`)
 };
 
 export const materialTypeApi = {

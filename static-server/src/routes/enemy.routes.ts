@@ -17,4 +17,9 @@ router.post('/attack', async (ctx: ParamContext) => {
   await EnemyAPI.attack(ctx);
 });
 
+// 获取生物战斗属性
+router.get('/creatures/:id/combat-stats', async (ctx: ParamContext) => {
+  await EnemyAPI.calculateCreatureCombatStats(ctx);
+});
+
 export default router; 

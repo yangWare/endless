@@ -157,37 +157,65 @@ export class EnemyInstanceService {
   static async calculateCombatStats(enemyInstanceId: string): Promise<CombatStats> {
     try {
       const enemyInstance = await EnemyInstance.findById(enemyInstanceId)
-        .populate({
-          path: 'creatureId',
-          populate: {
-            path: 'raceId'
-          }
-        });
+        .populate('creatureId');
 
       if (!enemyInstance) {
         throw new Error('敌人实例不存在');
       }
 
-      const creature = enemyInstance.creatureId as any;
-      const race = creature.raceId;
+      // 复用calculateCreatureCombatStats的逻辑
+      return await this.calculateCreatureCombatStats(enemyInstance.creatureId._id.toString());
+    } catch (error: any) {
+      throw new Error(`计算战斗属性失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 根据生物ID计算战斗属性
+   * @param creatureId 生物ID
+   * @returns 计算后的战斗属性
+   */
+  static async calculateCreatureCombatStats(creatureId: string): Promise<CombatStats> {
+    try {
+      const creature = await Creature.findById(creatureId)
+        .populate({
+          path: 'raceId'
+        });
+
+      if (!creature) {
+        throw new Error('生物不存在');
+      }
+
+      const combatMultipliers = creature.combat_multipliers || {
+        max_hp: 0,
+        attack: 0,
+        defense: 0,
+        crit_rate: 0,
+        crit_resist: 0,
+        crit_damage: 0,
+        crit_damage_resist: 0,
+        hit_rate: 0,
+        dodge_rate: 0
+      };
+      const race = creature.raceId as any;
       const level = creature.level;
 
       // 计算每个战斗属性
       const stats: CombatStats = {
-        max_hp: race.combatStats.max_hp * creature.combat_multipliers.max_hp * level,
-        attack: race.combatStats.attack * creature.combat_multipliers.attack * level,
-        defense: race.combatStats.defense * creature.combat_multipliers.defense * level,
-        crit_rate: race.combatStats.crit_rate * creature.combat_multipliers.crit_rate * level,
-        crit_resist: race.combatStats.crit_resist * creature.combat_multipliers.crit_resist * level,
-        crit_damage: race.combatStats.crit_damage * creature.combat_multipliers.crit_damage * level,
-        crit_damage_resist: race.combatStats.crit_damage_resist * creature.combat_multipliers.crit_damage_resist * level,
-        hit_rate: race.combatStats.hit_rate * creature.combat_multipliers.hit_rate * level,
-        dodge_rate: race.combatStats.dodge_rate * creature.combat_multipliers.dodge_rate * level
+        max_hp: race.combatStats.max_hp * combatMultipliers.max_hp * level,
+        attack: race.combatStats.attack * combatMultipliers.attack * level,
+        defense: race.combatStats.defense * combatMultipliers.defense * level,
+        crit_rate: race.combatStats.crit_rate * combatMultipliers.crit_rate * level,
+        crit_resist: race.combatStats.crit_resist * combatMultipliers.crit_resist * level,
+        crit_damage: race.combatStats.crit_damage * combatMultipliers.crit_damage * level,
+        crit_damage_resist: race.combatStats.crit_damage_resist * combatMultipliers.crit_damage_resist * level,
+        hit_rate: race.combatStats.hit_rate * combatMultipliers.hit_rate * level,
+        dodge_rate: race.combatStats.dodge_rate * combatMultipliers.dodge_rate * level
       };
 
       return stats;
     } catch (error: any) {
-      throw new Error(`计算战斗属性失败: ${error.message}`);
+      throw new Error(`计算生物战斗属性失败: ${error.message}`);
     }
   }
 

@@ -1,5 +1,5 @@
 import { EnemyInstanceService } from '../services/EnemyInstanceService';
-import { BaseContext } from '../types/context';
+import { BaseContext, ParamContext } from '../types/context';
 
 export class EnemyAPI {
   /**
@@ -46,6 +46,31 @@ export class EnemyAPI {
       ctx.body = {
         success: true,
         data: result
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 计算生物战斗属性
+   */
+  static async calculateCreatureCombatStats(ctx: ParamContext) {
+    try {
+      const creatureId = ctx.params.id;
+      if (!creatureId) {
+        throw new Error('缺少生物ID');
+      }
+
+      const combatStats = await EnemyInstanceService.calculateCreatureCombatStats(creatureId);
+      
+      ctx.body = {
+        success: true,
+        data: combatStats
       };
     } catch (error: any) {
       ctx.status = 400;
