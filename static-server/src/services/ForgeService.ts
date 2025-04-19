@@ -312,7 +312,7 @@ export class ForgeService {
     level: number;
     exp: number;
   }) {
-    const exp = successMaterialsLevel * EQUIPMENT_LEVELS_CONFIG[equipmentLevel as keyof typeof EQUIPMENT_LEVELS_CONFIG].multiplier;
+    const exp = Math.floor(successMaterialsLevel * EQUIPMENT_LEVELS_CONFIG[equipmentLevel as keyof typeof EQUIPMENT_LEVELS_CONFIG].multiplier);
     return HEART_SKILL_CONFIG['燧石锻造传承'].upgrade(exp + forgetHeartSkill.exp, forgetHeartSkill.level);
   }
 
@@ -354,8 +354,14 @@ export class ForgeService {
         };
       }
 
-      const forgerLevel = location.npc.forge.level;
-      const toolLevel = forgerLevel; // 假设工具等级与锻造师等级相同
+      // 计算锻造心法等级和经验值
+      const curForgeHeartSkill = player.heartSkills.find(skill => skill.name === '燧石锻造传承');
+      if (!curForgeHeartSkill) {
+        throw new Error('找不到锻造心法信息');
+      }
+
+      const forgerLevel = curForgeHeartSkill.level;
+      const toolLevel = location.npc.forge.level;
 
       // 获取材料信息
       const materialModels = await Material.find({ _id: { $in: materialIds } })
@@ -495,12 +501,6 @@ export class ForgeService {
         if (index !== -1) {
           updatedMaterials.splice(index, 1);
         }
-      }
-
-      // 计算锻造心法等级和经验值
-      const curForgeHeartSkill = player.heartSkills.find(skill => skill.name === '燧石锻造传承');
-      if (!curForgeHeartSkill) {
-        throw new Error('找不到锻造心法信息');
       }
 
       const forgeLevel = this.calculateForgeLevel(

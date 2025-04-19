@@ -326,6 +326,10 @@ export const locationApi = {
   }): Promise<BaseResponse<{
     equipment: Equipment | null;
     forgeCost: number;
+    curForgeHeartSkill?: {
+      level: number;
+      exp: number;
+    };
   } | null>> =>
     api.post(`/locations/${data.locationId}/forge`, data)
 };

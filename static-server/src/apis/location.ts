@@ -235,7 +235,8 @@ export class LocationAPI {
         message: result.message,
         data: {
           equipment: result.equipment,
-          forgeCost: result.forgeCost
+          forgeCost: result.forgeCost,
+          curForgeHeartSkill: result.curForgeHeartSkill
         }
       };
     } catch (error: any) {

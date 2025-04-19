@@ -197,7 +197,12 @@ export default defineComponent({
               availableMaterials.value.push(material)
             }
           })
-
+        }
+        // 更新锻造心法信息
+        const curForgeHeartSkill = state.player?.heartSkills.find((skill) => skill.name === '燧石锻造传承')
+        if (curForgeHeartSkill && result.data?.curForgeHeartSkill) {
+          curForgeHeartSkill.exp = result.data.curForgeHeartSkill.exp
+          curForgeHeartSkill.level = result.data.curForgeHeartSkill.level
         }
         forgeResult.value = result
         selectedMaterials.value = []

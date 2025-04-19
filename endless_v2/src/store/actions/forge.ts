@@ -12,6 +12,10 @@ export const forgeEquipment = async ({
 }): Promise<BaseResponse<{
   equipment: Equipment | null;
   forgeCost: number;
+  curForgeHeartSkill?: {
+    level: number;
+    exp: number;
+  };
 } | null>> => {
   if (!materials || materials.length === 0 || materials.length > 5) {
     return {

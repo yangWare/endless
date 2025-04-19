@@ -147,7 +147,7 @@ const showEquipmentInfo = (item: Equipment | null): void => {
 }
 
 const showHeartSkillInfo = (skill: HeartSkill): void => {
-  const info = `${skill.name}<br>等级: ${skill.level}`
+  const info = `${skill.name}<br>等级: ${skill.level}<br>经验值: ${skill.exp}`
   messageContent.value = info
   messageType.value = 'info'
   showMessage.value = true
