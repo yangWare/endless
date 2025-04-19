@@ -215,7 +215,7 @@ export class LocationService {
       const instancesToKeep: string[] = [];
 
       for (const instance of enemyInstances) {
-        const enemy = location.enemies.find(e => e.creatureId.toString() === instance.creatureId.toString());
+        const enemy = location.enemies.find(e => e.creatureId._id.toString() === instance.creatureId.toString());
         if (!enemy) {
           // 如果地点配置中已经移除了这个敌人，则删除实例
           instancesToDelete.push(instance._id.toString());
