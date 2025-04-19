@@ -49,7 +49,13 @@
               class="enemy-item"
               @click="showEnemyInfo(enemy)"
             >
-              <span>{{ enemy.name }} (HP: {{ enemy.enemy.hp }})</span>
+              <span>
+                {{ enemy.name }}
+                <span v-if="getEnemyLevelTag(enemy)" :class="['level-tag', getEnemyLevelTag(enemy).toLowerCase()]">
+                  {{ getEnemyLevelTag(enemy) }}
+                </span>
+                (HP: {{ enemy.enemy.hp }})
+              </span>
               <button @click.stop="handleAttackEnemy(enemy)" :disabled="isAttacking">
                 攻击
               </button>
@@ -373,6 +379,13 @@ const handleExplore = async (isStart?: boolean): Promise<void> => {
   }
   isExploring.value = false
 }
+
+const getEnemyLevelTag = (enemy: Enemy): string => {
+  const level = enemy.enemy.level || 1
+  if (level >= 5) return 'Boss'
+  if (level >= 3) return '精英'
+  return ''
+}
 </script>
 
 <style scoped>
@@ -671,5 +684,38 @@ const handleExplore = async (isStart?: boolean): Promise<void> => {
 .revive-button:active {
   transform: translateY(0);
   box-shadow: 0 1px 4px rgba(255, 71, 87, 0.2);
+}
+
+.level-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  margin-left: 4px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+}
+
+.level-tag.精英 {
+  background: linear-gradient(135deg, #ffa502, #ff7f50);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.level-tag.boss {
+  background: linear-gradient(135deg, #ff0000, #8b0000);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  animation: boss-glow 2s infinite;
+}
+
+@keyframes boss-glow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+  }
 }
 </style>

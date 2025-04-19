@@ -257,7 +257,8 @@ export class LocationService {
           const enemyInstance = new EnemyInstance({
             creatureId: creature._id,
             locationId: locationId,
-            hp: 100 // 临时值，后面会更新
+            hp: 100, // 临时值，后面会更新
+            level: creature.level
           });
           await enemyInstance.save();
           // 使用 EnemyInstanceService 计算战斗属性

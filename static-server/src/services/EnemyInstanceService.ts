@@ -8,6 +8,7 @@ import { LocationService } from './LocationService';
 export interface EnemyInstanceData {
   creatureId: Types.ObjectId;
   hp: number;
+  level: number;
   locationId: Types.ObjectId;
 }
 

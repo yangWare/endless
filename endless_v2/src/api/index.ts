@@ -51,6 +51,7 @@ export interface EnemyInstance {
   creatureId: string;
   locationId: string;
   hp: number;
+  level: number;
   createdAt: string;
   updatedAt: string;
 }

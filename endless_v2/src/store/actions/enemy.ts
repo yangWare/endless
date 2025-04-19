@@ -41,11 +41,7 @@ export const generateEnemies = async (): Promise<void> => {
 
     // 将后端返回的敌人实例添加到状态中
     enemies.forEach((enemy: EnemyInstance) => {
-      updateEnemyInstance(enemy._id, {
-        hp: enemy.hp,
-        creatureId: enemy.creatureId,
-        locationId: enemy.locationId
-      })
+      updateEnemyInstance(enemy._id, enemy)
     })
 
     updateLocationOfEnemy(locationId)
