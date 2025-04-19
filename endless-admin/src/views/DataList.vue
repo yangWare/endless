@@ -110,9 +110,10 @@
           </el-table-column>
           <el-table-column prop="level" label="等级" />
           <el-table-column prop="description" label="描述" />
-          <el-table-column label="操作" width="150">
+          <el-table-column label="操作" width="250">
             <template #default="scope">
               <el-button size="small" @click="handleEdit('material', scope.row)">编辑</el-button>
+              <el-button size="small" type="primary" @click="handleViewBattleAttributes(scope.row)">战斗属性</el-button>
               <el-button size="small" type="danger" @click="handleDelete('material', scope.row)">删除</el-button>
             </template>
           </el-table-column>
@@ -136,6 +137,25 @@
         </el-table>
       </el-tab-pane>
     </el-tabs>
+
+    <!-- 战斗属性弹窗 -->
+    <el-dialog
+      v-model="battleAttributesDialogVisible"
+      title="战斗属性"
+      width="500px"
+    >
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="最大生命值">{{ battleAttributes?.max_hp || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="攻击力">{{ battleAttributes?.attack || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="防御力">{{ battleAttributes?.defense || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="暴击率">{{ battleAttributes?.crit_rate || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="暴击抗性">{{ battleAttributes?.crit_resist || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="暴击伤害">{{ battleAttributes?.crit_damage || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="暴击伤害抗性">{{ battleAttributes?.crit_damage_resist || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="命中率">{{ battleAttributes?.hit_rate || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="闪避率">{{ battleAttributes?.dodge_rate || '-' }}</el-descriptions-item>
+      </el-descriptions>
+    </el-dialog>
   </div>
 </template>
 
@@ -153,6 +173,8 @@ const creatures = ref<any[]>([]);
 const materialTypes = ref<any[]>([]);
 const materials = ref<any[]>([]);
 const potions = ref<any[]>([]);
+const battleAttributesDialogVisible = ref(false);
+const battleAttributes = ref<any>(null);
 
 const router = useRouter();
 
@@ -255,6 +277,16 @@ const getParentRaceName = (parentRaceId: string | null) => {
 const getMaterialTypeName = (typeId: string) => {
   const type = materialTypes.value.find(t => t._id === typeId);
   return type ? type.name : '-';
+};
+
+const handleViewBattleAttributes = async (row: any) => {
+  try {
+    const res = await materialApi.getById(`${row._id}/combat-stats`);
+    battleAttributes.value = res.data.data || {};
+    battleAttributesDialogVisible.value = true;
+  } catch (error) {
+    ElMessage.error('获取战斗属性失败');
+  }
 };
 
 onMounted(() => {
