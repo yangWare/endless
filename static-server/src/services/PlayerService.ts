@@ -68,7 +68,7 @@ export class PlayerService {
    */
   private static getInitialPlayerState(firstMap: any) {
     return {
-      hp: 40,
+      hp: 140,
       coins: 0,
       levelInfo: {
         level: 1,
@@ -122,15 +122,15 @@ export class PlayerService {
           slot: 'accessory',
           level: 1,
           combatStats: {
-            max_hp: 0,
-            attack: 0,
-            defense: 0,
-            crit_rate: 0,
-            crit_resist: 0,
-            crit_damage: 0,
-            crit_damage_resist: 0,
+            max_hp: 1,
+            attack: 1,
+            defense: 1,
+            crit_rate: 1,
+            crit_resist: 1,
+            crit_damage: 1,
+            crit_damage_resist: 1,
             hit_rate: 1,
-            dodge_rate: 0
+            dodge_rate: 1
           }
         },
         helmet: {
@@ -157,7 +157,7 @@ export class PlayerService {
           level: 1,
           combatStats: {
             max_hp: 0,
-            attack: 1,
+            attack: 0,
             defense: 0,
             crit_rate: 0,
             crit_resist: 0,
