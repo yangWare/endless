@@ -195,7 +195,8 @@ export class LocationService {
 
       return currentTime - createTime >= updateDuration;
     } catch (error: any) {
-      throw new Error(`检查敌人刷新状态失败: ${error.message}`);
+      console.log(`检查敌人刷新状态失败: ${error.message}`)
+      return true
     }
   }
 
