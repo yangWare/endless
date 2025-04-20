@@ -387,8 +387,8 @@ export class ForgeService {
         };
       }
 
-      // 扣除锻造费用：锻造费用 = 2 ^ (forgerLevel - 1) * 10
-      const forgeCost = Math.pow(2, forgerLevel - 1) * 10;
+      // 扣除锻造费用：锻造费用 = 2 ^ (toolLevel - 1) * 10
+      const forgeCost = Math.pow(2, toolLevel - 1) * 10;
       if (player.coins < forgeCost) {
         return {
           success: false,
