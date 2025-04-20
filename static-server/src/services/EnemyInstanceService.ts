@@ -226,7 +226,7 @@ export class EnemyInstanceService {
    * @returns 战斗结果
    */
   static async attackEnemy(playerId: string, enemyInstanceId: string) {
-    const lockKey = `${playerId}-${enemyInstanceId}`;
+    const lockKey = `${enemyInstanceId}`;
     
     // 检查是否已经有战斗在进行
     if (this.combatLocks.get(lockKey)) {
