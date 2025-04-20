@@ -437,8 +437,11 @@ export class ForgeService {
         };
       }
 
-      // 获取最高成功率的材料
-      const maxSuccessRate = Math.max(...successfulMaterials.map(result => result.successRate));
+      // 获取材料等级最高的材料的成功率
+      const maxLevelMaterial = successfulMaterials.reduce((max, current) => {
+        return current.material.level > max.material.level ? current : max;
+      });
+      const maxSuccessRate = maxLevelMaterial.successRate;
 
       // 计算装备等级
       const equipmentLevel = this.calculateEquipmentLevel(forgerLevel, toolLevel, maxSuccessRate);
