@@ -180,6 +180,10 @@ export class LocationService {
         throw new Error('敌人实例不存在');
       }
 
+      if (enemyInstance.hp <= 0) {
+        throw new Error('敌人实例已死亡');
+      }
+
       const enemy = location.enemies.find(e => e.creatureId.toString() === enemyInstance.creatureId.toString());
       if (!enemy) {
         throw new Error('该地点不存在此生物');
