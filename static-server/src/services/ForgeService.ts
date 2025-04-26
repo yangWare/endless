@@ -88,28 +88,28 @@ const EQUIPMENT_POSITION_CONFIG = {
   "wrist": {
     "name": "手镯",
     "stat_multipliers": {
-      "max_hp": 1,
-      "attack": 1,
-      "defense": 1,
-      "crit_rate": 1,
-      "crit_resist": 1,
-      "crit_damage": 1,
-      "crit_damage_resist": 1,
-      "hit_rate": 1,
-      "dodge_rate": 1
+      "max_hp": 3,
+      "attack": 2,
+      "defense": 3,
+      "crit_rate": 2,
+      "crit_resist": 3,
+      "crit_damage": 2,
+      "crit_damage_resist": 3,
+      "hit_rate": 2,
+      "dodge_rate": 3
     }
   },
   "accessory": {
     "name": "项链",
     "stat_multipliers": {
       "max_hp": 2,
-      "attack": 2,
+      "attack": 3,
       "defense": 2,
-      "crit_rate": 2,
+      "crit_rate": 3,
       "crit_resist": 2,
-      "crit_damage": 2,
+      "crit_damage": 3,
       "crit_damage_resist": 2,
-      "hit_rate": 2,
+      "hit_rate": 3,
       "dodge_rate": 2
     }
   },
