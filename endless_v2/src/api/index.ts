@@ -31,6 +31,7 @@ export interface Player {
   equipped: {
     weapon: Equipment | null;
     armor: Equipment | null;
+    wrist: Equipment | null;
     accessory: Equipment | null;
     helmet: Equipment | null;
     boots: Equipment | null;
@@ -122,7 +123,7 @@ export interface Equipment {
   id: string;
   name: string;
   level: number;
-  slot: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  slot: 'weapon' | 'armor' | 'wrist' | 'accessory' | 'helmet' | 'boots';
   combatStats: CombatStats;
 }
 

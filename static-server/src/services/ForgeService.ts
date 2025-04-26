@@ -19,7 +19,7 @@ interface ForgeParams {
   playerId: string;
   locationId: string;
   materialIds: string[];
-  equipmentType: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  equipmentType: 'weapon' | 'armor' | 'wrist' | 'accessory' | 'helmet' | 'boots';
   forgeToolLevel: number;
 }
 
@@ -85,8 +85,22 @@ const EQUIPMENT_POSITION_CONFIG = {
       "dodge_rate": 1
     }
   },
+  "wrist": {
+    "name": "手镯",
+    "stat_multipliers": {
+      "max_hp": 1,
+      "attack": 1,
+      "defense": 1,
+      "crit_rate": 1,
+      "crit_resist": 1,
+      "crit_damage": 1,
+      "crit_damage_resist": 1,
+      "hit_rate": 1,
+      "dodge_rate": 1
+    }
+  },
   "accessory": {
-    "name": "饰品",
+    "name": "项链",
     "stat_multipliers": {
       "max_hp": 2,
       "attack": 2,

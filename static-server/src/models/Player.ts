@@ -59,7 +59,7 @@ const equipmentSchema = {
   slot: {
     type: String,
     required: true,
-    enum: ['weapon', 'armor', 'accessory', 'helmet', 'boots']
+    enum: ['weapon', 'armor', 'wrist', 'accessory', 'helmet', 'boots']
   },
   level: {
     type: Number,
@@ -73,7 +73,7 @@ export interface IEquipment {
   id: string;
   name: string;
   level: number;
-  slot: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  slot: 'weapon' | 'armor' | 'wrist' | 'accessory' | 'helmet' | 'boots';
   combatStats: {
     max_hp: number;
     attack: number;
@@ -108,6 +108,7 @@ export interface IPlayer {
   equipped: {
     weapon: IEquipment | null;
     armor: IEquipment | null;
+    wrist: IEquipment | null;
     accessory: IEquipment | null;
     helmet: IEquipment | null;
     boots: IEquipment | null;
@@ -199,7 +200,12 @@ const playerSchema = new mongoose.Schema({
     weapon: equipmentSchema,
     // 盔甲 
     armor: equipmentSchema,
-    // 饰品
+    // 手镯，补充：可以为空
+    wrist: {
+      type: equipmentSchema,
+      default: null
+    },
+    // 项链
     accessory: equipmentSchema,
     // 头盔
     helmet: equipmentSchema,

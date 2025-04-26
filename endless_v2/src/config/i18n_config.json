@@ -18,8 +18,11 @@
     "armor": {
       "name": "护甲"
     },
+    "wrist": {
+      "name": "手镯"
+    },
     "accessory": {
-      "name": "饰品"
+      "name": "项链"
     },
     "boots": {
       "name": "靴子"

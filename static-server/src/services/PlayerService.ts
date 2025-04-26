@@ -68,7 +68,7 @@ export class PlayerService {
    */
   private static getInitialPlayerState(firstMap: any) {
     return {
-      hp: 140,
+      hp: 200,
       coins: 0,
       levelInfo: {
         level: 1,
@@ -116,21 +116,38 @@ export class PlayerService {
             dodge_rate: 0
           }
         },
+        wrist: {
+          id: `default_wrist_${Date.now()}`,
+          name: `藤蔓手镯`,
+          slot: 'wrist',
+          level: 1,
+          combatStats: {
+            max_hp: 10,
+            attack: 0,
+            defense: 1,
+            crit_rate: 0,
+            crit_resist: 0,
+            crit_damage: 0,
+            crit_damage_resist: 0,
+            hit_rate: 0,
+            dodge_rate: 1
+          }
+        },
         accessory: {
           id: `default_accessory_${Date.now()}`,
           name: `羽毛挂坠`,
           slot: 'accessory',
           level: 1,
           combatStats: {
-            max_hp: 1,
+            max_hp: 10,
             attack: 1,
-            defense: 1,
+            defense: 0,
             crit_rate: 1,
-            crit_resist: 1,
+            crit_resist: 0,
             crit_damage: 1,
-            crit_damage_resist: 1,
+            crit_damage_resist: 0,
             hit_rate: 1,
-            dodge_rate: 1
+            dodge_rate: 0
           }
         },
         helmet: {
@@ -139,9 +156,9 @@ export class PlayerService {
           slot: 'helmet',
           level: 1,
           combatStats: {
-            max_hp: 10,
+            max_hp: 50,
             attack: 0,
-            defense: 2,
+            defense: 1,
             crit_rate: 0,
             crit_resist: 0,
             crit_damage: 0,
@@ -521,6 +538,7 @@ export class PlayerService {
           player.equipped = {
             weapon: null,
             armor: null,
+            wrist: null,
             accessory: null,
             helmet: null,
             boots: null
@@ -535,12 +553,28 @@ export class PlayerService {
           player.equipped = {
             weapon: null,
             armor: null,
+            wrist: null,
             accessory: null,
             helmet: null,
             boots: null
           };
         }
         player.equipped.armor = equipment;
+      } else if (equipment.slot === 'wrist') {
+        if (player.equipped && player.equipped.wrist) {
+          player.inventory.equipments.push(player.equipped.wrist);
+        }
+        if (!player.equipped) {
+          player.equipped = {
+            weapon: null,
+            armor: null,
+            wrist: null,
+            accessory: null,
+            helmet: null,
+            boots: null
+          };
+        }
+        player.equipped.wrist = equipment;
       } else if (equipment.slot === 'accessory') {
         if (player.equipped && player.equipped.accessory) {
           player.inventory.equipments.push(player.equipped.accessory);
@@ -549,6 +583,7 @@ export class PlayerService {
           player.equipped = {
             weapon: null,
             armor: null,
+            wrist: null,
             accessory: null,
             helmet: null,
             boots: null
@@ -563,6 +598,7 @@ export class PlayerService {
           player.equipped = {
             weapon: null,
             armor: null,
+            wrist: null,
             accessory: null,
             helmet: null,
             boots: null
@@ -577,6 +613,7 @@ export class PlayerService {
           player.equipped = {
             weapon: null,
             armor: null,
+            wrist: null,
             accessory: null,
             helmet: null,
             boots: null

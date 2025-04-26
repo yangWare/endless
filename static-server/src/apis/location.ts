@@ -215,7 +215,7 @@ export class LocationAPI {
       if (!materialIds || !Array.isArray(materialIds) || materialIds.length === 0) {
         throw new Error('缺少或无效的材料ID列表');
       }
-      if (!equipmentType || !['weapon', 'armor', 'accessory', 'helmet', 'boots'].includes(equipmentType)) {
+      if (!equipmentType || !['weapon', 'armor', 'wrist', 'accessory', 'helmet', 'boots'].includes(equipmentType)) {
         throw new Error('无效的装备类型');
       }
       if (!forgeToolLevel || typeof forgeToolLevel !== 'number' || forgeToolLevel < 1) {
