@@ -204,14 +204,22 @@ const usePotion = async (potion: Potion) => {
     })
 
     if (response.success) {
-      // 从背包中移除药水
-      const potionsList = state.player.inventory.potions.filter(id => id !== potion._id)
+      // 从背包中移除药水，仅移除一份
+      const potionIndex = potions.value.findIndex(item => item._id === potion._id)
+      if (potionIndex !== -1) {
+        potions.value.splice(potionIndex, 1)
+      }
+      const index = state.player.inventory.potions.findIndex(id => id === potion._id)
+      if (index !== -1) {
+        state.player.inventory.potions.splice(index, 1)
+      }
+
       updatePlayer({
         ...state.player,
         hp: response.data,
         inventory: {
           ...state.player.inventory,
-          potions: potionsList
+          potions: state.player.inventory.potions
         }
       })
     } else {
