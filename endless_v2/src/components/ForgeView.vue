@@ -41,17 +41,18 @@
       <!-- 材料选择区域 -->
       <div class="materials-selection">
         <div class="section-title">选择材料 (1-5件)</div>
-        <div class="materials-list">
+        <div class="materials-grid">
           <div
-            v-for="(material, index) in availableMaterials"
-            :key="index"
+            v-for="(material, index) in groupedMaterials"
+            :key="material.material._id"
             class="material-item"
             :class="{
-              selected: selectedMaterials.some((item) => item.index === index),
+              selected: selectedMaterials.some((item) => item.material._id === material.material._id),
             }"
-            @click="toggleMaterial(material, index)"
+            @click="toggleMaterial(material)"
           >
-            {{ material.name }}
+            <div class="material-name">{{ material.material.name }}</div>
+            <div class="material-count">x{{ material.count }}</div>
           </div>
         </div>
       </div>
@@ -66,7 +67,7 @@
             class="selected-item"
           >
             {{ item.material.name }}
-            <button @click="removeMaterial(item.index)">移除</button>
+            <button @click="removeMaterial(item.material._id)">移除</button>
           </div>
         </div>
       </div>
@@ -144,42 +145,55 @@ export default defineComponent({
     const availableMaterialIds = computed(() => state.player?.inventory?.materials || [])
     const availableMaterials = ref<Material[]>([])
     const materialModels = ref<Material[]>([])
+
+    // 按ID分组材料
+    const groupedMaterials = computed(() => {
+      const materialCounts = new Map<string, { material: Material; count: number }>()
+      
+      availableMaterials.value.forEach((material) => {
+        const existing = materialCounts.get(material._id)
+        if (existing) {
+          existing.count++
+        } else {
+          materialCounts.set(material._id, { material, count: 1 })
+        }
+      })
+      
+      return Array.from(materialCounts.values())
+    })
+
     if (availableMaterialIds.value.length > 0) {
-    materialApi.getByIds(availableMaterialIds.value).then((res) => {
-      materialModels.value = res.data
-      availableMaterialIds.value.forEach((id) => {
-        const material = materialModels.value.find((item) => item._id === id)
-        if (material) {
+      materialApi.getByIds(availableMaterialIds.value).then((res) => {
+        materialModels.value = res.data
+        availableMaterialIds.value.forEach((id) => {
+          const material = materialModels.value.find((item) => item._id === id)
+          if (material) {
             availableMaterials.value.push(material)
           }
         })
       })
     }
 
-
-    // 监听材料列表变化
-    watch(availableMaterialIds, () => {
-      selectedMaterials.value = []
-      selectedType.value = ''
-    })
-
     // 切换材料选择状态
-    const toggleMaterial = (material: Material, index: number): void => {
-      const existingIndex = selectedMaterials.value.findIndex(
-        (item) => item.index === index,
-      )
-      if (existingIndex !== -1) {
-        removeMaterial(index)
-      } else if (selectedMaterials.value.length < 5) {
-        selectedMaterials.value.push({ material, index })
+    const toggleMaterial = (material: typeof groupedMaterials.value[number]): void => {
+      // 选中的材料总数大于5，则不添加
+      if (selectedMaterials.value.length >= 5) {
+        return
       }
+      // 选中的数量大于已有的数量，则不添加
+      const selectedCount = selectedMaterials.value.filter(item => item.material._id === material.material._id).length
+      if (selectedCount >= material.count) {
+        return
+      }
+      selectedMaterials.value.push({ material: material.material, index: availableMaterials.value.findIndex(m => m._id === material.material._id) })
     }
 
     // 移除已选材料
-    const removeMaterial = (index: number): void => {
-      selectedMaterials.value = selectedMaterials.value.filter(
-        (item) => item.index !== index,
-      )
+    const removeMaterial = (materialId: string): void => {
+      const index = selectedMaterials.value.findIndex(item => item.material._id === materialId)
+      if (index !== -1) {
+        selectedMaterials.value.splice(index, 1)
+      }
     }
 
     // 选择装备类型
@@ -215,11 +229,18 @@ export default defineComponent({
         const forgeCost = result.data?.forgeCost || 0
         // 清理Player背包中已用掉的材料
         if (state.player?.inventory?.materials) {
+          const remaindMaterials = state.player.inventory.materials
+          selectedMaterials.value.forEach((item) => {
+            const index = remaindMaterials.findIndex((material) => material === item.material._id)
+            if (index !== -1) {
+              remaindMaterials.splice(index, 1)
+            }
+          })
           updatePlayer({
             coins: state.player.coins - forgeCost,
             inventory: {
               ...state.player.inventory,
-              materials: state.player.inventory.materials.filter((_, index) => !selectedMaterials.value.find((item) => item.index === index)),
+              materials: remaindMaterials,
               equipments: resultEquipment ? [...(state.player.inventory?.equipments || []), resultEquipment] : state.player.inventory.equipments
             }
           })
@@ -238,9 +259,8 @@ export default defineComponent({
           curForgeHeartSkill.level = result.data.curForgeHeartSkill.level
         }
         forgeResult.value = result
+        // 只清空材料选择
         selectedMaterials.value = []
-        selectedType.value = ''
-        selectedForgeLevel.value = 1
       } finally {
         isForging.value = false
       }
@@ -256,7 +276,7 @@ export default defineComponent({
 
     return {
       i18n,
-      availableMaterials,
+      groupedMaterials,
       selectedMaterials,
       selectedType,
       selectedForgeLevel,
@@ -432,39 +452,74 @@ export default defineComponent({
   transform: translateY(-1px);
 }
 
-.materials-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;  
 }
 
 .material-item {
-  padding: 4px 6px;
-  border: 2px solid #404040;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  width: calc(25% - 8px);
-  text-align: center;
-  font-weight: 500;
-  color: #e0e0e0;
   background-color: #333;
-  box-sizing: border-box;
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .material-item:hover {
-  border-color: #ff6b35;
-  background-color: #404040;
+  transform: translateY(-1px);
+  border-color: #ffd700;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.material-item:active {
+  transform: translateY(0);
 }
 
 .material-item.selected {
   background-color: #ff4d00;
-  color: white;
   border-color: #ff4d00;
-  box-shadow: 0 2px 4px rgba(255, 77, 0, 0.3);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 77, 0, 0.3);
+}
+
+.material-name {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.material-count {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffd700;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.materials-selection::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.materials-selection::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 3px;
+}
+
+.materials-selection::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.5);
 }
 
 .selected-list {
