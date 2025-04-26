@@ -25,32 +25,32 @@ interface ForgeParams {
 
 const EQUIPMENT_LEVELS_CONFIG = {
   1: {
-    "name": "普通的",
+    "name": "普通",
     "multiplier": 0.5,
     "chance": 0.5299
   },
   2: {
-    "name": "优秀的",
+    "name": "优秀",
     "multiplier": 1,
     "chance": 0.3
   },
   3: {
-    "name": "精良的",
+    "name": "精良",
     "multiplier": 2,
     "chance": 0.159
   },
   4: {
-    "name": "史诗的",
+    "name": "史诗",
     "multiplier": 12,
     "chance": 0.01
   },
   5: {
-    "name": "传说的",
+    "name": "传说",
     "multiplier": 60,
     "chance": 0.001
   },
   6: {
-    "name": "神话的",
+    "name": "神话",
     "multiplier": 360,
     "chance": 0.0001
   }
@@ -244,7 +244,9 @@ export class ForgeService {
     // 获取装备位置配置
     const positionConfig = EQUIPMENT_POSITION_CONFIG[equipmentType as keyof typeof EQUIPMENT_POSITION_CONFIG];
 
-    return `${levelConfig.name}${maxLevelMaterial.name}${positionConfig.name}`;
+    // 前缀星数，材料数量为星级数，每多一级加一个⭐️
+    const prefixStar = '☆'.repeat(materials.length);
+    return `${prefixStar}${levelConfig.name}${maxLevelMaterial.name}${positionConfig.name}`;
   }
 
   /**
