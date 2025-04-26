@@ -22,6 +22,22 @@
         </div>
       </div>
 
+      <!-- 锻造炉等级选择 -->
+      <div class="forge-level-selection">
+        <div class="section-title">选择锻造炉等级</div>
+        <div class="forge-levels">
+          <div
+            v-for="level in forgeLevels"
+            :key="level"
+            class="forge-level-item"
+            :class="{ selected: selectedForgeLevel === level }"
+            @click="selectForgeLevel(level)"
+          >
+            {{ level }}级
+          </div>
+        </div>
+      </div>
+
       <!-- 材料选择区域 -->
       <div class="materials-selection">
         <div class="section-title">选择材料 (1-5件)</div>
@@ -112,10 +128,17 @@ export default defineComponent({
   setup(props, { emit }) {
     const selectedMaterials = ref<SelectedMaterial[]>([])
     const selectedType = ref<string>('')
+    const selectedForgeLevel = ref<number>(1)
     const forgeResult = ref<ForgeResult | null>(null)
     const isForging = ref<boolean>(false)
 
     const equipmentTypes = i18n.equipment_position as Record<string, EquipmentType>
+    
+    // 计算可用的锻造炉等级
+    const forgeLevels = computed(() => {
+      const maxLevel = state.mapLocations[state.currentLocationId]?.npc?.forge?.level || 1
+      return Array.from({ length: maxLevel }, (_, i) => i + 1)
+    })
 
     // 获取玩家当前拥有的材料
     const availableMaterialIds = computed(() => state.player?.inventory?.materials || [])
@@ -164,6 +187,11 @@ export default defineComponent({
       selectedType.value = type
     }
 
+    // 选择锻造炉等级
+    const selectForgeLevel = (level: number): void => {
+      selectedForgeLevel.value = level
+    }
+
     // 开始锻造
     const startForge = async (): Promise<void> => {
       if (
@@ -181,6 +209,7 @@ export default defineComponent({
         const result = await forgeEquipment({
           materials: selectedMaterials.value.map((item) => item.material._id),
           equipmentType: selectedType.value,
+          forgeToolLevel: selectedForgeLevel.value
         })
         const resultEquipment = result.data?.equipment || null
         const forgeCost = result.data?.forgeCost || 0
@@ -211,6 +240,7 @@ export default defineComponent({
         forgeResult.value = result
         selectedMaterials.value = []
         selectedType.value = ''
+        selectedForgeLevel.value = 1
       } finally {
         isForging.value = false
       }
@@ -229,11 +259,14 @@ export default defineComponent({
       availableMaterials,
       selectedMaterials,
       selectedType,
+      selectedForgeLevel,
+      forgeLevels,
       equipmentTypes,
       forgeResult,
       toggleMaterial,
       removeMaterial,
       selectEquipmentType,
+      selectForgeLevel,
       startForge,
       handleCloseClick,
       getEquipmentColor
@@ -353,6 +386,45 @@ export default defineComponent({
 }
 
 .equipment-type-item.selected {
+  background-color: #ff4d00;
+  color: white;
+  border-color: #ff4d00;
+  box-shadow: 0 2px 4px rgba(255, 77, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.forge-level-selection {
+  margin-bottom: 20px;
+}
+
+.forge-levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.forge-level-item {
+  padding: 4px 6px;
+  border: 2px solid #404040;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: calc(25% - 8px);
+  text-align: center;
+  font-weight: 500;
+  color: #e0e0e0;
+  background-color: #333;
+  box-sizing: border-box;
+}
+
+.forge-level-item:hover {
+  border-color: #ff6b35;
+  background-color: #404040;
+}
+
+.forge-level-item.selected {
   background-color: #ff4d00;
   color: white;
   border-color: #ff4d00;

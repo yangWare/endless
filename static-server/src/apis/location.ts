@@ -202,7 +202,7 @@ export class LocationAPI {
    */
   static async forge(ctx: BaseContext) {
     try {
-      const { playerId, materialIds, equipmentType } = ctx.request.body;
+      const { playerId, materialIds, equipmentType, forgeToolLevel } = ctx.request.body;
       const locationId = ctx.params.id;
 
       // 参数验证
@@ -218,6 +218,9 @@ export class LocationAPI {
       if (!equipmentType || !['weapon', 'armor', 'accessory', 'helmet', 'boots'].includes(equipmentType)) {
         throw new Error('无效的装备类型');
       }
+      if (!forgeToolLevel || typeof forgeToolLevel !== 'number' || forgeToolLevel < 1) {
+        throw new Error('无效的锻造炉等级');
+      }
 
       // 创建锻造服务实例
       const forgeService = new ForgeService();
@@ -227,7 +230,8 @@ export class LocationAPI {
         playerId,
         locationId,
         materialIds,
-        equipmentType
+        equipmentType,
+        forgeToolLevel
       });
 
       ctx.body = {

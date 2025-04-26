@@ -324,6 +324,7 @@ export const locationApi = {
     playerId: string;
     materialIds: string[];
     equipmentType: string;
+    forgeToolLevel: number;
   }): Promise<BaseResponse<{
     equipment: Equipment | null;
     forgeCost: number;

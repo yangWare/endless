@@ -5,10 +5,12 @@ import { state } from '../state';
 // 锻造装备
 export const forgeEquipment = async ({
   materials,
-  equipmentType
+  equipmentType,
+  forgeToolLevel
 }: {
   materials: string[];
   equipmentType: string;
+  forgeToolLevel: number;
 }): Promise<BaseResponse<{
   equipment: Equipment | null;
   forgeCost: number;
@@ -31,6 +33,7 @@ export const forgeEquipment = async ({
       playerId: state.player?._id || '',
       materialIds: materials,
       equipmentType,
+      forgeToolLevel
     });
 
     return response;

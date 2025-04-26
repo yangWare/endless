@@ -20,6 +20,7 @@ interface ForgeParams {
   locationId: string;
   materialIds: string[];
   equipmentType: 'weapon' | 'armor' | 'accessory' | 'helmet' | 'boots';
+  forgeToolLevel: number;
 }
 
 const EQUIPMENT_LEVELS_CONFIG = {
@@ -322,7 +323,7 @@ export class ForgeService {
    * @returns 锻造结果
    */
   async forge(params: ForgeParams): Promise<ForgeResult> {
-    const { playerId, locationId, materialIds, equipmentType } = params;
+    const { playerId, locationId, materialIds, equipmentType, forgeToolLevel } = params;
 
     try {
       // 验证材料数量
@@ -346,10 +347,10 @@ export class ForgeService {
 
       // 获取位置信息（包含锻造师等级）
       const location = await Location.findById(locationId);
-      if (!location || !location.npc.forge) {
+      if (!location || !location.npc.forge || forgeToolLevel > location.npc.forge.level) {
         return {
           success: false,
-          message: '当前位置没有锻造师',
+          message: '当前位置没有该等级的锻造炉',
           forgeCost: 0
         };
       }
@@ -361,7 +362,7 @@ export class ForgeService {
       }
 
       const forgerLevel = curForgeHeartSkill.level;
-      const toolLevel = location.npc.forge.level;
+      const toolLevel = forgeToolLevel;
 
       // 获取材料信息
       const materialModels = await Material.find({ _id: { $in: materialIds } })
