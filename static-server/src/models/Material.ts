@@ -16,6 +16,11 @@ export interface IMaterial {
     hit_rate: number;
     dodge_rate: number;
   };
+  probability_bonus: {
+    epic_forge: number | null;
+    legendary_forge: number | null;
+    mythic_forge: number | null;
+  };
   level: number;
   createdAt: Date;
   updatedAt: Date;
@@ -83,6 +88,20 @@ const materialSchema = new mongoose.Schema({
       type: Number,
       required: true,
       default: 1.0
+    }
+  },
+  probability_bonus: {
+    epic_forge: {
+      type: Number,
+      default: null
+    },
+    legendary_forge: {
+      type: Number,
+      default: null
+    },
+    mythic_forge: {
+      type: Number,
+      default: null
     }
   },
   level: {

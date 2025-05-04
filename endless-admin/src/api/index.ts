@@ -55,6 +55,22 @@ export interface MaterialType {
   _id: string;
   name: string;
   description?: string;
+  combat_bonus?: {
+    max_hp?: number;
+    attack?: number;
+    defense?: number;
+    crit_rate?: number;
+    crit_resist?: number;
+    crit_damage?: number;
+    crit_damage_resist?: number;
+    hit_rate?: number;
+    dodge_rate?: number;
+  };
+  probability_bonus?: {
+    epic_forge?: number;
+    legendary_forge?: number;
+    mythic_forge?: number;
+  };
 }
 
 export interface Material {
@@ -63,6 +79,22 @@ export interface Material {
   typeId: string;
   level: number;
   description?: string;
+  combat_multipliers?: {
+    max_hp: number;
+    attack: number;
+    defense: number;
+    crit_rate: number;
+    crit_resist: number;
+    crit_damage: number;
+    crit_damage_resist: number;
+    hit_rate: number;
+    dodge_rate: number;
+  };
+  probability_bonus?: {
+    epic_forge: number;
+    legendary_forge: number;
+    mythic_forge: number;
+  };
 }
 
 export interface Potion {

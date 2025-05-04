@@ -17,6 +17,17 @@
     <el-form-item v-for="(_, key) in formData.combat_multipliers" :key="key" :label="getCombatStatLabel(key)">
       <el-input-number v-model="formData.combat_multipliers[key]" :min="0" :step="0.1" />
     </el-form-item>
+    <el-divider>概率加成</el-divider>
+    <el-form-item v-for="(_, key) in formData.probability_bonus" :key="key" :label="getProbabilityLabel(key)">
+      <el-input-number 
+        v-model="formData.probability_bonus[key]" 
+        :min="0" 
+        :max="100"
+        :step="1"
+        :controls-position="'right'"
+        placeholder="留空表示无加成"
+      />
+    </el-form-item>
   </div>
 </template>
 
@@ -34,6 +45,11 @@ interface FormData {
   typeId: string
   level: number
   combat_multipliers: Record<string, number>
+  probability_bonus: {
+    epic_forge: number | null
+    legendary_forge: number | null
+    mythic_forge: number | null
+  }
 }
 
 defineProps<{
@@ -54,6 +70,16 @@ const getCombatStatLabel = (key: string) => {
     crit_damage_resist: '暴击伤害抗性',
     hit_rate: '命中值',
     dodge_rate: '闪避值'
+  }
+  return labels[key] || key
+}
+
+// 获取概率加成标签
+const getProbabilityLabel = (key: string) => {
+  const labels: Record<string, string> = {
+    epic_forge: '锻造史诗加成',
+    legendary_forge: '锻造传说加成',
+    mythic_forge: '锻造神话加成'
   }
   return labels[key] || key
 }

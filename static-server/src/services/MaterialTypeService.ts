@@ -16,6 +16,11 @@ export interface MaterialTypeData {
     hit_rate?: number;
     dodge_rate?: number;
   };
+  probability_bonus: {
+    epic_forge?: number;
+    legendary_forge?: number;
+    mythic_forge?: number;
+  };
 }
 
 export interface MaterialTypeQueryParams {

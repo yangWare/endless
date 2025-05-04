@@ -48,6 +48,20 @@ const materialTypeSchema = new mongoose.Schema({
       default: null
     }
   },
+  probability_bonus: {
+    epic_forge: {
+      type: Number,
+      default: null
+    },
+    legendary_forge: {
+      type: Number,
+      default: null
+    },
+    mythic_forge: {
+      type: Number,
+      default: null
+    }
+  },
   createdAt: {
     type: Date,
     default: () => new Date()

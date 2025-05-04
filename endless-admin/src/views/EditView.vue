@@ -120,6 +120,11 @@ const formData = reactive({
     hit_rate: null,
     dodge_rate: null,
   },
+  probability_bonus: {
+    epic_forge: null,
+    legendary_forge: null,
+    mythic_forge: null,
+  },
 })
 
 // 表单验证规则
@@ -238,6 +243,7 @@ const submitForm = async () => {
               name: formData.name,
               description: formData.description,
               combat_bonus: formData.combat_bonus,
+              probability_bonus: formData.probability_bonus,
             }
             break
           case 'material':
@@ -248,6 +254,7 @@ const submitForm = async () => {
               typeId: formData.typeId,
               level: formData.level,
               combat_multipliers: formData.combat_multipliers,
+              probability_bonus: formData.probability_bonus,
             }
             break
           case 'potion':
