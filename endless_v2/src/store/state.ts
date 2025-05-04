@@ -7,8 +7,13 @@ interface State {
   currentMapId: string
   currentLocationId: string
   player: Player
-  enemyInstances: Record<string, EnemyInstance>
-  locationOfEnemy: string
+  enemyInstances: Record<string, EnemyInstance> // 当前locationOfEnemy地点所有敌人实例缓存
+  locationOfEnemy: string // 当前敌人列表所在的id
+  locationEnemies: Array<{
+    instanceId: string
+    name: string
+    enemy: EnemyInstance
+  }> // 当前玩家遇见的敌人列表
   currentMap: Map | null
   mapLocations: Record<string, Location>
   shopPotions: Record<string, Potion>  // 商店药水缓存
@@ -28,7 +33,8 @@ export const state = reactive<State>({
   shopPotions: {},
   materials: {},
   potions: {},
-  materialCombatStats: {}
+  materialCombatStats: {},
+  locationEnemies: []
 })
 
 ;(window as any).createUser = playerApi.create
@@ -238,4 +244,23 @@ export async function loadPotions(potionIds: string[]): Promise<void> {
   } catch (error) {
     console.error('加载药水数据失败:', error)
   }
+}
+
+/**
+ * 更新当前地点的敌人列表
+ * @param {EnemyInstance[]} enemies 敌人列表
+ */
+export function updateLocationEnemies(enemies: Array<{
+  instanceId: string
+  name: string
+  enemy: EnemyInstance
+}>): void {
+  state.locationEnemies = enemies
+}
+
+/**
+ * 清空当前地点的敌人列表
+ */
+export function clearLocationEnemies(): void {
+  state.locationEnemies = []
 }

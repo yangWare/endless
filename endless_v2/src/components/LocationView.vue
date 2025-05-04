@@ -42,29 +42,31 @@
               复活
             </span>
           </div>
-          <div v-else-if="hasEnemies" class="enemies-list-content">
-            <div
-              v-for="enemy in locationEnemies"
-              :key="enemy.instanceId"
-              class="enemy-item"
-              @click="showEnemyInfo(enemy)"
-            >
-              <span>
-                {{ enemy.name }}
-                <span v-if="getEnemyLevelTag(enemy)" :class="['level-tag', getEnemyLevelTag(enemy).toLowerCase()]">
-                  {{ getEnemyLevelTag(enemy) }}
+          <div v-else class="enemies-container">
+            <div v-if="hasEnemies" class="enemies-list-content">
+              <div
+                v-for="enemy in locationEnemies"
+                :key="enemy.instanceId"
+                class="enemy-item"
+                @click="showEnemyInfo(enemy)"
+              >
+                <span>
+                  {{ enemy.name }}
+                  <span v-if="getEnemyLevelTag(enemy)" :class="['level-tag', getEnemyLevelTag(enemy).toLowerCase()]">
+                    {{ getEnemyLevelTag(enemy) }}
+                  </span>
+                  (HP: {{ enemy.enemy.hp }})
                 </span>
-                (HP: {{ enemy.enemy.hp }})
-              </span>
-              <button @click.stop="handleAttackEnemy(enemy)" :disabled="isAttacking">
-                攻击
-              </button>
+                <button @click.stop="handleAttackEnemy(enemy)" :disabled="isAttacking">
+                  攻击
+                </button>
+              </div>
             </div>
-          </div>
-          <div v-else class="empty-enemies">
-            <span class="explore-button" @click="handleExplore(false)">
-              继续探索
-            </span>
+            <div class="explore-button-container">
+              <span class="explore-button" @click="handleExplore(false)" :class="{ 'with-enemies': hasEnemies }">
+                继续探索
+              </span>
+            </div>
           </div>
         </div>
 
@@ -98,7 +100,7 @@
 <script setup lang="ts">
 import { ref, computed, defineEmits, onMounted, watch, nextTick } from 'vue'
 import type { EnemyInstance } from '../api'
-import { state, updatePlayer } from '../store/state'
+import { state, updatePlayer, updateLocationEnemies, clearLocationEnemies } from '../store/state'
 import {  generateEnemyCombatStats, generateEnemies } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
 import { playerApi } from '../api'
@@ -121,7 +123,6 @@ interface Enemy {
 }
 
 const activeTab = ref<'enemies' | 'npcs' | null>('enemies')
-const locationEnemies = ref<Enemy[]>([])
 const combatLogs = ref<CombatLog[]>([])
 const isAttacking = ref(false)
 const showForge = ref(false)
@@ -130,6 +131,7 @@ const showEnemyInfoModal = ref(false)
 const enemyInfoContent = ref('')
 
 const location = computed(() => state.mapLocations[state.currentLocationId])
+const locationEnemies = computed(() => state.locationEnemies)
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -146,7 +148,9 @@ const ensureValidTab = (): void => {
   }
 }
 
-const updateLocationEnemies = (): void => {
+const updateLocationEnemiesDelay = async () => {
+   // 添加等待效果，等待效果为2~4秒
+  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
   const currentLocationEnemies = state.enemyInstances
   const possibleEnemies = Object.entries(currentLocationEnemies)
     .filter(([_, enemy]) => {
@@ -167,17 +171,10 @@ const updateLocationEnemies = (): void => {
     })
   
   const maxEnemies = Math.min(5, possibleEnemies.length)
-  locationEnemies.value = possibleEnemies
+  const enemies = possibleEnemies
     .sort(() => Math.random() - 0.5)
     .slice(0, maxEnemies)
-}
-const deleteLocationEnemies = (enemyInstanceId: string) => {
-  locationEnemies.value = locationEnemies.value.filter((enemy) => enemy.instanceId !== enemyInstanceId)
-}
-const updateLocationEnemiesDelay = async () => {
-   // 添加等待效果，等待效果为2~4秒
-  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
-  updateLocationEnemies()
+  updateLocationEnemies(enemies)
 }
 
 onMounted(async () => {
@@ -187,10 +184,7 @@ onMounted(async () => {
   })
   ensureValidTab()
   if (state.locationOfEnemy !== state.currentLocationId) {
-    generateEnemies().then(() => {
-      updateLocationEnemies()
-    })
-  } else {
+    await generateEnemies()
     handleExplore(true)
   }
 })
@@ -269,7 +263,7 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
 
     if (result.result === 'enemy_refresh') {
       generateEnemies()
-      locationEnemies.value = []
+      clearLocationEnemies()
       await addMessageWithDelay(`${enemy.name}逃跑了，请继续探索`)
       return
     }
@@ -292,7 +286,8 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
             .join('、')
           await addMessageWithDelay(`获得了：${dropsMessage}`)
         }
-        deleteLocationEnemies(enemy.instanceId)
+        const currentEnemies = state.locationEnemies.filter(e => e.instanceId !== enemy.instanceId)
+        updateLocationEnemies(currentEnemies)
         return
       }
     }
@@ -323,7 +318,7 @@ const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
 }
 
 const hasEnemies = computed((): boolean => {
-  return locationEnemies.value.length > 0
+  return state.locationEnemies.length > 0
 })
 
 const showEnemiesTab = computed((): boolean => {
@@ -372,7 +367,7 @@ const handleExplore = async (isStart?: boolean): Promise<void> => {
   await addMessageWithDelay(`你${isStart ? '开始' : '继续'}向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
   // 添加等待效果，等待效果为2~4秒
   await updateLocationEnemiesDelay()
-  if (locationEnemies.value.length === 0) {
+  if (state.locationEnemies.length === 0) {
     await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
   } else {
     await addMessageWithDelay('发现敌对生物，准备战斗吧')
@@ -485,12 +480,19 @@ const getEnemyLevelTag = (enemy: Enemy): string => {
   margin-bottom: 20px;
 }
 
+.enemies-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .enemies-list-content {
-  max-height: calc(100vh - 500px);
+  flex: 1;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   margin: 4px 0;
+  padding-bottom: 16px;
 }
 
 .enemies-list-content::-webkit-scrollbar {
@@ -602,6 +604,15 @@ const getEnemyLevelTag = (enemy: Enemy): string => {
   padding: 10px;
 }
 
+.explore-button-container {
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+  position: sticky;
+  bottom: 12px;
+  z-index: 1;
+}
+
 .explore-button {
   padding: 8px 16px;
   font-size: 14px;
@@ -616,6 +627,11 @@ const getEnemyLevelTag = (enemy: Enemy): string => {
   min-width: 120px;
   position: relative;
   overflow: hidden;
+}
+
+.explore-button.with-enemies {
+  background: linear-gradient(135deg, #A0522D, #8B4513);
+  box-shadow: 0 2px 8px rgba(139, 69, 19, 0.4);
 }
 
 .explore-button::before {
