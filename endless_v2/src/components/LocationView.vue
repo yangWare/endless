@@ -363,6 +363,10 @@ const isExploring = ref(false)
 const handleExplore = async (isStart?: boolean): Promise<void> => {
   // 添加拦截，避免反复触发
   if (isExploring.value) return
+  // 敌人列表为空，则不探索
+  if (Object.entries(state.enemyInstances).length === 0) {
+    return
+  }
   clearLocationEnemies()
   isExploring.value = true
   await addMessageWithDelay(`你${isStart ? '开始' : '继续'}向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
