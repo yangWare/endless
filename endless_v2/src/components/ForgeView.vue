@@ -48,11 +48,14 @@
             class="material-item"
             :class="{
               selected: selectedMaterials.some((item) => item.material._id === material.material._id),
+              'assist-material': hasProbabilityBonus(material.material),
+              'assist-selected': selectedAssistMaterials.some((item) => item.material._id === material.material._id)
             }"
             @click="toggleMaterial(material)"
           >
             <div class="material-name">{{ material.material.name }}</div>
             <div class="material-count">x{{ material.count }}</div>
+            <div v-if="hasProbabilityBonus(material.material)" class="assist-badge">辅</div>
           </div>
         </div>
       </div>
@@ -68,6 +71,21 @@
           >
             {{ item.material.name }}
             <button @click="removeMaterial(item.material._id)">移除</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 已选辅助材料展示 -->
+      <div class="selected-materials" v-if="selectedAssistMaterials.length > 0">
+        <div class="section-title">已选辅助材料 (1-5件)</div>
+        <div class="selected-list">
+          <div
+            v-for="(item, idx) in selectedAssistMaterials"
+            :key="idx"
+            class="selected-item assist-material"
+          >
+            {{ item.material.name }}
+            <button @click="removeAssistMaterial(item.material._id)">移除</button>
           </div>
         </div>
       </div>
@@ -128,6 +146,7 @@ export default defineComponent({
   emits: ['close'],
   setup(props, { emit }) {
     const selectedMaterials = ref<SelectedMaterial[]>([])
+    const selectedAssistMaterials = ref<SelectedMaterial[]>([])
     const selectedType = ref<string>('')
     const selectedForgeLevel = ref<number>(1)
     const forgeResult = ref<ForgeResult | null>(null)
@@ -174,18 +193,36 @@ export default defineComponent({
       })
     }
 
+    // 检查材料是否有概率加成
+    const hasProbabilityBonus = (material: Material): boolean => {
+      return material.probability_bonus?.epic_forge !== null ||
+             material.probability_bonus?.legendary_forge !== null ||
+             material.probability_bonus?.mythic_forge !== null
+    }
+
     // 切换材料选择状态
     const toggleMaterial = (material: typeof groupedMaterials.value[number]): void => {
-      // 选中的材料总数大于5，则不添加
-      if (selectedMaterials.value.length >= 5) {
-        return
+      if (hasProbabilityBonus(material.material)) {
+        // 如果是辅助材料，添加到辅助材料区
+        if (selectedAssistMaterials.value.length >= 5) {
+          return
+        }
+        const selectedCount = selectedAssistMaterials.value.filter(item => item.material._id === material.material._id).length
+        if (selectedCount >= material.count) {
+          return
+        }
+        selectedAssistMaterials.value.push({ material: material.material, index: availableMaterials.value.findIndex(m => m._id === material.material._id) })
+      } else {
+        // 如果是普通材料，添加到主材料区
+        if (selectedMaterials.value.length >= 5) {
+          return
+        }
+        const selectedCount = selectedMaterials.value.filter(item => item.material._id === material.material._id).length
+        if (selectedCount >= material.count) {
+          return
+        }
+        selectedMaterials.value.push({ material: material.material, index: availableMaterials.value.findIndex(m => m._id === material.material._id) })
       }
-      // 选中的数量大于已有的数量，则不添加
-      const selectedCount = selectedMaterials.value.filter(item => item.material._id === material.material._id).length
-      if (selectedCount >= material.count) {
-        return
-      }
-      selectedMaterials.value.push({ material: material.material, index: availableMaterials.value.findIndex(m => m._id === material.material._id) })
     }
 
     // 移除已选材料
@@ -193,6 +230,14 @@ export default defineComponent({
       const index = selectedMaterials.value.findIndex(item => item.material._id === materialId)
       if (index !== -1) {
         selectedMaterials.value.splice(index, 1)
+      }
+    }
+
+    // 移除已选辅助材料
+    const removeAssistMaterial = (materialId: string): void => {
+      const index = selectedAssistMaterials.value.findIndex(item => item.material._id === materialId)
+      if (index !== -1) {
+        selectedAssistMaterials.value.splice(index, 1)
       }
     }
 
@@ -222,6 +267,7 @@ export default defineComponent({
         // 调用forge.js中的锻造方法
         const result = await forgeEquipment({
           materials: selectedMaterials.value.map((item) => item.material._id),
+          assistMaterials: selectedAssistMaterials.value.map((item) => item.material._id),
           equipmentType: selectedType.value,
           forgeToolLevel: selectedForgeLevel.value
         })
@@ -231,6 +277,12 @@ export default defineComponent({
         if (state.player?.inventory?.materials) {
           const remaindMaterials = state.player.inventory.materials
           selectedMaterials.value.forEach((item) => {
+            const index = remaindMaterials.findIndex((material) => material === item.material._id)
+            if (index !== -1) {
+              remaindMaterials.splice(index, 1)
+            }
+          })
+          selectedAssistMaterials.value.forEach((item) => {
             const index = remaindMaterials.findIndex((material) => material === item.material._id)
             if (index !== -1) {
               remaindMaterials.splice(index, 1)
@@ -259,8 +311,9 @@ export default defineComponent({
           curForgeHeartSkill.level = result.data.curForgeHeartSkill.level
         }
         forgeResult.value = result
-        // 只清空材料选择
+        // 清空材料选择
         selectedMaterials.value = []
+        selectedAssistMaterials.value = []
       } finally {
         isForging.value = false
       }
@@ -278,6 +331,7 @@ export default defineComponent({
       i18n,
       groupedMaterials,
       selectedMaterials,
+      selectedAssistMaterials,
       selectedType,
       selectedForgeLevel,
       forgeLevels,
@@ -285,11 +339,13 @@ export default defineComponent({
       forgeResult,
       toggleMaterial,
       removeMaterial,
+      removeAssistMaterial,
       selectEquipmentType,
       selectForgeLevel,
       startForge,
       handleCloseClick,
-      getEquipmentColor
+      getEquipmentColor,
+      hasProbabilityBonus
     }
   },
 })
@@ -474,7 +530,6 @@ export default defineComponent({
 
 .material-item:hover {
   transform: translateY(-1px);
-  border-color: #ffd700;
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
@@ -486,6 +541,20 @@ export default defineComponent({
   background-color: #ff4d00;
   border-color: #ff4d00;
   box-shadow: 0 4px 12px rgba(255, 77, 0, 0.3);
+}
+
+.material-item.assist-material {
+  position: relative;
+}
+
+.material-item.assist-material:hover {
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.material-item.assist-selected {
+  background-color: #ffd700;
+  border-color: #ffd700;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
 .material-name {
@@ -508,18 +577,16 @@ export default defineComponent({
   font-weight: 500;
 }
 
-.materials-selection::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.materials-selection::-webkit-scrollbar-thumb {
-  background: rgba(255, 215, 0, 0.3);
-  border-radius: 3px;
-}
-
-.materials-selection::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 215, 0, 0.5);
+.assist-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(255, 215, 0, 0.9);
+  color: #000;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .selected-list {
@@ -562,8 +629,21 @@ export default defineComponent({
   transition: all 0.3s ease;
 }
 
+.selected-item.assist-material button {
+  background-color: #ffd700;
+}
+
 .selected-item button:hover {
   background-color: #ff6b35;
+}
+
+.selected-item.assist-material {
+  background-color: rgba(255, 215, 0, 0.1);
+}
+
+.selected-item.assist-material:hover {
+  border-color: #ffd700;
+  background-color: rgba(255, 215, 0, 0.2);
 }
 
 .forge-button {

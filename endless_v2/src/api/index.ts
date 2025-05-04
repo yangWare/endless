@@ -168,6 +168,11 @@ export interface Material {
     hit_rate: number;
     dodge_rate: number;
   };
+  probability_bonus: {
+    epic_forge: number | null;
+    legendary_forge: number | null;
+    mythic_forge: number | null;
+  };
   level: number;
   createdAt?: string;
   updatedAt?: string;
@@ -324,6 +329,7 @@ export const locationApi = {
     locationId: string;
     playerId: string;
     materialIds: string[];
+    assistMaterialIds: string[];
     equipmentType: string;
     forgeToolLevel: number;
   }): Promise<BaseResponse<{
