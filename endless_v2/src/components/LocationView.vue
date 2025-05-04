@@ -610,7 +610,6 @@ const getEnemyLevelTag = (enemy: Enemy): string => {
 }
 
 .explore-button-container {
-  padding: 12px 0;
   display: flex;
   justify-content: center;
   position: sticky;
