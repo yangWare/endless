@@ -1,5 +1,6 @@
 import { MaterialService, MaterialData, MaterialQueryParams } from '../services/MaterialService';
 import { BaseContext } from '../types/context';
+import { Material } from '../models/Material';
 
 export class MaterialAPI {
   /**
@@ -178,6 +179,30 @@ export class MaterialAPI {
       ctx.body = {
         success: true,
         data: combatStats
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * 获取材料概率加成
+   */
+  static async getProbabilityBonus(ctx: BaseContext) {
+    try {
+      const { id } = ctx.params;
+      if (!id) {
+        throw new Error('缺少材料ID');
+      }
+
+      const probabilityBonus = await MaterialService.calculateMaterialProbabilityBonus(id);
+      ctx.body = {
+        success: true,
+        data: probabilityBonus
       };
     } catch (error: any) {
       ctx.status = 400;

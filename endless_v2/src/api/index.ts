@@ -387,6 +387,10 @@ export const materialApi = {
   // 获取材料战斗属性
   getCombatStats: (id: string): Promise<BaseResponse<Record<string, number>>> => 
     api.get(`/materials/${id}/combat-stats`),
+
+  // 获取材料概率加成
+  getProbabilityBonus: (id: string): Promise<BaseResponse<Record<string, number>>> => 
+    api.get(`/materials/${id}/probability-bonus`),
   
   // 创建材料
   create: (data: MaterialData): Promise<BaseResponse<Material>> => 

@@ -19,6 +19,7 @@ interface ForgeParams {
   playerId: string;
   locationId: string;
   materialIds: string[];
+  assistMaterialIds: string[];
   equipmentType: 'weapon' | 'armor' | 'wrist' | 'accessory' | 'helmet' | 'boots';
   forgeToolLevel: number;
 }
@@ -192,15 +193,40 @@ export class ForgeService {
    * @param maxSuccessRate 最高材料成功率
    * @returns 装备等级
    */
-  private calculateEquipmentLevel(forgerLevel: number, toolLevel: number, maxSuccessRate: number): number {
+  private calculateEquipmentLevel(forgerLevel: number, toolLevel: number, maxSuccessRate: number, successfulAssistMaterials: MaterialDocument[]): number {
     // 计算随机数
     const random = Math.random();
     let cumulativeChance = 0;
-    
+
+    // 根据辅助材料计算各品阶装备的成功率
+    const originalLevelConfig = JSON.parse(JSON.stringify(EQUIPMENT_LEVELS_CONFIG));
+    successfulAssistMaterials.forEach(item => {
+      const materialType = item.typeId as unknown as {
+        probability_bonus: {
+          epic_forge: number | null;
+          legendary_forge: number | null;
+          mythic_forge: number | null;
+        };
+      };
+      if (item.probability_bonus.epic_forge && materialType.probability_bonus.epic_forge) {
+        originalLevelConfig[4].chance += item.probability_bonus.epic_forge * materialType.probability_bonus.epic_forge;
+      }
+      if (item.probability_bonus.legendary_forge && materialType.probability_bonus.legendary_forge) {
+        originalLevelConfig[5].chance += item.probability_bonus.legendary_forge * materialType.probability_bonus.legendary_forge;
+      }
+      if (item.probability_bonus.mythic_forge && materialType.probability_bonus.mythic_forge) {
+        originalLevelConfig[6].chance += item.probability_bonus.mythic_forge * materialType.probability_bonus.mythic_forge;
+      }
+      // 所有其他品阶额外加成的概率均从普通概率上减除
+      originalLevelConfig[1].chance = 1 - originalLevelConfig[2].chance - originalLevelConfig[3].chance - originalLevelConfig[4].chance - originalLevelConfig[5].chance - originalLevelConfig[6].chance;
+    })
+
+    console.log(originalLevelConfig)
+
     // 先根据概率确定基础等级
     let baseLevel = 1; // 默认普通
-    for (const level in EQUIPMENT_LEVELS_CONFIG) {
-      const levelConfig = EQUIPMENT_LEVELS_CONFIG[Number(level) as keyof typeof EQUIPMENT_LEVELS_CONFIG];
+    for (const level in originalLevelConfig) {
+      const levelConfig = originalLevelConfig[Number(level) as keyof typeof originalLevelConfig];
       cumulativeChance += levelConfig.chance;
       
       if (random <= cumulativeChance) {
@@ -339,7 +365,7 @@ export class ForgeService {
    * @returns 锻造结果
    */
   async forge(params: ForgeParams): Promise<ForgeResult> {
-    const { playerId, locationId, materialIds, equipmentType, forgeToolLevel } = params;
+    const { playerId, locationId, materialIds, assistMaterialIds, equipmentType, forgeToolLevel } = params;
 
     try {
       // 验证材料数量
@@ -347,6 +373,15 @@ export class ForgeService {
         return {
           success: false,
           message: '材料数量必须在1-5之间',
+          forgeCost: 0
+        };
+      }
+
+      // 验证辅助材料数量
+      if (assistMaterialIds.length > 5) {
+        return {
+          success: false,
+          message: '辅助材料数量不能超过5个',
           forgeCost: 0
         };
       }
@@ -381,11 +416,12 @@ export class ForgeService {
       const toolLevel = forgeToolLevel;
 
       // 获取材料信息
-      const materialModels = await Material.find({ _id: { $in: materialIds } })
+      const materialModels = await Material.find({ _id: { $in: [...materialIds, ...assistMaterialIds] } })
         .populate('typeId');
       const materials = materialIds.map(id => materialModels.find(model => model._id.toString() === id)).filter(Boolean) as MaterialDocument[];
+      const assistMaterials = assistMaterialIds.map(id => materialModels.find(model => model._id.toString() === id)).filter(Boolean) as MaterialDocument[];
 
-      if (materials.length !== materialIds.length) {
+      if (materials.length !== materialIds.length || assistMaterials.length !== assistMaterialIds.length) {
         return {
           success: false,
           message: '部分材料不存在',
@@ -395,7 +431,7 @@ export class ForgeService {
 
       // 验证玩家是否拥有这些材料
       const playerMaterialIds = (player.inventory?.materials || []).map(id => id.toString());
-      const hasAllMaterials = materialIds.every(id => playerMaterialIds.includes(id));
+      const hasAllMaterials = materialIds.every(id => playerMaterialIds.includes(id)) && assistMaterialIds.every(id => playerMaterialIds.includes(id));
       if (!hasAllMaterials) {
         return {
           success: false,
@@ -460,8 +496,21 @@ export class ForgeService {
       });
       const maxSuccessRate = maxLevelMaterial.successRate;
 
+      // 计算辅助材料成功率
+      const assistMaterialResults = assistMaterials.map(material => {
+        const successRate = this.calculateForgeSuccess(forgerLevel, toolLevel, material.level);
+        return {
+          material,
+          success: Math.random() < successRate,
+          successRate,
+          forgeCost: 0
+        };
+      });
+
+      const successfulAssistMaterials = assistMaterialResults.filter(result => result.success);
+
       // 计算装备等级
-      const equipmentLevel = this.calculateEquipmentLevel(forgerLevel, toolLevel, maxSuccessRate);
+      const equipmentLevel = this.calculateEquipmentLevel(forgerLevel, toolLevel, maxSuccessRate, successfulAssistMaterials.map(result => result.material));
 
       // 初始化装备属性
       const equipment: IEquipment = {
@@ -523,8 +572,15 @@ export class ForgeService {
         }
       }
 
+      // 为每个辅助材料ID找到第一个匹配的索引并移除
+      for (const materialId of assistMaterialIds) {
+        const index = updatedMaterials.findIndex(id => id.toString() === materialId);
+        if (index !== -1) {
+          updatedMaterials.splice(index, 1);
+        }
+      }
       const forgeLevel = this.calculateForgeLevel(
-        successfulMaterials.reduce((sum, material) => sum + material.material.level, 0),
+        successfulMaterials.reduce((sum, material) => sum + material.material.level, 0) + successfulAssistMaterials.reduce((sum, material) => sum + material.material.level, 0),
         equipmentLevel,
         curForgeHeartSkill
       );
@@ -540,7 +596,7 @@ export class ForgeService {
 
       return {
         success: true,
-        message: `锻造成功！${successfulMaterials.length}个材料成功融合`,
+        message: `锻造成功！${successfulMaterials.length}个材料成功融合! ${successfulAssistMaterials.length}个辅助材料成功融合!`,
         equipment,
         forgeCost,
         curForgeHeartSkill

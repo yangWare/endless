@@ -51,4 +51,7 @@ router.get('/:id/combat-stats', async (ctx: ParamContext) => {
   await MaterialAPI.calculateCombatStats(ctx);
 });
 
+// 获取材料概率加成
+router.get('/:id/probability-bonus', MaterialAPI.getProbabilityBonus);
+
 export default router; 

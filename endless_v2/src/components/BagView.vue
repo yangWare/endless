@@ -63,6 +63,11 @@ interface MaterialDetails {
   level: number
   type: string
   stats: string
+  probabilityBonus?: {
+    epic_forge: number | null
+    legendary_forge: number | null
+    mythic_forge: number | null
+  }
 }
 
 interface PotionDetails {
@@ -130,44 +135,90 @@ const getEquipmentColor = (level: number): string => {
   return i18nConfig.equipment_level[String(level) as keyof typeof i18nConfig.equipment_level].color
 }
 
+const fetchMaterialCombatStats = async (materialId: string) => {
+  if (state.materialCombatStats[materialId]) {
+    return state.materialCombatStats[materialId]
+  }
+
+  try {
+    const response = await materialApi.getCombatStats(materialId)
+    if (response.success) {
+      state.materialCombatStats[materialId] = response.data
+      return response.data
+    }
+    console.error('获取材料战斗属性失败:', response.message)
+    return null
+  } catch (error) {
+    console.error('获取材料战斗属性失败:', error)
+    return null
+  }
+}
+
+const fetchMaterialProbabilityBonus = async (materialId: string) => {
+  if (state.materialProbabilityBonus[materialId]) {
+    return state.materialProbabilityBonus[materialId]
+  }
+
+  try {
+    const response = await materialApi.getProbabilityBonus(materialId)
+    if (response.success) {
+      state.materialProbabilityBonus[materialId] = response.data
+      return response.data
+    }
+    console.error('获取材料概率加成失败:', response.message)
+    return null
+  } catch (error) {
+    console.error('获取材料概率加成失败:', error)
+    return null
+  }
+}
+
 const getMaterialDetails = async (material: Material): Promise<MaterialDetails | null> => {
   if (!material) return null
   
-  // 如果 state 中没有该材料的战斗属性，则从后端获取
-  if (!state.materialCombatStats[material._id]) {
-    try {
-      const response = await materialApi.getCombatStats(material._id)
-      if (response.success) {
-        // 更新 state 中的缓存
-        state.materialCombatStats[material._id] = response.data
-      } else {
-        console.error('获取材料战斗属性失败:', response.message)
-        return null
-      }
-    } catch (error) {
-      console.error('获取材料战斗属性失败:', error)
-      return null
-    }
-  }
+  const [combatStats, probabilityBonus] = await Promise.all([
+    fetchMaterialCombatStats(material._id),
+    fetchMaterialProbabilityBonus(material._id)
+  ])
+
+  if (!combatStats) return null
 
   let statsInfo = ''
-  const combatStats = state.materialCombatStats[material._id]
   for (const [stat, value] of Object.entries(combatStats)) {
     statsInfo += `${statNameMap[stat as keyof typeof statNameMap] || stat}: ${value}<br>`
+  }
+  if (statsInfo) {
+    statsInfo = '战斗属性加成:<br>' + statsInfo
+  }
+
+  // 添加概率加成信息
+  if (probabilityBonus) {
+    statsInfo += '辅助属性加成:<br>'
+    if (probabilityBonus.epic_forge) {
+      statsInfo += `史诗锻造: +${probabilityBonus.epic_forge * 100}%<br>`
+    }
+    if (probabilityBonus.legendary_forge) {
+      statsInfo += `传说锻造: +${probabilityBonus.legendary_forge * 100}%<br>`
+    }
+    if (probabilityBonus.mythic_forge) {
+      statsInfo += `神话锻造: +${probabilityBonus.mythic_forge * 100}%<br>`
+    }
   }
 
   return {
     name: material.name,
     level: material.level,
     type: material.typeId.name,
-    stats: statsInfo.trim(),
+    stats: statsInfo.trim()
   }
 }
 
 const showMaterialInfo = async (material: Material) => {
   const details = await getMaterialDetails(material)
   if (details) {
-    messageContent.value = `${details.name}<br>类型: ${details.type}<br>等级: ${details.level}<br>属性加成:<br>${details.stats}`
+    let message = `${details.name}<br>类型: ${details.type}<br>等级: ${details.level}<br>${details.stats}`
+    
+    messageContent.value = message
     messageType.value = 'info'
     showMessage.value = true
     showButton.value = false

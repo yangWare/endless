@@ -202,7 +202,7 @@ export class LocationAPI {
    */
   static async forge(ctx: BaseContext) {
     try {
-      const { playerId, materialIds, equipmentType, forgeToolLevel } = ctx.request.body;
+      const { playerId, materialIds, assistMaterialIds, equipmentType, forgeToolLevel } = ctx.request.body;
       const locationId = ctx.params.id;
 
       // 参数验证
@@ -214,6 +214,9 @@ export class LocationAPI {
       }
       if (!materialIds || !Array.isArray(materialIds) || materialIds.length === 0) {
         throw new Error('缺少或无效的材料ID列表');
+      }
+      if (assistMaterialIds && (!Array.isArray(assistMaterialIds) || assistMaterialIds.length > 5)) {
+        throw new Error('辅助材料数量不能超过5个');
       }
       if (!equipmentType || !['weapon', 'armor', 'wrist', 'accessory', 'helmet', 'boots'].includes(equipmentType)) {
         throw new Error('无效的装备类型');
@@ -230,6 +233,7 @@ export class LocationAPI {
         playerId,
         locationId,
         materialIds,
+        assistMaterialIds: assistMaterialIds || [],
         equipmentType,
         forgeToolLevel
       });

@@ -20,6 +20,7 @@ interface State {
   materials: Record<string, Material>   // 材料缓存
   potions: Record<string, Potion>       // 药水缓存
   materialCombatStats: Record<string, Record<string, number>> // 材料战斗属性缓存
+  materialProbabilityBonus: Record<string, Record<string, number>> // 材料概率加成缓存
 }
 
 export const state = reactive<State>({
@@ -34,6 +35,7 @@ export const state = reactive<State>({
   materials: {},
   potions: {},
   materialCombatStats: {},
+  materialProbabilityBonus: {},
   locationEnemies: []
 })
 

@@ -197,4 +197,40 @@ export class MaterialService {
       throw new Error(`计算材料战斗属性失败: ${error.message}`);
     }
   }
+
+  /**
+   * 计算材料的概率加成
+   * @param materialId 材料ID
+   * @returns 计算后的概率加成
+   */
+  static async calculateMaterialProbabilityBonus(materialId: string) {
+    try {
+      const material = await Material.findById(materialId).populate('typeId');
+      if (!material) {
+        throw new Error('材料不存在');
+      }
+
+      const materialType = material.typeId as unknown as {
+        probability_bonus: {
+          epic_forge: number | null;
+          legendary_forge: number | null;
+          mythic_forge: number | null;
+        };
+      };
+
+      // 计算最终的概率加成
+      const probabilityBonus = {
+        epic_forge: materialType.probability_bonus.epic_forge ? 
+          materialType.probability_bonus.epic_forge * (material.probability_bonus?.epic_forge || 0) : null,
+        legendary_forge: materialType.probability_bonus.legendary_forge ? 
+          materialType.probability_bonus.legendary_forge * (material.probability_bonus?.legendary_forge || 0) : null,
+        mythic_forge: materialType.probability_bonus.mythic_forge ? 
+          materialType.probability_bonus.mythic_forge * (material.probability_bonus?.mythic_forge || 0) : null
+      };
+
+      return probabilityBonus;
+    } catch (error: any) {
+      throw new Error(`计算材料概率加成失败: ${error.message}`);
+    }
+  }
 } 
