@@ -363,8 +363,8 @@ const isExploring = ref(false)
 const handleExplore = async (isStart?: boolean): Promise<void> => {
   // 添加拦截，避免反复触发
   if (isExploring.value) return
-  // 敌人列表为空，则不探索
-  if (Object.entries(state.enemyInstances).length === 0) {
+  // 打开页面时，敌人列表为空，说明敌人队列还未加载完成则不探索
+  if (isStart && Object.entries(state.enemyInstances).length === 0) {
     return
   }
   clearLocationEnemies()

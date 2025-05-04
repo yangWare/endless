@@ -1,6 +1,5 @@
-import { state } from '../state'
+import { state, clearLocationEnemies } from '../state'
 import { playerApi } from '../../api'
-
 /**
  * 移动玩家到指定位置
  * @param toId 目标位置ID
@@ -49,4 +48,6 @@ export const move = async (toId: string): Promise<void> => {
   state.currentLocationId = toId
   // 置空当前地点的敌人列表所在的地点，以便下次刷新敌人列表
   state.locationOfEnemy = ''
+  // 置空当前地点的敌人列表
+  clearLocationEnemies()
 }
