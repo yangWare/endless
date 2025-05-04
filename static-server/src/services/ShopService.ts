@@ -90,6 +90,22 @@ export class ShopService {
         }
       });
 
+      const probabilityBonus = await MaterialService.calculateMaterialProbabilityBonus(materialId);
+      console.log(probabilityBonus);
+
+      // 计算辅助材料的价格
+      if (probabilityBonus) {
+        if (probabilityBonus.epic_forge) {
+          totalPrice += probabilityBonus.epic_forge * 100 * 1000;
+        }
+        if (probabilityBonus.legendary_forge) {
+          totalPrice += probabilityBonus.legendary_forge * 100 * 10000;
+        }
+        if (probabilityBonus.mythic_forge) {
+          totalPrice += probabilityBonus.mythic_forge * 100 * 100000;
+        }
+      }
+
       // 考虑材料等级的抑制作用 - 等级越高,锻造难度越大,价格越低
       const levelPenalty = Math.max(0.5, 0.8 - (material.level - 1) * 0.05); // 最低降低到原价的50%
       totalPrice *= levelPenalty;
