@@ -18,9 +18,9 @@ export const HEART_SKILL_CONFIG = {
       crit_damage_resist: 0,
       hit_rate: 0,
       dodge_rate: 0,
-      perception: 1,
-      stealth: 1,
-      escape: 1
+      perception: 0,
+      stealth: 0,
+      escape: 0
     },
     multiplier: {
       max_hp: 1,
@@ -32,9 +32,9 @@ export const HEART_SKILL_CONFIG = {
       crit_damage_resist: 0,
       hit_rate: 0,
       dodge_rate: 0,
-      perception: 1,
-      stealth: 1,
-      escape: 1
+      perception: 0,
+      stealth: 0,
+      escape: 0
     },
     // 升级方法
     upgrade: (exp: number, curLevel: number) => {
