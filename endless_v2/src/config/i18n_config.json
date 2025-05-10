@@ -12,7 +12,8 @@
     "dodge_rate": "闪避值",
     "perception": "感知值",
     "stealth": "隐匿值",
-    "escape": "遁速值"
+    "escape": "遁速值",
+    "rage": "暴躁值"
   },
   "equipment_position": {
     "weapon": {

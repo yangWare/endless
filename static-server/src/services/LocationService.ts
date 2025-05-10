@@ -4,6 +4,7 @@ import { EnemyInstanceService } from './EnemyInstanceService';
 import { EnemyInstance } from '../models/EnemyInstance';
 import { ShopPotionItem } from './ShopService';
 import { LocationState } from '../models/LocationState';
+import { Player } from '../models/Player';
 
 export interface LocationNPC {
   forge?: {
@@ -201,82 +202,137 @@ export class LocationService {
   }
 
   /**
-   * 生成指定地点的敌人
+   * 生成指定玩家的敌人
+   * @param playerId 玩家id
+   * @param isCotinue 是否是继续向前探索
    */
-  static async generateEnemies(locationId: string) {
+  static async generateEnemies(playerId: string, isCotinue: 0 | 1) {
     try {
-      const location = await Location.findById(locationId)
+      const player = await Player.findById(playerId)
+
+      if (!player) {
+        throw new Error('玩家不存在')
+      }
+
+      const location = await Location.findById(player.currentLocation.toString())
         .populate('enemies.creatureId');
       
       if (!location) {
         throw new Error('地点不存在');
       }
+      const locationId = location._id.toString()
 
-      // 获取当前地点的所有敌人实例
-      const enemyInstances = await EnemyInstance.find({ locationId: locationId });
+      const prevIndex = player.currentLocationIndex
+      let currentIndex = prevIndex
+      if (isCotinue) {
+        // 每次探索固定向前移动7格
+        currentIndex += 7
+        await Player.findByIdAndUpdate(
+          playerId,
+          {
+            currentLocationIndex: currentIndex
+          }
+        );
+      }
+
+      // 1. 获取当前地点的所有敌人实例
+      const enemyInstances = await EnemyInstance.find({ locationId: locationId }).populate('creatureId', 'name');
       
-      // 检查每个敌人实例是否需要刷新
-      const instancesToDelete: string[] = [];
-      const instancesToKeep: string[] = [];
-
-      for (const instance of enemyInstances) {
-        const enemy = location.enemies.find(e => e.creatureId._id.toString() === instance.creatureId.toString());
-        if (!enemy) {
-          // 如果地点配置中已经移除了这个敌人，则删除实例
-          instancesToDelete.push(instance._id.toString());
-          continue;
-        }
-
-        const currentTime = Date.now();
-        const createTime = instance.createdAt.getTime();
-        const updateDuration = enemy.updateDuration;
-
-        if (currentTime - createTime >= updateDuration) {
-          // 如果超过刷新时间，则删除实例
-          instancesToDelete.push(instance._id.toString());
+      // 2. 删除过期项
+      const validEnemyIds = location.enemies.map(e => e.creatureId._id.toString());
+      const instancesToDelete: typeof enemyInstances = []
+      const remainingInstances: typeof enemyInstances  = []
+      enemyInstances.forEach(instance => {
+        if (instance.locationIndex === -1 || !validEnemyIds.includes(instance.creatureId._id.toString())) {
+          instancesToDelete.push(instance)
         } else {
-          // 否则保留实例
-          instancesToKeep.push(instance._id.toString());
+          remainingInstances.push(instance)
         }
-      }
+      });
 
-      // 删除需要刷新的敌人实例
       if (instancesToDelete.length > 0) {
-        await EnemyInstance.deleteMany({ _id: { $in: instancesToDelete } });
+        await EnemyInstance.deleteMany({ 
+          _id: { $in: instancesToDelete.map(i => i._id) } 
+        });
       }
 
-      // 生成新的敌人实例
-      const newInstances = [];
-      for (const enemy of location.enemies || []) {
+      // 2.5 检查并补足敌人数量
+      for (const enemy of location.enemies) {
         const creature = enemy.creatureId as any;
         const maxCount = enemy.maxCount;
-
+        
         // 计算当前已有的该类型敌人数量
-        const existingCount = instancesToKeep.filter(id => {
-          const instance = enemyInstances.find(i => i._id.toString() === id);
-          return instance && instance.creatureId.toString() === creature._id.toString();
-        }).length;
+        const existingCount = remainingInstances.filter(instance => 
+          instance.creatureId._id.toString() === creature._id.toString()
+        ).length;
 
-        // 生成新的敌人实例
+        // 生成新的敌人实例直到达到最大数量
         for (let i = existingCount; i < maxCount; i++) {
-          const enemyInstance = new EnemyInstance({
-            creatureId: creature._id,
+          const newInstance = new EnemyInstance({
+            creatureId: creature,
             locationId: locationId,
             hp: 100, // 临时值，后面会更新
-            level: creature.level
+            level: creature.level,
+            locationIndex: Math.floor(Math.random() * 100) // 0-99之间的随机数
           });
-          await enemyInstance.save();
+          // 保存一下，计算战斗属性方法依赖数据库数据
+          await newInstance.save();
+
           // 使用 EnemyInstanceService 计算战斗属性
-          const combatStats = await EnemyInstanceService.calculateCombatStats(enemyInstance._id.toString());
+          const combatStats = await EnemyInstanceService.calculateCombatStats(newInstance._id.toString());
           // 更新敌人实例的 HP
-          enemyInstance.hp = combatStats.max_hp;
-          await enemyInstance.save();
-          newInstances.push(enemyInstance);
+          newInstance.hp = combatStats.max_hp;
+          await newInstance.save();
+          remainingInstances.push(newInstance)
         }
       }
 
-      // 过滤掉需要刷新的敌人实例和hp为0的敌人实例
-      return [...enemyInstances.filter(i => instancesToKeep.includes(i._id.toString()) && i.hp > 0), ...newInstances];
+      // 3. 获取当前index前后各3格的敌人实例
+      const nearbyInstances = remainingInstances.filter(instance => {
+        const index = instance.locationIndex;
+        const left = currentIndex - 3 < 0 ? 0 : currentIndex - 3
+        const right = currentIndex + 3 > 99 ? 99 : currentIndex + 3
+        return index >= left && index <= right;
+      });
+
+      // 4. 检查并刷新死亡的敌人实例
+      const res: typeof nearbyInstances = []
+      const currentTime = Date.now();
+      for (const instance of nearbyInstances) {
+        const enemy = location.enemies.find(e => 
+          e.creatureId._id.toString() === instance.creatureId._id.toString()
+        );
+
+        if (!enemy) continue;
+
+        if (instance.hp <= 0 && (currentTime - instance.createdAt.getTime() >= enemy.updateDuration)) {
+          // 删除死亡实例
+          await EnemyInstance.findByIdAndDelete(instance._id);
+
+          // 生成新实例
+          const newInstance = new EnemyInstance({
+            creatureId: instance.creatureId,
+            locationId: locationId,
+            hp: 100, // 临时值，后面会更新
+            level: (enemy.creatureId as any).level,
+            locationIndex: Math.floor(Math.random() * 100) // 0-99之间的随机数
+          });
+
+          await newInstance.save();
+          
+          // 使用 EnemyInstanceService 计算战斗属性
+          const combatStats = await EnemyInstanceService.calculateCombatStats(newInstance._id.toString());
+          // 更新敌人实例的 HP
+          newInstance.hp = combatStats.max_hp;
+          await newInstance.save();
+          res.push(newInstance)
+        } else {
+          res.push(instance)
+        }
+      }
+
+      // 返回更新后的敌人实例列表
+      return res.filter(item => item.hp > 0)
     } catch (error: any) {
       throw new Error(`生成敌人失败: ${error.message}`);
     }

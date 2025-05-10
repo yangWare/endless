@@ -34,15 +34,15 @@ export class EnemyAPI {
    */
   static async attack(ctx: BaseContext) {
     try {
-      const { playerId, enemyInstanceId } = ctx.request.body;
+      const { playerId, enemyInstanceIds, isContinue } = ctx.request.body;
 
       // 参数验证
-      if (!playerId || !enemyInstanceId) {
+      if (!playerId || !enemyInstanceIds || ![0, 1].includes(isContinue)) {
         throw new Error('缺少必要参数');
       }
 
       // 攻击敌人
-      const result = await EnemyInstanceService.attackEnemy(playerId, enemyInstanceId);
+      const result = await EnemyInstanceService.attackEnemy(playerId, enemyInstanceIds, isContinue);
       ctx.body = {
         success: true,
         data: result

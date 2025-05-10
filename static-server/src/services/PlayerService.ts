@@ -90,6 +90,7 @@ export class PlayerService {
       },
       currentMap: firstMap._id,
       currentLocation: firstMap.startLocationId,
+      currentLocationIndex: 0,
       equipped: {
         weapon: {
           id: `default_weapon_${Date.now()}`,

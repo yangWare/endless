@@ -149,15 +149,15 @@ export class LocationAPI {
    */
   static async generateEnemies(ctx: BaseContext) {
     try {
-      const { locationId } = ctx.request.body;
+      const { playerId, isCotinue } = ctx.request.body;
 
       // 参数验证
-      if (!locationId) {
-        throw new Error('缺少位置ID');
+      if (!playerId || ![0, 1].includes(isCotinue)) {
+        throw new Error('缺少locationId或playerId或isContinue不合法');
       }
 
       // 生成敌人
-      const result = await LocationService.generateEnemies(locationId);
+      const result = await LocationService.generateEnemies(playerId, isCotinue);
       ctx.body = {
         success: true,
         data: result

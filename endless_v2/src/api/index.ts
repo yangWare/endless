@@ -49,7 +49,10 @@ export interface Player {
 // 敌人实例类型
 export interface EnemyInstance {
   _id: string;
-  creatureId: string;
+  creatureId: {
+    _id: string
+    name: string
+  };
   locationId: string;
   hp: number;
   level: number;
@@ -140,16 +143,17 @@ export interface DroppedMaterial {
 }
 
 // 攻击敌人的结果类型
-export interface AttackEnemyResult {
-  result: 'enemy_dead' | 'player_dead' | 'continue' | 'enemy_refresh';
+export type AttackEnemyResult = Record<string, {
+  result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'active_attack' | 'deactive_attack';
   damage: number;
   isCritical: boolean;
   remainingHp: number;
-  counterDamage?: number;
-  isCounterCritical?: boolean;
-  isPlayerDead?: boolean;
-  droppedMaterials?: DroppedMaterial[];
-}
+  counterDamage: number;
+  isCounterCritical: boolean;
+  isPlayerDead: boolean;
+  droppedMaterials: DroppedMaterial[];
+  enemyInstance: EnemyInstance
+}>
 
 // 材料类型
 export interface Material {
@@ -308,9 +312,11 @@ export const locationApi = {
    * 生成指定地点的敌人
    * @param locationId 地点ID
    */
-  generateEnemies: async (locationId: string) => {
+  generateEnemies: async (locationId: string, playerId: string, isCotinue: 0 | 1) => {
     const response = await api.post<EnemyInstance[]>(`/locations/${locationId}/enemies`, {
-      locationId
+      locationId,
+      playerId,
+      isCotinue
     });
     return response.data;
   },
@@ -369,7 +375,7 @@ export const enemyApi = {
    * 攻击敌人
    * @param data 攻击参数，包含 playerId 和 enemyInstanceId
    */
-  attack: async (data: { playerId: string; enemyInstanceId: string }): Promise<BaseResponse<AttackEnemyResult>> => {
+  attack: async (data: { playerId: string; enemyInstanceIds: string[], isContinue: 0 | 1 }): Promise<BaseResponse<AttackEnemyResult>> => {
     return api.post('/enemies/attack', data);
   }
 };

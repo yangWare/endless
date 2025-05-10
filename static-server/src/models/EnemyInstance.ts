@@ -19,6 +19,10 @@ const enemyInstanceSchema = new mongoose.Schema({
     ref: 'Location',
     required: true
   },
+  locationIndex: {
+    type: Number,
+    default: -1
+  },
   createdAt: {
     type: Date,
     default: () => new Date()

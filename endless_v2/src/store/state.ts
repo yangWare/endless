@@ -7,7 +7,6 @@ interface State {
   currentMapId: string
   currentLocationId: string
   player: Player
-  enemyInstances: Record<string, EnemyInstance> // 当前locationOfEnemy地点所有敌人实例缓存
   locationOfEnemy: string // 当前敌人列表所在的id
   locationEnemies: Array<{
     instanceId: string
@@ -27,7 +26,6 @@ export const state = reactive<State>({
   currentMapId: '1',
   currentLocationId: '1',
   player: null as any,
-  enemyInstances: {},
   currentMap: null,
   mapLocations: {},
   locationOfEnemy: '',
@@ -138,30 +136,8 @@ export function updateCurrentLocation(locationId: string): void {
   state.currentLocationId = locationId
 }
 
-/**
- * 更新敌人实例
- * @param {string} instanceId 敌人实例ID
- * @param {Partial<EnemyInstance>} data 要更新的数据
- */
-export function updateEnemyInstance(instanceId: string, data: Partial<EnemyInstance>): void {
-  state.enemyInstances[instanceId] = {
-    ...state.enemyInstances[instanceId],
-    ...data
-  }
-}
-
 export function updateLocationOfEnemy(locationId: string): void {
   state.locationOfEnemy = locationId
-}
-
-/**
- * 删除所有敌人实例
- */
-export function deleteAllEnemies(): void {
-  // 遍历所有敌人实例，删除属于指定地点的实例
-  Object.keys(state.enemyInstances).forEach(instanceId => {
-    delete state.enemyInstances[instanceId]
-  })
 }
 
 /**

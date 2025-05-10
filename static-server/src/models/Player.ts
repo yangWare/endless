@@ -57,17 +57,14 @@ const equipmentSchema = {
     },
     perception: {
       type: Number,
-      required: true,
       default: 0
     },
     stealth: {
       type: Number,
-      required: true,
       default: 0
     },
     escape: {
       type: Number,
-      required: true,
       default: 0
     }
   },
@@ -109,6 +106,7 @@ export interface IPlayer {
   nickname: string;
   currentMap: mongoose.Types.ObjectId | null;
   currentLocation: mongoose.Types.ObjectId | null;
+  currentLocationIndex: number;
   hp: number;
   coins: number;
   levelInfo: {
@@ -169,6 +167,11 @@ const playerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Location',
     default: null
+  },
+  currentLocationIndex: {
+    type: Number,
+    required: true,
+    default: 0
   },
   levelInfo: {
     level: {

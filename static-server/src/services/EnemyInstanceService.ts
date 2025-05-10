@@ -2,7 +2,7 @@ import { EnemyInstance } from '../models/EnemyInstance';
 import { Types } from 'mongoose';
 import { Creature } from '../models/Creature';
 import { PlayerService } from './PlayerService';
-import { CreatureService } from './CreatureService';
+import { CreatureService, DroppedMaterial } from './CreatureService';
 import { LocationService } from './LocationService';
 
 export interface EnemyInstanceData {
@@ -10,6 +10,7 @@ export interface EnemyInstanceData {
   hp: number;
   level: number;
   locationId: Types.ObjectId;
+  locationIndex: number;
 }
 
 export interface EnemyInstanceQueryParams {
@@ -29,6 +30,10 @@ export interface CombatStats {
   crit_damage_resist: number;
   hit_rate: number;
   dodge_rate: number;
+  perception: number;
+  stealth: number;
+  escape: number;
+  rage: number;
 }
 
 // 添加伤害计算结果接口
@@ -195,7 +200,11 @@ export class EnemyInstanceService {
         crit_damage: 0,
         crit_damage_resist: 0,
         hit_rate: 0,
-        dodge_rate: 0
+        dodge_rate: 0,
+        perception: 0,
+        stealth: 0,
+        escape: 0,
+        rage: 0
       };
       const race = creature.raceId as any;
       const level = creature.level;
@@ -210,7 +219,11 @@ export class EnemyInstanceService {
         crit_damage: race.combatStats.crit_damage * combatMultipliers.crit_damage * level,
         crit_damage_resist: race.combatStats.crit_damage_resist * combatMultipliers.crit_damage_resist * level,
         hit_rate: race.combatStats.hit_rate * combatMultipliers.hit_rate * level,
-        dodge_rate: race.combatStats.dodge_rate * combatMultipliers.dodge_rate * level
+        dodge_rate: race.combatStats.dodge_rate * combatMultipliers.dodge_rate * level,
+        perception: race.combatStats.perception * combatMultipliers.perception * level,
+        stealth: race.combatStats.stealth * combatMultipliers.stealth * level,
+        escape: race.combatStats.escape * combatMultipliers.escape * level,
+        rage: race.combatStats.rage * combatMultipliers.rage * level
       };
 
       return stats;
@@ -219,96 +232,192 @@ export class EnemyInstanceService {
     }
   }
 
+
   /**
    * 攻击敌人
    * @param playerId 玩家ID
-   * @param enemyInstanceId 敌人实例ID
+   * @param mainEnemyInstanceIds 直接攻击的敌人实例ID列表
    * @returns 战斗结果
    */
-  static async attackEnemy(playerId: string, enemyInstanceId: string) {
-    const lockKey = `${enemyInstanceId}`;
-    
-    // 检查是否已经有战斗在进行
-    if (this.combatLocks.get(lockKey)) {
-      throw new Error('该战斗正在进行中，请稍后再试');
-    }
+  static async attackEnemy(playerId: string, mainEnemyInstanceIds: string[], isCotinue: 0 | 1) {
+    const currentEnemyInstances = await LocationService.generateEnemies(playerId, isCotinue)
 
-    try {
+    const res: Record<string, {
+      // 结果字符串
+      result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'active_attack' | 'deactive_attack';
+      // 玩家造成的伤害
+      damage: number;
+      // 玩家是否暴击
+      isCritical: boolean;
+      // 怪物还剩多少hp
+      remainingHp: number;
+      // 怪物攻击伤害
+      counterDamage: number;
+      // 怪物是否暴击
+      isCounterCritical: boolean;
+      // 怪物掉落物品
+      droppedMaterials: DroppedMaterial[];
+      // 敌人实例
+      enemyInstance: typeof currentEnemyInstances[number]
+    }> = {}
+    const mainEnemyInstances: typeof currentEnemyInstances = []
+    const otherEnemyInstances: typeof currentEnemyInstances = []
+    // 战斗锁判定
+    currentEnemyInstances.forEach(instance => {
+      const lockKey = `${instance._id.toString()}`
+      // 检查是否已经有战斗在进行，过滤掉这个怪
+      if (this.combatLocks.get(lockKey)) {
+        res[instance._id.toString()] = {
+          result: 'continue',
+          damage: 0,
+          isCritical: false,
+          remainingHp: instance.hp,
+          counterDamage: 0,
+          isCounterCritical: false,
+          droppedMaterials: [],
+          enemyInstance: instance
+        }
+        return
+      }
       // 设置战斗锁
       this.combatLocks.set(lockKey, true);
+      if (mainEnemyInstanceIds.includes(instance._id.toString())) {
+        mainEnemyInstances.push(instance)
+      } else {
+        otherEnemyInstances.push(instance)
+      }
+    })
 
-      // 获取敌人实例
-      const enemyInstance = await EnemyInstance.findById(enemyInstanceId);
-      if (!enemyInstance) {
-        return {
-          result: 'enemy_refresh',
-          damage: 0,
-          isCritical: false,
-          remainingHp: 0,
-          counterDamage: 0,
-          isCounterCritical: false,
-          isPlayerDead: false
+    try {
+      const playerStats = await PlayerService.calculateCombatStats(playerId)
+      // 处理主动攻击
+      await Promise.all([...mainEnemyInstances.map(async instance => {
+        const attackRes = await this.attackSingleEnemy(playerStats, instance)
+        res[instance._id.toString()] = {
+          ...attackRes,
+          enemyInstance: instance
         }
-      }
-
-      // 检查当前地图是否需要刷新敌人
-      const isNeedRefresh = await LocationService.checkEnemyRefreshNeeded(enemyInstance.locationId.toString(), enemyInstanceId);
-      if (isNeedRefresh) {
-        return {
-          result: 'enemy_refresh',
-          damage: 0,
-          isCritical: false,
-          remainingHp: 0,
-          counterDamage: 0,
-          isCounterCritical: false,
-          isPlayerDead: false
+      }), ...otherEnemyInstances.map(async instance => {
+        const attackRes = await this.onlySingleEnemyAttackPlayer(playerStats, instance)
+        res[instance._id.toString()] = {
+          ...attackRes,
+          enemyInstance: instance
         }
+      })])
+      // 处理玩家血量和背包掉落物
+      let totalCounterDamage = 0
+      const totalDroppedMaterials: DroppedMaterial[] = []
+      for (const instanceId in res) {
+        const resItem = res[instanceId]
+        totalCounterDamage += resItem.counterDamage
+        totalDroppedMaterials.push(...resItem.droppedMaterials)
       }
-
-      // 获取玩家和敌人的战斗属性
-      const [playerStats, enemyStats] = await Promise.all([
-        PlayerService.calculateCombatStats(playerId),
-        this.calculateCombatStats(enemyInstanceId)
-      ]);
-
-      // 计算伤害
-      const { damage, isCritical } = this.calculateDamage(playerStats, enemyStats);
-      enemyInstance.hp = Math.max(0, enemyInstance.hp - damage);
-      await enemyInstance.save();
-
-      // 如果敌人死亡
-      if (enemyInstance.hp === 0) {
-        const { droppedMaterials } = await this.handleEnemyDeath(enemyInstanceId);
-        // 添加掉落物到玩家背包
-        await PlayerService.addMaterialsToInventory(playerId, droppedMaterials);
-        return {
-          result: 'enemy_dead',
-          damage,
-          isCritical,
-          remainingHp: 0,
-          droppedMaterials
-        };
-      }
-
-      // 敌人反击
-      const { damage: counterDamage, isCritical: isCounterCritical } = this.calculateDamage(enemyStats, playerStats);
       // 处理玩家受伤
-      const isPlayerDead = await PlayerService.handlePlayerDamage(playerId, counterDamage);
-
-      return {
-        result: isPlayerDead ? 'player_dead' : 'continue',
-        damage,
-        isCritical,
-        remainingHp: enemyInstance.hp,
-        counterDamage,
-        isCounterCritical,
-        isPlayerDead
-      };
+      const isPlayerDead = await PlayerService.handlePlayerDamage(playerId, totalCounterDamage);
+      if (!isPlayerDead) {
+        await PlayerService.addMaterialsToInventory(playerId, totalDroppedMaterials);
+      }
+      return res
     } catch (error: any) {
       throw new Error(`攻击敌人失败: ${error.message}`);
     } finally {
-      // 释放战斗锁
-      this.combatLocks.delete(lockKey);
+      [...mainEnemyInstances, ...otherEnemyInstances].forEach(instance => {
+        const lockKey = `${instance._id.toString()}`
+        // 释放战斗锁
+        this.combatLocks.delete(lockKey);
+      })
+    }
+  }
+
+  private static async attackSingleEnemy(playerStats: Omit<CombatStats, 'rage'>, enemyInstance: Awaited<ReturnType<typeof LocationService.generateEnemies>>[number]) {
+    const enemyStats = await this.calculateCombatStats(enemyInstance._id.toString())
+    // 计算伤害
+    const { damage, isCritical } = this.calculateDamage(playerStats, enemyStats);
+    enemyInstance.hp = Math.max(0, enemyInstance.hp - damage);
+    await enemyInstance.save();
+    // 如果敌人死亡
+    if (enemyInstance.hp === 0) {
+      const { droppedMaterials } = await this.handleEnemyDeath(enemyInstance._id.toString());
+      // 添加掉落物到玩家背包
+      // await PlayerService.addMaterialsToInventory(playerId, droppedMaterials);
+      return {
+        result: 'enemy_dead' as const,
+        damage,
+        isCritical,
+        remainingHp: 0,
+        droppedMaterials,
+        counterDamage: 0,
+        isCounterCritical: false
+      };
+    }
+    // 敌人逃跑：敌人血量降低至50%以下，且根据暴躁值计算概率，以确定是否逃跑
+    const isHpOk = enemyInstance.hp / enemyStats.max_hp < 0.5
+    const isRageOk = Math.random() < (1 - enemyStats.rage / 10)
+    const isEscapeOk = enemyStats.escape > playerStats.escape
+    if (isHpOk && isRageOk && isEscapeOk) {
+      // 逃跑的敌人hp直接置为0，模拟敌人不再可见的逻辑
+      enemyInstance.hp = 0;
+      await enemyInstance.save();
+      return {
+        result: 'enemy_flee' as const,
+        damage: 0,
+        isCritical: false,
+        remainingHp: 0,
+        droppedMaterials: [],
+        counterDamage: 0,
+        isCounterCritical: false
+      }
+    }
+    // 敌人反击
+    const { damage: counterDamage, isCritical: isCounterCritical } = this.calculateDamage(enemyStats, playerStats);
+    return {
+      result: 'continue' as const,
+      damage,
+      isCritical,
+      remainingHp: enemyInstance.hp,
+      droppedMaterials: [],
+      counterDamage,
+      isCounterCritical
+    }
+  }
+
+  // 处理敌对生物主动攻击
+  private static async onlySingleEnemyAttackPlayer(playerStats:  Omit<CombatStats, 'rage'>, enemyInstance: Awaited<ReturnType<typeof LocationService.generateEnemies>>[number]) {
+    const enemyStats = await this.calculateCombatStats(enemyInstance._id.toString())
+
+    // 生物感知能力是否比玩家低，不主动攻击
+    if (enemyStats.perception - playerStats.stealth <= playerStats.perception - enemyStats.stealth) {
+      return {
+        result: 'deactive_attack' as const,
+        damage: 0,
+        isCritical: false,
+        remainingHp: enemyInstance.hp,
+        counterDamage: 0,
+        isCounterCritical: false,
+        droppedMaterials: []
+      }
+    }
+    // 根据暴躁值计算主动攻击概率
+    if (Math.random() >= enemyStats.rage / 10) {
+      return {
+        result: 'deactive_attack' as const,
+        damage: 0,
+        isCritical: false,
+        remainingHp: enemyInstance.hp,
+        counterDamage: 0,
+        isCounterCritical: false,
+        droppedMaterials: []
+      }
+    }
+    const { damage: counterDamage, isCritical: isCounterCritical } = this.calculateDamage(enemyStats, playerStats);
+    return {
+      result: 'active_attack' as const,
+      damage: 0,
+      isCritical: false,
+      remainingHp: enemyInstance.hp,
+      counterDamage,
+      isCounterCritical,
+      droppedMaterials: []
     }
   }
 
@@ -318,7 +427,7 @@ export class EnemyInstanceService {
    * @param defenderStats 防御者属性
    * @returns 伤害计算结果，包含伤害值和是否暴击
    */
-  private static calculateDamage(attackerStats: CombatStats, defenderStats: CombatStats): DamageResult {
+  private static calculateDamage(attackerStats: Omit<CombatStats, 'rage'>, defenderStats: Omit<CombatStats, 'rage'>): DamageResult {
     // 计算闪避
     const hitRoll = Math.random();
     // 命中率 = 攻击方命中值 除以 防御方闪避值
@@ -388,20 +497,22 @@ export class EnemyInstanceService {
         });
       
       if (!enemyInstance) {
-        throw new Error('敌人实例不存在');
+        return {
+          droppedMaterials: []
+        }
       }
 
       // 使用CreatureService计算掉落物品
       const droppedMaterials = await CreatureService.calculateDrops(enemyInstance.creatureId._id);
 
-      // 删除敌人实例，敌人刷新后会重新生成
-      // await EnemyInstance.findByIdAndDelete(enemyInstanceId);
-
       return {
         droppedMaterials
       };
     } catch (error: any) {
-      throw new Error(`处理敌人死亡失败: ${error.message}`);
+      console.error(error)
+      return {
+        droppedMaterials: []
+      }
     }
   }
 } 

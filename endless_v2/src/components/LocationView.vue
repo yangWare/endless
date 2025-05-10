@@ -99,7 +99,7 @@
 
 <script setup lang="ts">
 import { ref, computed, defineEmits, onMounted, watch, nextTick } from 'vue'
-import type { EnemyInstance } from '../api'
+import type { AttackEnemyResult, EnemyInstance } from '../api'
 import { state, updatePlayer, updateLocationEnemies, clearLocationEnemies } from '../store/state'
 import {  generateEnemyCombatStats, generateEnemies } from '../store/actions/enemy'
 import { attackEnemy } from '../store/actions/player'
@@ -148,43 +148,14 @@ const ensureValidTab = (): void => {
   }
 }
 
-const updateLocationEnemiesDelay = async () => {
-   // 添加等待效果，等待效果为2~4秒
-  await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000))
-  const currentLocationEnemies = state.enemyInstances
-  const possibleEnemies = Object.entries(currentLocationEnemies)
-    .filter(([_, enemy]) => {
-      const creatureId = enemy.creatureId
-      const enemyConfigOfLocation = location.value.enemies.find((enemy) => enemy.creatureId._id === creatureId)
-      if (!enemyConfigOfLocation) return false
-      
-      return Math.random() < enemyConfigOfLocation.probability
-    })
-    .map(([instanceId, enemy]) => {
-      const creatureId = enemy.creatureId
-      const enemyConfigOfLocation = location.value.enemies.find((enemy) => enemy.creatureId._id === creatureId)
-      return {
-        instanceId,
-        name: enemyConfigOfLocation?.creatureId.name || '异常生物',
-        enemy,
-      }
-    })
-  
-  const maxEnemies = Math.min(5, possibleEnemies.length)
-  const enemies = possibleEnemies
-    .sort(() => Math.random() - 0.5)
-    .slice(0, maxEnemies)
-  updateLocationEnemies(enemies)
-}
-
 onMounted(async () => {
   combatLogs.value.push({
     id: Date.now(),
     message: `${location.value.description || ''}`,
   })
   ensureValidTab()
+  // 没切换地图，不刷新敌人
   if (state.locationOfEnemy !== state.currentLocationId) {
-    await generateEnemies()
     handleExplore(true)
   }
 })
@@ -255,60 +226,123 @@ const scrollToBottom = (): void => {
 
 watch(combatLogs, scrollToBottom, { deep: true })
 
+const handleAttackMainEnemyRes = async (enemy: Enemy, mainEnemyRes: AttackEnemyResult[string]) => {
+  // 主攻击敌人不存在，说明敌人已被其他玩家击杀
+  if (!mainEnemyRes) {
+    await addMessageWithDelay(`${enemy.name}已被其他玩家击杀`)
+    // 立刻更新，提高体验
+    const currentEnemies = state.locationEnemies.filter(e => e.instanceId !== enemy.instanceId)
+    updateLocationEnemies(currentEnemies)
+    return false
+  }
+
+  if (!mainEnemyRes.damage) {
+    await addMessageWithDelay(`你的攻击未命中${enemy.name}`)
+  } else {
+    let message = `你对${enemy.name}造成了${mainEnemyRes.damage}点伤害`
+    if (mainEnemyRes.isCritical) {
+      message += '（暴击！）'
+    }
+    await addMessageWithDelay(message)
+    enemy.enemy.hp = mainEnemyRes.remainingHp
+  }
+
+  if (mainEnemyRes.result === 'enemy_flee') {
+    await addMessageWithDelay(`${enemy.name}惊慌失措，一溜烟逃跑了`)
+    const currentEnemies = state.locationEnemies.filter(e => e.instanceId !== enemy.instanceId)
+    updateLocationEnemies(currentEnemies)
+    return false
+  }
+
+  if (mainEnemyRes.result === 'enemy_dead') {
+    await addMessageWithDelay(`${enemy.name}已被你击杀！`)
+    const currentEnemies = state.locationEnemies.filter(e => e.instanceId !== enemy.instanceId)
+    updateLocationEnemies(currentEnemies)
+    if (mainEnemyRes.droppedMaterials && mainEnemyRes.droppedMaterials.length > 0) {
+      const dropsMessage = mainEnemyRes.droppedMaterials
+        .map((drop) => {
+          return drop.materialId.name
+        })
+        .join('、')
+      await addMessageWithDelay(`获得了：${dropsMessage}`)
+      // 材料加入玩家背包
+      const newPlayer = { ...state.player }
+      newPlayer.inventory.materials = [...newPlayer.inventory.materials, ...mainEnemyRes.droppedMaterials.map(m => m.materialId._id)]
+      updatePlayer(newPlayer)
+    }
+    return false
+  }
+
+  if (!mainEnemyRes.counterDamage) {
+    await addMessageWithDelay(`${enemy.name}的反击未命中你`)
+  } else {
+    let counterMessage = `${enemy.name}反击对你造成了${mainEnemyRes.counterDamage}点伤害`
+    if (mainEnemyRes.isCounterCritical) {
+      counterMessage += '（暴击！）'
+    }
+    // 材料加入玩家背包
+    const newPlayer = { ...state.player }
+    newPlayer.hp = Math.max(0, newPlayer.hp - mainEnemyRes.counterDamage)
+    updatePlayer(newPlayer)
+    await addMessageWithDelay(counterMessage)
+    if (state.player.hp === 0) {
+      await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
+    }
+  }
+  return true
+}
+const handleOtherEnemyAttackRes = async (enemyId: string, res: AttackEnemyResult) => {
+  // 新的敌人列表
+  const newLocationEnemies: typeof state.locationEnemies = []
+  // 处理其他主动攻击的敌人
+  for (const instanceId in res) {
+    const otherEnemyRes = res[instanceId]
+    newLocationEnemies.push({
+      instanceId: otherEnemyRes.enemyInstance._id,
+      name: otherEnemyRes.enemyInstance.creatureId.name,
+      enemy: {
+        ...otherEnemyRes.enemyInstance,
+        hp: otherEnemyRes.remainingHp
+      }
+    })
+    if (instanceId === enemyId) {
+      continue
+    }
+    if (otherEnemyRes.result !== 'active_attack') {
+      continue
+    }
+    const otherEnemyName = otherEnemyRes.enemyInstance.creatureId.name
+    if (!otherEnemyRes.counterDamage) {
+      await addMessageWithDelay(`附近的${otherEnemyName}主动发起攻击，但未命中你`)
+    } else {
+      let counterMessage = `附近的${otherEnemyName}主动发起攻击，对你造成了${otherEnemyRes.counterDamage}点伤害`
+      if (otherEnemyRes.isCounterCritical) {
+        counterMessage += '（暴击！）'
+      }
+      // 材料加入玩家背包
+      const newPlayer = { ...state.player }
+      newPlayer.hp = Math.max(0, newPlayer.hp - otherEnemyRes.counterDamage)
+      updatePlayer(newPlayer)
+      await addMessageWithDelay(counterMessage)
+      if (state.player.hp === 0) {
+        await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
+        return
+      }
+    }
+  }
+  // 整体更新一波列表
+  updateLocationEnemies(newLocationEnemies.sort((prev, next) => {
+    return prev.instanceId > next.instanceId ? -1 : 1
+  }))
+}
 const handleAttackEnemy = async (enemy: Enemy): Promise<void> => {
   if (isAttacking.value) return
   isAttacking.value = true
   try {
-    const result = await attackEnemy(enemy.instanceId)
-
-    if (result.result === 'enemy_refresh') {
-      generateEnemies()
-      clearLocationEnemies()
-      await addMessageWithDelay(`${enemy.name}逃跑了，请继续探索`)
-      return
-    }
-
-    if (!result.damage) {
-      await addMessageWithDelay(`你的攻击未命中${enemy.name}`)
-    } else {
-      let message = `你对${enemy.name}造成了${result.damage}点伤害`
-      if (result.isCritical) {
-        message += '（暴击！）'
-      }
-      await addMessageWithDelay(message)
-      if (result.result === 'enemy_dead') {
-        await addMessageWithDelay(`${enemy.name}被击败了！`)
-        if (result.droppedMaterials && result.droppedMaterials.length > 0) {
-          const dropsMessage = result.droppedMaterials
-            .map((drop) => {
-              return drop.materialId.name
-            })
-            .join('、')
-          await addMessageWithDelay(`获得了：${dropsMessage}`)
-        }
-        const currentEnemies = state.locationEnemies.filter(e => e.instanceId !== enemy.instanceId)
-        updateLocationEnemies(currentEnemies)
-        return
-      }
-    }
-
-    if (!result.counterDamage) {
-      await addMessageWithDelay(`${enemy.name}的反击未命中你`)
-    } else {
-      let counterMessage = `${enemy.name}反击对你造成了${result.counterDamage}点伤害`
-      if (result.isCounterCritical) {
-        counterMessage += '（暴击！）'
-      }
-      await addMessageWithDelay(counterMessage)
-
-      if (result.isPlayerDead) {
-        await addMessageWithDelay('你被击败了，装备材料掉了一地，太可惜了')
-      }
-      updatePlayer({
-        ...state.player,
-        hp: state.player ? Math.max(0, state.player.hp - result.counterDamage) : 0,
-      })
-    }
+    const res = await attackEnemy(0, enemy.instanceId)
+    const mainEnemyRes = res[enemy.instanceId]
+    await handleAttackMainEnemyRes(enemy, mainEnemyRes)
+    await handleOtherEnemyAttackRes(enemy.instanceId, res)
   } catch (error) {
     console.error('Attack failed:', error)
     await addMessageWithDelay('你脚下一滑，攻击没有发起')
@@ -359,25 +393,27 @@ const handleRevive = async (): Promise<void> => {
   }
 }
 
-const isExploring = ref(false)
 const handleExplore = async (isStart?: boolean): Promise<void> => {
-  // 添加拦截，避免反复触发
-  if (isExploring.value) return
-  // 打开页面时，敌人列表为空，说明敌人队列还未加载完成则不探索
-  if (isStart && Object.entries(state.enemyInstances).length === 0) {
-    return
-  }
-  clearLocationEnemies()
-  isExploring.value = true
+  // 和攻击动作互斥
+  if (isAttacking.value) return
+  isAttacking.value = true
   await addMessageWithDelay(`你${isStart ? '开始' : '继续'}向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
-  // 添加等待效果，等待效果为2~4秒
-  await updateLocationEnemiesDelay()
-  if (state.locationEnemies.length === 0) {
-    await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
-  } else {
-    await addMessageWithDelay('发现敌对生物，准备战斗吧')
+
+  try {
+      // 模拟攻击，实际是为了拿到敌人列表
+    const res = await attackEnemy(isStart ? 0 : 1)
+    await handleOtherEnemyAttackRes('', res)
+    if (state.locationEnemies.length === 0) {
+      await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
+    } else {
+      await addMessageWithDelay('发现敌对生物，准备战斗吧')
+    }
+  } catch (error) {
+    console.error('explore failed:', error)
+    await addMessageWithDelay('你好像遇到了某种神秘的阻碍，又回到了原点')
+  } finally {
+    isAttacking.value = false
   }
-  isExploring.value = false
 }
 
 const getEnemyLevelTag = (enemy: Enemy): string => {
