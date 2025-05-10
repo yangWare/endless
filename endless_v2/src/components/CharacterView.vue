@@ -84,6 +84,34 @@
       </div>
     </div>
 
+    <div class="section-title">辅助属性</div>
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-label"
+          >{{ i18nConfig.combat_stats.perception }}:</span
+        >
+        <span class="stat-value"
+          >{{ player.combat_stats?.perception || 0 }}</span
+        >
+      </div>
+      <div class="stat-item">
+        <span class="stat-label"
+          >{{ i18nConfig.combat_stats.stealth }}:</span
+        >
+        <span class="stat-value"
+          >{{ player.combat_stats?.stealth || 0 }}</span
+        >
+      </div>
+      <div class="stat-item">
+        <span class="stat-label"
+          >{{ i18nConfig.combat_stats.escape }}:</span
+        >
+        <span class="stat-value"
+          >{{ player.combat_stats?.escape || 0 }}</span
+        >
+      </div>
+    </div>
+
     <div class="equipment-section">
       <div class="section-title">当前装备</div>
       <ul class="equipment-list">

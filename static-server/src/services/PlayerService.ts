@@ -17,7 +17,10 @@ export const HEART_SKILL_CONFIG = {
       crit_damage: 0,
       crit_damage_resist: 0,
       hit_rate: 0,
-      dodge_rate: 0
+      dodge_rate: 0,
+      perception: 1,
+      stealth: 1,
+      escape: 1
     },
     multiplier: {
       max_hp: 1,
@@ -28,7 +31,10 @@ export const HEART_SKILL_CONFIG = {
       crit_damage: 0,
       crit_damage_resist: 0,
       hit_rate: 0,
-      dodge_rate: 0
+      dodge_rate: 0,
+      perception: 1,
+      stealth: 1,
+      escape: 1
     },
     // 升级方法
     upgrade: (exp: number, curLevel: number) => {
@@ -58,6 +64,9 @@ export interface CombatStats {
   crit_damage_resist: number;
   hit_rate: number;
   dodge_rate: number;
+  perception: number;
+  stealth: number;
+  escape: number;
 }
 
 export class PlayerService {
@@ -283,7 +292,10 @@ export class PlayerService {
         crit_damage: 0,
         crit_damage_resist: 0,
         hit_rate: 0,
-        dodge_rate: 0
+        dodge_rate: 0,
+        perception: 0,
+        stealth: 0,
+        escape: 0
       };
 
       // 遍历心法，计算战斗属性
@@ -300,6 +312,9 @@ export class PlayerService {
           baseStats.crit_damage_resist += heartSkillCombatStats.base.crit_damage_resist * playerLevel * heartSkillCombatStats.multiplier.crit_damage_resist;
           baseStats.hit_rate += heartSkillCombatStats.base.hit_rate * playerLevel * heartSkillCombatStats.multiplier.hit_rate;
           baseStats.dodge_rate += heartSkillCombatStats.base.dodge_rate * playerLevel * heartSkillCombatStats.multiplier.dodge_rate;
+          baseStats.perception += heartSkillCombatStats.base.perception * playerLevel * heartSkillCombatStats.multiplier.perception;
+          baseStats.stealth += heartSkillCombatStats.base.stealth * playerLevel * heartSkillCombatStats.multiplier.stealth;
+          baseStats.escape += heartSkillCombatStats.base.escape * playerLevel * heartSkillCombatStats.multiplier.escape;
         }
       });
 
@@ -313,7 +328,10 @@ export class PlayerService {
         crit_damage: 0,
         crit_damage_resist: 0,
         hit_rate: 0,
-        dodge_rate: 0
+        dodge_rate: 0,
+        perception: 0,
+        stealth: 0,
+        escape: 0
       };
 
       // 累加所有装备的属性
@@ -329,6 +347,9 @@ export class PlayerService {
           equipmentStats.crit_damage_resist += equipment.combatStats.crit_damage_resist;
           equipmentStats.hit_rate += equipment.combatStats.hit_rate;
           equipmentStats.dodge_rate += equipment.combatStats.dodge_rate;
+          equipmentStats.perception += equipment.combatStats.perception;
+          equipmentStats.stealth += equipment.combatStats.stealth;
+          equipmentStats.escape += equipment.combatStats.escape;
         }
       });
 
@@ -342,7 +363,10 @@ export class PlayerService {
         crit_damage: baseStats.crit_damage + equipmentStats.crit_damage,
         crit_damage_resist: baseStats.crit_damage_resist + equipmentStats.crit_damage_resist,
         hit_rate: baseStats.hit_rate + equipmentStats.hit_rate,
-        dodge_rate: baseStats.dodge_rate + equipmentStats.dodge_rate
+        dodge_rate: baseStats.dodge_rate + equipmentStats.dodge_rate,
+        perception: baseStats.perception + equipmentStats.perception,
+        stealth: baseStats.stealth + equipmentStats.stealth,
+        escape: baseStats.escape + equipmentStats.escape
       };
 
       return finalStats;

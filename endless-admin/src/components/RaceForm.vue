@@ -6,7 +6,7 @@
       </el-select>
     </el-form-item>
     <el-divider>战斗属性</el-divider>
-    <el-form-item v-for="(_, key) in formData.combatStats" :key="key" :label="getCombatStatLabel(key)">
+    <el-form-item v-for="(label, key) in combatStatLabelMap" :key="key" :label="label">
       <el-input-number v-model="formData.combatStats[key]" :min="0" :step="1" />
     </el-form-item>
   </div>
@@ -33,20 +33,20 @@ defineProps<{
 
 const races = ref<Race[]>([])
 
-// 获取战斗属性标签
-const getCombatStatLabel = (key: string) => {
-  const labels: Record<string, string> = {
-    max_hp: '最大生命值',
-    attack: '攻击力',
-    defense: '防御力',
-    crit_rate: '暴击值',
-    crit_resist: '暴击抗性',
-    crit_damage: '暴击伤害',
-    crit_damage_resist: '暴击伤害抗性',
-    hit_rate: '命中值',
-    dodge_rate: '闪避值'
-  }
-  return labels[key] || key
+const combatStatLabelMap: Record<string, string> = {
+  max_hp: '最大生命值',
+  attack: '攻击力',
+  defense: '防御力',
+  crit_rate: '暴击值',
+  crit_resist: '暴击抗性',
+  crit_damage: '暴击伤害',
+  crit_damage_resist: '暴击伤害抗性',
+  hit_rate: '命中值',
+  dodge_rate: '闪避值',
+  perception: '感知值',
+  stealth: '隐匿值',
+  escape: '遁速值',
+  rage: '暴躁值'
 }
 
 // 获取种族列表

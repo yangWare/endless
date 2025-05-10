@@ -1,5 +1,4 @@
 import { RaceService, RaceData, RaceQueryParams } from '../services/RaceService';
-import { Types } from 'mongoose';
 import { RaceContext } from '../types/context';
 
 export class RaceAPI {

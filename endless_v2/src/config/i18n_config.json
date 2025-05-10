@@ -9,7 +9,10 @@
     "crit_damage": "暴击伤害",
     "crit_damage_resist": "暴击伤害抗性",
     "hit_rate": "命中值",
-    "dodge_rate": "闪避值"
+    "dodge_rate": "闪避值",
+    "perception": "感知值",
+    "stealth": "隐匿值",
+    "escape": "遁速值"
   },
   "equipment_position": {
     "weapon": {

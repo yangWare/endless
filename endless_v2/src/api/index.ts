@@ -116,6 +116,9 @@ export interface CombatStats {
   crit_damage_resist: number;
   hit_rate: number;
   dodge_rate: number;
+  perception: number;
+  stealth: number;
+  escape: number;
 }
 
 // 装备类型

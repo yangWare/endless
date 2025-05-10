@@ -60,6 +60,26 @@ const raceSchema = new mongoose.Schema({
       type: Number,
       required: true,
       default: 1.0
+    },
+    perception: {
+      type: Number,
+      required: true,
+      default: 0
+    },
+    stealth: {
+      type: Number,
+      required: true,
+      default: 0
+    },
+    escape: {
+      type: Number,
+      required: true,
+      default: 0
+    },
+    rage: {
+      type: Number,
+      required: true,
+      default: 0
     }
   },
   createdAt: {

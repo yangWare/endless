@@ -75,6 +75,10 @@ const formData = reactive({
     crit_damage_resist: 1.0,
     hit_rate: 1.0,
     dodge_rate: 1.0,
+    perception: 1.0,  // 感知值
+    stealth: 1.0,     // 隐匿值
+    escape: 1.0,      // 遁速值
+    rage: 1.0,        // 暴躁值
   },
   // 生物特有
   raceId: '',
@@ -89,6 +93,10 @@ const formData = reactive({
     crit_damage_resist: 1.0,
     hit_rate: 1.0,
     dodge_rate: 1.0,
+    perception: 1.0,  // 感知值
+    stealth: 1.0,     // 隐匿值
+    escape: 1.0,      // 遁速值
+    rage: 1.0,        // 暴躁值
   },
   drop_materials: [] as any[],
   // 材料特有
@@ -176,6 +184,10 @@ const handleTypeChange = () => {
         crit_damage_resist: 1.0,
         hit_rate: 1.0,
         dodge_rate: 1.0,
+        perception: 1.0,
+        stealth: 1.0,
+        escape: 1.0,
+        rage: 1.0,
       }
       break
     case 'creature':
@@ -191,6 +203,10 @@ const handleTypeChange = () => {
         crit_damage_resist: 1.0,
         hit_rate: 1.0,
         dodge_rate: 1.0,
+        perception: 1.0,
+        stealth: 1.0,
+        escape: 1.0,
+        rage: 1.0,
       }
       formData.drop_materials = []
       break
@@ -224,6 +240,10 @@ const handleTypeChange = () => {
         crit_damage_resist: 1.0,
         hit_rate: 1.0,
         dodge_rate: 1.0,
+        perception: 1.0,
+        stealth: 1.0,
+        escape: 1.0,
+        rage: 1.0,
       }
       formData.probability_bonus = {
         epic_forge: null,

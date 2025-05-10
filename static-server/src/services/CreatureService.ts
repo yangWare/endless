@@ -21,6 +21,10 @@ export interface CreatureData {
     crit_damage_resist: number;
     hit_rate: number;
     dodge_rate: number;
+    perception: number;
+    stealth: number;
+    escape: number;
+    rage: number;
   };
   drop_materials: DropMaterial[];
 }
