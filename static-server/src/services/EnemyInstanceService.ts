@@ -342,8 +342,8 @@ export class EnemyInstanceService {
     const isRageOk = Math.random() < (1 - enemyStats.rage / 10)
     const isEscapeOk = enemyStats.escape > playerStats.escape
     if (isHpOk && isRageOk && isEscapeOk) {
-      // 逃跑的敌人hp直接置为0，模拟敌人不再可见的逻辑
-      enemyInstance.hp = 0;
+      // 逃跑的敌人位置重新随机
+      enemyInstance.locationIndex = Math.floor(Math.random() * 100);
       await enemyInstance.save();
       return {
         result: 'enemy_flee' as const,
