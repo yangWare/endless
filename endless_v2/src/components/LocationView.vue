@@ -66,6 +66,7 @@
               <span v-if="!isAttackStatus" class="explore-button" @click="handleExplore()" :class="{ 'with-enemies': hasEnemies }">
                 继续探索
               </span>
+              <span v-else class="explore-button" @click="handleEscape()" :class="{ 'with-enemies': hasEnemies }">脱战</span>
             </div>
           </div>
         </div>
@@ -418,6 +419,24 @@ const handleRevive = async (): Promise<void> => {
   } catch (error) {
     console.error('Revive failed:', error)
     await addMessageWithDelay('复活失败，请稍后再试')
+  }
+}
+
+const handleEscape = async () => {
+  try {
+    const response = await playerApi.escape({ playerId: state.player?._id || '' })
+    if (response.data.canEscape) {
+      isAttackStatus.value = false
+      const newPlayer = { ...state.player }
+      newPlayer.fightingEnemies = []
+      updatePlayer(newPlayer)
+      addMessageWithDelay('你已脱战')
+    } else {
+      addMessageWithDelay('敌人遁速较高，你无法脱战')
+    }
+  } catch (error) {
+    console.error('Revive failed:', error)
+    await addMessageWithDelay('脱战失败，请稍后再试')
   }
 }
 

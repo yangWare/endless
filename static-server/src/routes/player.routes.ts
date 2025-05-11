@@ -51,4 +51,9 @@ router.post('/use-potion', async (ctx: ParamContext) => {
   await PlayerAPI.usePotion(ctx);
 });
 
+// 脱战
+router.post('/escape', async (ctx: ParamContext) => {
+  await PlayerAPI.escape(ctx);
+});
+
 export default router; 

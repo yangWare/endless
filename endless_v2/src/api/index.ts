@@ -283,6 +283,12 @@ export const playerApi = {
   revive: (data: { playerId: string }): Promise<BaseResponse<Player>> =>
     api.post('/players/revive', data),
 
+  // 复活玩家
+  escape: (data: { playerId: string }): Promise<BaseResponse<{
+    canEscape: boolean
+  }>> =>
+    api.post('/players/escape', data),
+
     // 使用药水
   usePotion: (data: { playerId: string; potionId: string }): Promise<BaseResponse<number>> =>
     api.post('/players/use-potion', data)

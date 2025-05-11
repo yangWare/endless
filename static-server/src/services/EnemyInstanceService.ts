@@ -347,8 +347,8 @@ export class EnemyInstanceService {
       await enemyInstance.save();
       return {
         result: 'enemy_flee' as const,
-        damage: 0,
-        isCritical: false,
+        damage,
+        isCritical,
         remainingHp: 0,
         droppedMaterials: [],
         counterDamage: 0,

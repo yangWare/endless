@@ -28,7 +28,7 @@ export async function generateCombatStats(): Promise<void> {
     const combatStats = response.data
     
     // 更新玩家状态
-    await updatePlayer({
+    updatePlayer({
       ...player,
       combat_stats: combatStats
     })

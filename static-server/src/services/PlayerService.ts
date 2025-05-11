@@ -5,6 +5,8 @@ import { MapService } from './MapService';
 import { LocationService } from './LocationService';
 import { PotionService } from './PotionService';
 import { DroppedMaterial } from './CreatureService';
+import { EnemyInstance } from '../models/EnemyInstance';
+import { EnemyInstanceService } from './EnemyInstanceService';
 
 // 心法配置
 export const HEART_SKILL_CONFIG = {
@@ -829,5 +831,57 @@ export class PlayerService {
     } catch (error: any) {
       throw new Error(`使用药水失败: ${error.message}`);
     }
+  }
+
+  static async escapeFromBattle(playerId: string): Promise<boolean> {
+    const player = await Player.findById(playerId);
+    if (!player) {
+      throw new Error('Player not found');
+    }
+
+    if (!player.fightingEnemies || player.fightingEnemies.length === 0) {
+      return true; // 如果玩家没有在战斗中，直接返回true
+    }
+
+    const getAllEnemiesCombatStats = async () => {
+      const enemiesCombatStats: Array<{
+        escape: number
+      }> = []
+      for (const enemyId of player.fightingEnemies) {
+        try {
+          const enemyCombatStats = await EnemyInstanceService.calculateCombatStats(enemyId.toString())
+          enemiesCombatStats.push(enemyCombatStats)
+        } catch (error) {
+          console.warn(`获取${enemyId.toString()}异常，已过滤`)
+        }
+      }
+      return enemiesCombatStats
+    }
+
+    // 获取所有战斗中的敌人战斗属性
+    const allEnemiesCombatStats = await getAllEnemiesCombatStats()
+
+    if (!allEnemiesCombatStats || allEnemiesCombatStats.length === 0) {
+      // 如果找不到敌人战斗属性，清理战斗状态并返回true
+      player.fightingEnemies = [];
+      await player.save();
+      return true;
+    }
+
+    const playerCombatStats = await this.calculateCombatStats(playerId)
+    const playerEscape = playerCombatStats.escape
+
+    // 检查是否所有敌人的escape值都小于玩家的escape值
+    const canEscape = allEnemiesCombatStats.every(enemyCombatStats => {
+      return playerCombatStats.escape > enemyCombatStats.escape
+    });
+
+    if (canEscape) {
+      // 如果可以脱战，清理战斗状态
+      player.fightingEnemies = [];
+      await player.save();
+    }
+
+    return canEscape;
   }
 } 

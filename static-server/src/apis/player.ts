@@ -240,21 +240,20 @@ export class PlayerAPI {
     }
   }
 
-    /**
- * 使用药水
- */
+  /**
+   * 使用药水
+   */
   static async usePotion(ctx: BaseContext) {
     try {
       const { playerId, potionId } = ctx.request.body;
       if (!playerId || !potionId) {
-        throw new Error('缺少玩家ID或药水ID');
+        throw new Error('缺少必要参数');
       }
 
       const newHp = await PlayerService.usePotion(playerId, potionId);
-
       ctx.body = {
         success: true,
-        data: newHp
+        data: { newHp }
       };
     } catch (error: any) {
       ctx.status = 400;
@@ -262,6 +261,30 @@ export class PlayerAPI {
         success: false,
         error: error.message
       };
+    }
   }
+
+  /**
+   * 脱战
+   */
+  static async escape(ctx: BaseContext) {
+    try {
+      const { playerId } = ctx.request.body;
+      if (!playerId) {
+        throw new Error('缺少玩家ID');
+      }
+
+      const canEscape = await PlayerService.escapeFromBattle(playerId);
+      ctx.body = {
+        success: true,
+        data: { canEscape }
+      };
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
   }
 } 
