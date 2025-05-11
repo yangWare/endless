@@ -1,4 +1,4 @@
-import { state, updateLocationOfEnemy, clearLocationEnemies, updateLocationEnemies } from '../state'
+import { state, clearLocationEnemies, updateLocationEnemies } from '../state'
 import { locationApi, enemyApi } from '../../api'
 import type { EnemyInstance, CombatStats } from '../../api'
 
@@ -48,8 +48,6 @@ export const generateEnemies = async (isCotinue: 0 | 1): Promise<void> => {
         enemy: item
       }
     }))
-
-    updateLocationOfEnemy(locationId)
   } catch (error) {
     console.error('生成敌人失败:', error)
     throw error

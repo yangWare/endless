@@ -244,7 +244,7 @@ export class EnemyInstanceService {
 
     const res: Record<string, {
       // 结果字符串
-      result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'active_attack' | 'deactive_attack';
+      result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'enemy_lock_by_other' | 'active_attack' | 'deactive_attack';
       // 玩家造成的伤害
       damage: number;
       // 玩家是否暴击
@@ -268,7 +268,7 @@ export class EnemyInstanceService {
       // 检查是否已经有战斗在进行，过滤掉这个怪
       if (this.combatLocks.get(lockKey)) {
         res[instance._id.toString()] = {
-          result: 'continue',
+          result: 'enemy_lock_by_other',
           damage: 0,
           isCritical: false,
           remainingHp: instance.hp,
@@ -304,19 +304,8 @@ export class EnemyInstanceService {
           enemyInstance: instance
         }
       })])
-      // 处理玩家血量和背包掉落物
-      let totalCounterDamage = 0
-      const totalDroppedMaterials: DroppedMaterial[] = []
-      for (const instanceId in res) {
-        const resItem = res[instanceId]
-        totalCounterDamage += resItem.counterDamage
-        totalDroppedMaterials.push(...resItem.droppedMaterials)
-      }
-      // 处理玩家受伤
-      const isPlayerDead = await PlayerService.handlePlayerDamage(playerId, totalCounterDamage);
-      if (!isPlayerDead) {
-        await PlayerService.addMaterialsToInventory(playerId, totalDroppedMaterials);
-      }
+      // 处理玩家血量、背包掉落物、战斗中敌人列表
+      await PlayerService.handlePlayerStatusAfterAttack(playerId, res)
       return res
     } catch (error: any) {
       throw new Error(`攻击敌人失败: ${error.message}`);
@@ -338,8 +327,6 @@ export class EnemyInstanceService {
     // 如果敌人死亡
     if (enemyInstance.hp === 0) {
       const { droppedMaterials } = await this.handleEnemyDeath(enemyInstance._id.toString());
-      // 添加掉落物到玩家背包
-      // await PlayerService.addMaterialsToInventory(playerId, droppedMaterials);
       return {
         result: 'enemy_dead' as const,
         damage,

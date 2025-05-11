@@ -7,7 +7,6 @@ interface State {
   currentMapId: string
   currentLocationId: string
   player: Player
-  locationOfEnemy: string // 当前敌人列表所在的id
   locationEnemies: Array<{
     instanceId: string
     name: string
@@ -28,7 +27,6 @@ export const state = reactive<State>({
   player: null as any,
   currentMap: null,
   mapLocations: {},
-  locationOfEnemy: '',
   shopPotions: {},
   materials: {},
   potions: {},
@@ -134,10 +132,6 @@ export function updateCurrentLocation(locationId: string): void {
   }
 
   state.currentLocationId = locationId
-}
-
-export function updateLocationOfEnemy(locationId: string): void {
-  state.locationOfEnemy = locationId
 }
 
 /**

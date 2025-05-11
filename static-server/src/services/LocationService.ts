@@ -325,7 +325,11 @@ export class LocationService {
           // 更新敌人实例的 HP
           newInstance.hp = combatStats.max_hp;
           await newInstance.save();
-          res.push(newInstance)
+          const left = currentIndex - 3 < 0 ? 0 : currentIndex - 3
+          const right = currentIndex + 3 > 99 ? 99 : currentIndex + 3
+          if (newInstance.locationIndex >= left && newInstance.locationIndex <= right) {
+            res.push(newInstance)
+          }
         } else {
           res.push(instance)
         }

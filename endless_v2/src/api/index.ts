@@ -44,6 +44,7 @@ export interface Player {
     level: number;
     exp: number;
   }[];
+  fightingEnemies: string[]
 }
 
 // 敌人实例类型
@@ -144,7 +145,7 @@ export interface DroppedMaterial {
 
 // 攻击敌人的结果类型
 export type AttackEnemyResult = Record<string, {
-  result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'active_attack' | 'deactive_attack';
+  result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'enemy_lock_by_other' | 'active_attack' | 'deactive_attack';
   damage: number;
   isCritical: boolean;
   remainingHp: number;

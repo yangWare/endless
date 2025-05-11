@@ -126,6 +126,7 @@ export interface IPlayer {
     helmet: IEquipment | null;
     boots: IEquipment | null;
   };
+  fightingEnemies: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -230,6 +231,10 @@ const playerSchema = new mongoose.Schema({
     // 靴子
     boots: equipmentSchema
   },
+  fightingEnemies: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'EnemyInstance'
+  }],
   createdAt: {
     type: Date,
     default: () => new Date()

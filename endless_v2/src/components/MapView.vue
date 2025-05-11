@@ -236,6 +236,9 @@ onMounted(() => {
 
   // 初始定位
   focusOnCurrentLocation()
+
+  // 打开地点页
+  showLocationView.value = true
 })
 
 watch(() => state.currentLocationId, drawMap)

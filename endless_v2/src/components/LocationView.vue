@@ -63,7 +63,7 @@
               </div>
             </div>
             <div class="explore-button-container">
-              <span class="explore-button" @click="handleExplore(false)" :class="{ 'with-enemies': hasEnemies }">
+              <span v-if="!isAttackStatus" class="explore-button" @click="handleExplore()" :class="{ 'with-enemies': hasEnemies }">
                 继续探索
               </span>
             </div>
@@ -133,10 +133,17 @@ const enemyInfoContent = ref('')
 const location = computed(() => state.mapLocations[state.currentLocationId])
 const locationEnemies = computed(() => state.locationEnemies)
 
+// 是否处于战斗状态
+const isAttackStatus = ref(false)
+
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 const closeLocationView = (): void => {
+  if (isAttackStatus.value) {
+    addMessageWithDelay('当前处于战斗状态，无法离开')
+    return
+  }
   emit('close')
 }
 
@@ -154,10 +161,7 @@ onMounted(async () => {
     message: `${location.value.description || ''}`,
   })
   ensureValidTab()
-  // 没切换地图，不刷新敌人
-  if (state.locationOfEnemy !== state.currentLocationId) {
-    handleExplore(true)
-  }
+  handleInitExplore()
 })
 
 const npcs = computed(() => {
@@ -292,19 +296,37 @@ const handleAttackMainEnemyRes = async (enemy: Enemy, mainEnemyRes: AttackEnemyR
   return true
 }
 const handleOtherEnemyAttackRes = async (enemyId: string, res: AttackEnemyResult) => {
+  // 上一次战斗中敌人列表
+  const prevFightEnemies = state.player.fightingEnemies
+  // 新的战斗中敌人列表
+  const newFightingEnemies: string[] = []
   // 新的敌人列表
   const newLocationEnemies: typeof state.locationEnemies = []
   // 处理其他主动攻击的敌人
   for (const instanceId in res) {
     const otherEnemyRes = res[instanceId]
-    newLocationEnemies.push({
-      instanceId: otherEnemyRes.enemyInstance._id,
-      name: otherEnemyRes.enemyInstance.creatureId.name,
-      enemy: {
-        ...otherEnemyRes.enemyInstance,
-        hp: otherEnemyRes.remainingHp
+
+    // 处理战斗中敌人列表
+    // 被锁定，则取上一次战斗结果
+    if (otherEnemyRes.result === 'enemy_lock_by_other') {
+      const prevEnemyId = prevFightEnemies.find(id => id === instanceId)
+      if (prevEnemyId) {
+        newFightingEnemies.push(prevEnemyId)
       }
-    })
+    } else if (['continue', 'active_attack'].includes(otherEnemyRes.result)) {
+      newFightingEnemies.push(instanceId)
+    }
+
+    if (otherEnemyRes.remainingHp > 0) {
+      newLocationEnemies.push({
+        instanceId: otherEnemyRes.enemyInstance._id,
+        name: otherEnemyRes.enemyInstance.creatureId.name,
+        enemy: {
+          ...otherEnemyRes.enemyInstance,
+          hp: otherEnemyRes.remainingHp
+        }
+      })
+    }
     if (instanceId === enemyId) {
       continue
     }
@@ -330,6 +352,10 @@ const handleOtherEnemyAttackRes = async (enemyId: string, res: AttackEnemyResult
       }
     }
   }
+  const newPlayer = { ...state.player }
+  newPlayer.fightingEnemies = newFightingEnemies
+  updatePlayer(newPlayer)
+  isAttackStatus.value = newFightingEnemies.length > 0
   // 整体更新一波列表
   updateLocationEnemies(newLocationEnemies.sort((prev, next) => {
     return prev.instanceId > next.instanceId ? -1 : 1
@@ -383,6 +409,8 @@ const handleRevive = async (): Promise<void> => {
       updatePlayer(response.data)
       updateCurrentMap(response.data.currentMap)
       updateCurrentLocation(response.data.currentLocation)
+      clearLocationEnemies()
+      isAttackStatus.value = false
       closeLocationView()
     } else {
       await addMessageWithDelay('复活失败，请稍后再试')
@@ -393,15 +421,62 @@ const handleRevive = async (): Promise<void> => {
   }
 }
 
-const handleExplore = async (isStart?: boolean): Promise<void> => {
+const handleInitExplore = async (): Promise<void> => {
   // 和攻击动作互斥
   if (isAttacking.value) return
   isAttacking.value = true
-  await addMessageWithDelay(`你${isStart ? '开始' : '继续'}向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
+
+  await addMessageWithDelay(`你开始向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
 
   try {
-      // 模拟攻击，实际是为了拿到敌人列表
-    const res = await attackEnemy(isStart ? 0 : 1)
+    // 根据缓存数据判断当前是否处于战斗状态
+    const attackEnemyList = state.player.fightingEnemies
+    // 处于战斗状态，则只获取生物列表，不处于，则要重新判断
+    // 如果=敌人列表不为空，则可能处于战斗状态，需获取列表进行判断
+    if (attackEnemyList.length > 0) {
+      await generateEnemies(0)
+      if (locationEnemies.value.length === 0) {
+        await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
+        return
+      }
+      attackEnemyList.forEach(id => {
+        const instance = locationEnemies.value.find(item => item.instanceId === id)
+        // 任意一个敌人还在敌人列表里，则认为处于战斗状态
+        if (instance) {
+          isAttackStatus.value = true
+        }
+      })
+    }
+
+    // 处于非战斗状态，则立刻进行一次模拟攻击，刷新战斗状态
+    if (!isAttackStatus.value) {
+      // 模拟攻击，实际是为了实现敌人主动攻击效果
+      const res = await attackEnemy(0)
+      await handleOtherEnemyAttackRes('', res)
+    }
+
+    if (locationEnemies.value.length === 0) {
+      await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')
+    } else {
+      await addMessageWithDelay('发现敌对生物，准备战斗吧')
+    }
+  } catch (error) {
+    console.error('explore failed:', error)
+    await addMessageWithDelay('你好像遇到了某种神秘的阻碍，又回到了原点')
+  } finally {
+    isAttacking.value = false
+  }
+}
+const handleExplore = async (): Promise<void> => {
+  // 和攻击动作互斥
+  if (isAttacking.value) return
+  isAttacking.value = true
+
+  await addMessageWithDelay(`你继续向前探索，发现前方似乎有动静，你谨慎的摸了过去...`)
+
+  try {
+    // 模拟攻击，实际是为了实现敌人主动攻击效果
+    const res = await attackEnemy(1)
     await handleOtherEnemyAttackRes('', res)
     if (state.locationEnemies.length === 0) {
       await addMessageWithDelay('虚惊一场，什么都没有，继续探索吧')

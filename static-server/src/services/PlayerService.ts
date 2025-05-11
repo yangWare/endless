@@ -4,6 +4,7 @@ import { Material } from '../models/Material';
 import { MapService } from './MapService';
 import { LocationService } from './LocationService';
 import { PotionService } from './PotionService';
+import { DroppedMaterial } from './CreatureService';
 
 // 心法配置
 export const HEART_SKILL_CONFIG = {
@@ -199,7 +200,8 @@ export class PlayerService {
         name: '燧石锻造传承',
         level: 1,
         exp: 0
-      }]
+      }],
+      fightingEnemies: []
     };
   }
 
@@ -373,6 +375,73 @@ export class PlayerService {
       return finalStats;
     } catch (error: any) {
       throw new Error(`计算玩家战斗属性失败: ${error.message}`);
+    }
+  }
+
+  /**
+   * 处理攻击后玩家状态：包括受伤状态、材料情况、敌人战斗列表
+   */
+  static async handlePlayerStatusAfterAttack(playerId: string, attackRes: Record<string, {
+    // 结果字符串
+    result: 'enemy_dead' | 'continue' | 'enemy_flee' | 'enemy_lock_by_other' | 'active_attack' | 'deactive_attack';
+    // 怪物攻击伤害
+    counterDamage: number;
+    // 怪物掉落物品
+    droppedMaterials: DroppedMaterial[];
+  }>) {
+    try {
+      const player = await Player.findById(playerId) as PlayerDocument;
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      // 上一次战斗敌人列表
+      const prevEnemyIds = player.fightingEnemies
+      const newEnemyIds: typeof player.fightingEnemies = []
+
+      // 计算结算结果：血量、背包掉落物、战斗中敌人列表
+      let totalCounterDamage = 0
+      const totalDroppedMaterials: DroppedMaterial[] = []
+      for (const instanceId in attackRes) {
+        const resItem = attackRes[instanceId]
+        totalCounterDamage += resItem.counterDamage
+        totalDroppedMaterials.push(...resItem.droppedMaterials)
+        // 被锁定，则取上一次战斗结果
+        if (resItem.result === 'enemy_lock_by_other') {
+          const prevEnemyId = prevEnemyIds.find(id => id.toString() === instanceId)
+          if (prevEnemyId) {
+            newEnemyIds.push(prevEnemyId)
+          }
+        } else if (['continue', 'active_attack'].includes(resItem.result)) {
+          newEnemyIds.push(new Types.ObjectId(instanceId))
+        }
+      }
+
+      // 更新敌人列表
+      player.fightingEnemies = newEnemyIds
+
+      // 计算玩家当前HP
+      const currentHp = Math.max(0, player.hp - totalCounterDamage);
+      player.hp = currentHp;
+      // 玩家死亡不再处理材料
+      if (player.hp <= 0) {
+        await player.save();
+        return
+      }
+
+      // 批量添加材料到背包
+      // 确保inventory存在
+      if (!player.inventory) {
+        player.inventory = {
+          materials: [] as Types.ObjectId[],
+          potions: [] as Types.ObjectId[],
+          equipments: [] as IEquipment[]
+        };
+      }
+      player.inventory.materials = [...player.inventory.materials, ...totalDroppedMaterials.map(item => item.materialId)];
+      await player.save();
+    } catch (error: any) {
+      throw new Error(`处理玩家攻击结算失败: ${error.message}`);
     }
   }
 
