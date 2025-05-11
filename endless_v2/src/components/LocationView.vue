@@ -83,12 +83,20 @@
               <span>{{ getNpcName(key) }}</span>
               <button v-if="key === 'forge' || key === 'shop'" class="enter-button">进入</button>
             </div>
+            <div
+              class="npc-item"
+              @click="handleNpcClick('tavern')"
+            >
+              <span>{{ getNpcName('tavern') }}</span>
+              <button class="enter-button">进入</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
     <ForgeView v-if="showForge" class="npc-view" @close="closeForge" />
     <ShopView v-if="showShop" class="npc-view" @close="closeShop" />
+    <TavernView v-if="showTavern" class="npc-view" @close="closeTavern"></TavernView>
     <Message
       v-model:visible="showEnemyInfoModal"
       :content="enemyInfoContent"
@@ -108,6 +116,7 @@ import { playerApi } from '../api'
 import i18nConfig from '../config/i18n_config.json'
 import ForgeView from './ForgeView.vue'
 import ShopView from './ShopView.vue'
+import TavernView from './TavernView.vue'
 import Message from './Message.vue'
 import { updateCurrentMap } from '../store/state'
 import { updateCurrentLocation } from '../store/state'
@@ -128,6 +137,7 @@ const combatLogs = ref<CombatLog[]>([])
 const isAttacking = ref(false)
 const showForge = ref(false)
 const showShop = ref(false)
+const showTavern = ref(false)
 const showEnemyInfoModal = ref(false)
 const enemyInfoContent = ref('')
 
@@ -184,6 +194,7 @@ const getNpcName = (npcType: string): string => {
   const npcNames: Record<string, string> = {
     forge: '锻造所',
     shop: '商店',
+    tavern: "酒馆"
   }
   return npcNames[npcType] || npcType
 }
@@ -197,6 +208,8 @@ const handleNpcClick = (npcType: string): void => {
     showForge.value = true
   } else if (npcType === 'shop') {
     showShop.value = true
+  } else if (npcType === 'tavern') {
+    showTavern.value = true
   }
 }
 
@@ -206,6 +219,10 @@ const closeForge = (): void => {
 
 const closeShop = (): void => {
   showShop.value = false
+}
+
+const closeTavern = () => {
+  showTavern.value = false
 }
 
 const addMessageWithDelay = (message: string, delay = 500): Promise<void> => {

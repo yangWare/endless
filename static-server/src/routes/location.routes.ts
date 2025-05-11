@@ -58,4 +58,9 @@ router.post('/:id/forge', async (ctx: ParamContext) => {
   await LocationAPI.forge(ctx);
 });
 
+// 获取生物情报
+router.post('/creature-intel', async (ctx: ParamContext) => {
+  await LocationAPI.getCreatureIntel(ctx);
+});
+
 export default router; 

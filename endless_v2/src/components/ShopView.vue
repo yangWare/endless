@@ -2,7 +2,7 @@
   <div class="shop-view-container">
     <div class="shop-header">
       <div class="title">商店</div>
-      <div class="close-button" @click="handleClose">×</div>
+      <button class="close-button" @click="handleClose">×</button>
     </div>
 
     <div class="shop-content">
@@ -377,22 +377,25 @@ const handleClose = () => {
 }
 
 .close-button {
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
-  text-align: center;
-  font-size: 24px;
-  color: #999;
-  cursor: pointer;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  background-color: #404040;
+  color: #e0e0e0;
+  font-size: 24px;
+  line-height: 32px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
+  padding: 0;
 }
 
 .close-button:hover {
-  background-color: #ff6b6b;
-  color: white;
-  transform: scale(1.1);
+  background-color: #ff4d00;
+  transform: rotate(90deg);
 }
 
 .shop-content {

@@ -356,7 +356,25 @@ export const locationApi = {
       exp: number;
     };
   } | null>> =>
-    api.post(`/locations/${data.locationId}/forge`, data)
+    api.post(`/locations/${data.locationId}/forge`, data),
+
+  /**
+   * 获取指定地点的敌人实例列表
+   * @param locationId 地点ID
+   * @returns 敌人实例列表
+   */
+  getCreatureIntel: (data: {
+    playerId: string
+    creatureId: string
+  }): Promise<BaseResponse<{
+    cost: number
+    creature: {
+      name: string
+      level: string
+    }
+    creatureCombatStats: CombatStats
+  }>> =>
+    api.post(`/locations/creature-intel`, data)
 };
 
 export const enemyInstanceApi = {

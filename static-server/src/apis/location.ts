@@ -281,4 +281,24 @@ export class LocationAPI {
       };
     }
   }
+
+  /** 
+   * 获取生物情报
+   */
+  static async getCreatureIntel(ctx: BaseContext) {
+    try {
+      const { playerId, creatureId } = ctx.request.body;
+      if (!creatureId || !playerId) {
+        throw new Error('缺少生物ID或玩家ID');
+      }
+      const data = await LocationService.getCreatureIntel(playerId, creatureId);
+      ctx.body = data
+    } catch (error: any) {
+      ctx.status = 400;
+      ctx.body = {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 } 

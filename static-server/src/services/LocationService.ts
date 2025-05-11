@@ -5,6 +5,7 @@ import { EnemyInstance } from '../models/EnemyInstance';
 import { ShopPotionItem } from './ShopService';
 import { LocationState } from '../models/LocationState';
 import { Player } from '../models/Player';
+import { Creature } from '../models/Creature';
 
 export interface LocationNPC {
   forge?: {
@@ -364,6 +365,59 @@ export class LocationService {
       return enemyInstances;
     } catch (error: any) {
       throw new Error(`获取地点敌人列表失败: ${error.message}`);
+    }
+  }
+
+   /**
+   * 获取指定生物的情报
+   * @param creatureId 生物ID
+   * @returns 生物情况
+   */
+  static async getCreatureIntel(playerId: string, creatureId: string) {
+    try {
+      const creature = await Creature.findById(creatureId)
+      if (!creature) {
+        throw new Error('生物不存在');
+      }
+
+      const player = await Player.findById(playerId);
+      if (!player) {
+        throw new Error('玩家不存在');
+      }
+
+      const creatureCombatStats = await EnemyInstanceService.calculateCreatureCombatStats(creatureId)
+
+      let cost = 0
+      if (creature.level <= 2) {
+        cost = creature.level * 10
+      } else if (creature.level <= 4) {
+        cost = creature.level * 50
+      } else {
+        cost = creature.level * 200
+      }
+      if (player.coins < cost) {
+        return {
+          success: false,
+          message: '金币不足',
+          data: {
+            cost: 0
+          }
+        };
+      }
+      player.coins -= cost;
+      await player.save();
+
+      return {
+        success: true,
+        message: '',
+        data: {
+          cost,
+          creature,
+          creatureCombatStats
+        }
+      }
+    } catch (error: any) {
+      throw new Error(`获取生物情报失败: ${error.message}`);
     }
   }
 } 

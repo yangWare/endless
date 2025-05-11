@@ -406,7 +406,7 @@ export default defineComponent({
   background-color: #404040;
   color: #e0e0e0;
   font-size: 24px;
-  line-height: 1;
+  line-height: 32px;
   cursor: pointer;
   display: flex;
   align-items: center;
