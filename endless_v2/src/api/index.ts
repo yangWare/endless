@@ -370,7 +370,7 @@ export const locationApi = {
     cost: number
     creature: {
       name: string
-      level: string
+      level: number
     }
     creatureCombatStats: CombatStats
   }>> =>

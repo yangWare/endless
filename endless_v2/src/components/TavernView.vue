@@ -43,7 +43,10 @@ import { state, updatePlayer } from '../store/state'
 import Message from './Message.vue'
 import i18nConfig from '../config/i18n_config.json'
 
-const currentLocation = ref<Location>({
+const currentLocation = ref<{
+  name: string
+  enemies: Location['enemies']
+}>({
   name: '',
   enemies: []
 })
@@ -59,7 +62,7 @@ const fetchCreatures = async () => {
 
 const showIntelInfoModal = ref(false)
 const intelInfo = ref('')
-const showCreatureDetails = async (creature) => {
+const showCreatureDetails = async (creature: Location['enemies'][number]) => {
   showIntelInfoModal.value = true
   intelInfo.value = '加载中...'
   const res = await locationApi.getCreatureIntel({
