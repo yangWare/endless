@@ -253,7 +253,7 @@ export class PlayerAPI {
       const newHp = await PlayerService.usePotion(playerId, potionId);
       ctx.body = {
         success: true,
-        data: { newHp }
+        data: newHp
       };
     } catch (error: any) {
       ctx.status = 400;
