@@ -225,8 +225,9 @@ export class LocationService {
       const prevIndex = player.currentLocationIndex
       let currentIndex = prevIndex
       if (isCotinue) {
-        // 每次探索固定向前移动7格
+        // 每次探索固定向前移动7格，并取余处理超出边界自动重新开始
         currentIndex += 7
+        currentIndex = currentIndex % 100
         await Player.findByIdAndUpdate(
           playerId,
           {
