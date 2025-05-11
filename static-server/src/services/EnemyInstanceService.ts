@@ -223,7 +223,7 @@ export class EnemyInstanceService {
         perception: race.combatStats.perception * combatMultipliers.perception * level,
         stealth: race.combatStats.stealth * combatMultipliers.stealth * level,
         escape: race.combatStats.escape * combatMultipliers.escape * level,
-        rage: race.combatStats.rage * combatMultipliers.rage * level
+        rage: race.combatStats.rage * combatMultipliers.rage
       };
 
       return stats;
