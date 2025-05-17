@@ -28,6 +28,10 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/endless/images': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
     }
   }
 } as UserConfig) 

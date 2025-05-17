@@ -22,6 +22,7 @@ import LocationView from './LocationView.vue'
 import Message from './Message.vue'
 import { move } from '../store/actions/map'
 import type { Map, Location } from '../api'
+// import zoneConfig from '../config/zone_config.json'
 
 const mapCanvas = ref<HTMLCanvasElement | null>(null)
 const showLocationView = ref<boolean>(false)
@@ -88,8 +89,27 @@ const drawMap = (): void => {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
   ctx.fillRect(0, 0, currentMap.value.width, currentMap.value.height)
 
-  const drawnConnections = new Set<string>()
+  // 绘制区域
+  // zoneConfig.zones.forEach(zone => {
+  //   if (zone.points.length < 3) return // 至少需要3个点才能形成区域
 
+  //   ctx.beginPath()
+  //   ctx.moveTo(zone.points[0].x, zone.points[0].y)
+    
+  //   // 连接所有点
+  //   for (let i = 1; i < zone.points.length; i++) {
+  //     ctx.lineTo(zone.points[i].x, zone.points[i].y)
+  //   }
+    
+  //   // 闭合路径
+  //   ctx.closePath()
+    
+  //   // 设置填充颜色
+  //   ctx.fillStyle = zone.bg_color
+  //   ctx.fill()
+  // })
+
+  const drawnConnections = new Set<string>()
   // 绘制地点和连线
   Object.values(state.mapLocations).forEach((location: Location) => {
     const x = location.position.x
