@@ -228,7 +228,7 @@ export class LocationService {
       if (isCotinue) {
         // 每次探索固定向前移动7格，并取余处理超出边界自动重新开始
         currentIndex += 7
-        currentIndex = currentIndex % 100
+        currentIndex = currentIndex % location.size
         await Player.findByIdAndUpdate(
           playerId,
           {
@@ -275,7 +275,7 @@ export class LocationService {
             locationId: locationId,
             hp: 100, // 临时值，后面会更新
             level: creature.level,
-            locationIndex: Math.floor(Math.random() * 100) // 0-99之间的随机数
+            locationIndex: Math.floor(Math.random() * location.size) // 0-99之间的随机数
           });
           // 保存一下，计算战斗属性方法依赖数据库数据
           await newInstance.save();
@@ -293,7 +293,7 @@ export class LocationService {
       const nearbyInstances = remainingInstances.filter(instance => {
         const index = instance.locationIndex;
         const left = currentIndex - 3 < 0 ? 0 : currentIndex - 3
-        const right = currentIndex + 3 > 99 ? 99 : currentIndex + 3
+        const right = currentIndex + 3 > (location.size - 1) ? (location.size - 1) : currentIndex + 3
         return index >= left && index <= right;
       });
 
@@ -317,7 +317,7 @@ export class LocationService {
             locationId: locationId,
             hp: 100, // 临时值，后面会更新
             level: (enemy.creatureId as any).level,
-            locationIndex: Math.floor(Math.random() * 100) // 0-99之间的随机数
+            locationIndex: Math.floor(Math.random() * location.size) // 0-99之间的随机数
           });
 
           await newInstance.save();
@@ -328,7 +328,7 @@ export class LocationService {
           newInstance.hp = combatStats.max_hp;
           await newInstance.save();
           const left = currentIndex - 3 < 0 ? 0 : currentIndex - 3
-          const right = currentIndex + 3 > 99 ? 99 : currentIndex + 3
+          const right = currentIndex + 3 > (location.size - 1) ? (location.size - 1) : currentIndex + 3
           if (newInstance.locationIndex >= left && newInstance.locationIndex <= right) {
             res.push(newInstance)
           }

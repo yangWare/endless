@@ -33,6 +33,7 @@
               {{ `(${scope.row.position.x}, ${scope.row.position.y})` }}
             </template>
           </el-table-column>
+          <el-table-column prop="size" label="大小" />
           <el-table-column label="操作" width="150">
             <template #default="scope">
               <el-button size="small" @click="handleEdit('location', scope.row)">编辑</el-button>

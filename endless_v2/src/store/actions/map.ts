@@ -48,5 +48,6 @@ export const move = async (toId: string): Promise<void> => {
   }
 
   // 更新状态
+  clearLocationEnemies()
   state.currentLocationId = toId
 }

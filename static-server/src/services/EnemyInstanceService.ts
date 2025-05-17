@@ -4,6 +4,7 @@ import { Creature } from '../models/Creature';
 import { PlayerService } from './PlayerService';
 import { CreatureService, DroppedMaterial } from './CreatureService';
 import { LocationService } from './LocationService';
+import { Location } from '../models/Location';
 
 export interface EnemyInstanceData {
   creatureId: Types.ObjectId;
@@ -343,7 +344,8 @@ export class EnemyInstanceService {
     const isEscapeOk = enemyStats.escape > playerStats.escape
     if (isHpOk && isRageOk && isEscapeOk) {
       // 逃跑的敌人位置重新随机
-      enemyInstance.locationIndex = Math.floor(Math.random() * 100);
+      const location = await Location.findById(enemyInstance.locationId.toString())
+      enemyInstance.locationIndex = Math.floor(Math.random() * location!.size);
       await enemyInstance.save();
       return {
         result: 'enemy_flee' as const,

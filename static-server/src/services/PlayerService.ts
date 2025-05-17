@@ -553,19 +553,21 @@ export class PlayerService {
         throw new Error('该地点不属于指定地图');
       }
 
-      // 更新玩家位置
-      const player = await Player.findByIdAndUpdate(
-        playerId,
-        {
-          currentMap: mapId,
-          currentLocation: locationId
-        },
-        { new: true }
-      );
-
+      const player = await Player.findById(playerId)
       if (!player) {
         throw new Error('玩家不存在');
       }
+
+      if (player.currentMap.toString() === mapId && player.currentLocation.toString() === locationId) {
+        throw new Error('玩家已处于目标位置');
+      }
+
+      const newLocationIndex = Math.floor(Math.random() * location.size)
+      player.currentMap = new Types.ObjectId(mapId)
+      player.currentLocation = new Types.ObjectId(locationId)
+      player.currentLocationIndex = newLocationIndex
+
+      await player.save()
 
       return player;
     } catch (error: any) {

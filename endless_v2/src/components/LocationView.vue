@@ -151,7 +151,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 const closeLocationView = (): void => {
-  if (isAttackStatus.value) {
+  if (isAttackStatus.value || isAttacking.value) {
     addMessageWithDelay('当前处于战斗状态，无法离开')
     return
   }
