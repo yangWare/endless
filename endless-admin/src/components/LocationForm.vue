@@ -16,6 +16,9 @@
     <el-form-item label="位置Y" prop="position.y">
       <el-input-number v-model="formData.position.y" />
     </el-form-item>
+    <el-form-item label="大小" prop="size">
+      <el-input-number v-model="formData.size" :min="1" :step="10" />
+    </el-form-item>
     <el-form-item label="相邻位置" prop="adjacentLocations">
       <el-select
         v-model="formData.adjacentLocations"
@@ -137,6 +140,7 @@ interface FormData {
     x: number
     y: number
   }
+  size: number
   adjacentLocations: string[]
   npc: {
     forge: {

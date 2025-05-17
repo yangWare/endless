@@ -105,6 +105,7 @@ const formData = reactive({
     x: 0,
     y: 0,
   },
+  size: 100,
   adjacentLocations: [] as string[],
   npc: {
     forge: {
@@ -280,6 +281,7 @@ const submitForm = async () => {
               description: formData.description,
               mapId: formData.mapId,
               position: formData.position,
+              size: formData.size,
               adjacentLocations: formData.adjacentLocations,
               npc: {
                 forge: formData.npc.forge.enabled ? formData.npc.forge : null,

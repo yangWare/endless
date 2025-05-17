@@ -24,6 +24,10 @@ const locationSchema = new mongoose.Schema({
       required: true
     }
   },
+  size: {
+    type: Number,
+    default: 100
+  },
   adjacentLocations: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Location',
