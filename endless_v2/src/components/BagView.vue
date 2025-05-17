@@ -1,18 +1,5 @@
 <template>
   <div class="bag-container">
-    <div class="section-title">材料</div>
-    <div v-if="materialsLoading" class="loading">加载中...</div>
-    <div v-else class="materials-grid">
-      <div
-        v-for="material in materials"
-        :key="material._id"
-        class="material-item"
-        @click="showMaterialInfo(material)"
-      >
-        <div class="material-name">{{ material.name }}</div>
-      </div>
-    </div>
-
     <div class="section-title">药品</div>
     <div v-if="potionsLoading" class="loading">加载中...</div>
     <div v-else class="potions-grid">
@@ -35,6 +22,19 @@
         @click="showEquipmentInfo(item)"
       >
         <div class="item-name" :style="{ color: getEquipmentColor(item?.level || 1) }">{{ item.name }}</div>
+      </div>
+    </div>
+
+    <div class="section-title">材料</div>
+    <div v-if="materialsLoading" class="loading">加载中...</div>
+    <div v-else class="materials-grid">
+      <div
+        v-for="material in materials"
+        :key="material._id"
+        class="material-item"
+        @click="showMaterialInfo(material)"
+      >
+        <div class="material-name">{{ material.name }}</div>
       </div>
     </div>
 
